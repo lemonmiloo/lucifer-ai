@@ -10,7 +10,8 @@
 <script>
 const chat=document.getElementById("chat"),input=document.getElementById("input"),form=document.getElementById("form"),send=document.getElementById("send");
 const drawer=document.getElementById("historyDrawer"),backdrop=document.getElementById("drawerBackdrop"),historyList=document.getElementById("historyList");
-const STORAGE_KEY="lucifer-ai-chat-history-v1";\nconst VISITOR_KEY="lucifer-ai-visitor-v1";\nlet visitorId=localStorage.getItem(VISITOR_KEY);if(!visitorId){visitorId=crypto.randomUUID();localStorage.setItem(VISITOR_KEY,visitorId)}
+const STORAGE_KEY="lucifer-ai-chat-history-v1";
+const VISITOR_KEY="lucifer-ai-visitor-v1";\nlet visitorId=localStorage.getItem(VISITOR_KEY);if(!visitorId){visitorId=crypto.randomUUID();localStorage.setItem(VISITOR_KEY,visitorId)}
 let chats=[],currentChatId=null,history=[];
 function loadChats(){try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");chats=Array.isArray(saved)?saved.filter(c=>c&&c.id&&Array.isArray(c.messages)):[]}catch{chats=[]}}
 function saveChats(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(chats))}catch{console.warn("Penyimpanan riwayat penuh atau tidak tersedia.")}}
