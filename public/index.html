@@ -196,7 +196,7 @@ input.addEventListener("input",()=>{
 form.addEventListener("submit",async e=>{
  e.preventDefault();const message=input.value.trim();if(!message)return;input.value="";input.style.height="44px";add(message,"user");send.disabled=true;send.textContent="...";
  const wait=add("Lucifer sedang berpikir...","assistant");try{
-  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,history,visitorId,conversationId:(currentChat()?.serverId||(currentChat().serverId=crypto.randomUUID()))})});
+  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,history,visitorId,isFirstMessage:currentChat()?.messages.length===1,chatTitle:currentChat()?.title,conversationId:(currentChat()?.serverId||(currentChat().serverId=crypto.randomUUID()))})});
   const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(raw.trim().startsWith("<")||raw.startsWith("An error")?"Server sedang bermasalah atau timeout. Coba lagi sebentar.":"Respons server tidak valid: "+raw.slice(0,180))}
   if(!r.ok)throw new Error(data.error||"Permintaan gagal");if(typeof data.reply!=="string")throw new Error("Server tidak mengirim jawaban teks.");
   updateLastMessage(wait,data.reply);
