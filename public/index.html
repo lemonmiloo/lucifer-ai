@@ -32,16 +32,45 @@ body.drawer-open #newChatTop:hover{background:#211b35}
  #historyToggle{top:12px;left:12px}
  #newChatTop{top:12px;right:12px;padding:10px 11px}
  .top{padding-left:48px;padding-right:104px}
-}\n</style></head><body><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="history-list" id="historyList"></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
+}\n
+/* DanKudo account gate */
+.app{display:none}body.authenticated .app{display:flex}
+.auth-screen{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:22px;background:radial-gradient(ellipse at top,#17132b 0,#090b12 58%);overflow:auto}
+.auth-card{width:min(100%,410px);border:1px solid #2b2d40;background:#111522;border-radius:20px;padding:28px;box-shadow:0 22px 80px #0008}
+.auth-brand{text-align:center;font-size:25px;font-weight:750;letter-spacing:-.7px;margin:0 0 7px}
+.auth-caption{text-align:center;color:var(--muted);font-size:13px;margin:0 0 25px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;background:#090d18;border-radius:11px;margin-bottom:18px}
+.auth-tab{border:0;border-radius:8px;padding:10px;background:transparent;color:#9ca4b7;cursor:pointer;font:600 13px inherit}
+.auth-tab.active{background:#28213f;color:#fff}
+.auth-field{display:block;margin:13px 0;color:#c9c7d5;font-size:12px}
+.auth-field input{display:block;width:100%;margin-top:7px;border:1px solid #30364a;border-radius:10px;background:#090d18;color:#fff;padding:13px;font:14px inherit;outline:none}
+.auth-field input:focus{border-color:#9b78ff}
+.auth-submit{width:100%;border:0;border-radius:11px;padding:13px;margin-top:10px;background:#9b78ff;color:white;font-weight:700;cursor:pointer}
+.auth-submit:disabled{opacity:.55;cursor:wait}
+.auth-message{min-height:18px;margin:13px 0 0;color:#ffb5b5;font-size:12px;line-height:1.5;text-align:center}
+.auth-message.success{color:#8ee3b1}
+.drawer-user{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:11px;background:#151a29}
+.drawer-user-info{min-width:0;flex:1}
+.drawer-user-email{font-size:12px;overflow-wrap:anywhere;color:#e9e6f4}
+.drawer-user-role{font-size:10px;color:var(--muted);margin-top:3px}
+.signout-btn{border:1px solid #51415e;border-radius:8px;padding:8px 10px;background:#251d32;color:#f4eaff;font-size:11px;cursor:pointer}
+@media(max-width:600px){.auth-card{padding:24px 20px}.auth-screen{padding:16px}}
+</style></head><body><section class="auth-screen" id="authScreen"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Email<input id="authEmail" type="email" autocomplete="email" placeholder="email@contoh.com" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script>
+const SUPABASE_URL="https://lxktuagmmugdrgthbgxi.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_hE2aLl_1yNzY5DDKXHt4Gw_MzruLP-_";
+const authClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+let activeSession=null,accountRole="user",authMode="login";
 const chat=document.getElementById("chat"),input=document.getElementById("input"),form=document.getElementById("form"),send=document.getElementById("send");
 const drawer=document.getElementById("historyDrawer"),backdrop=document.getElementById("drawerBackdrop"),historyList=document.getElementById("historyList");
 const STORAGE_KEY="lucifer-ai-chat-history-v1";
 const VISITOR_KEY="lucifer-ai-visitor-v1";
 let visitorId=localStorage.getItem(VISITOR_KEY);if(!visitorId){visitorId=crypto.randomUUID();localStorage.setItem(VISITOR_KEY,visitorId)}
 let chats=[],currentChatId=null,history=[];
-function loadChats(){try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");chats=Array.isArray(saved)?saved.filter(c=>c&&c.id&&Array.isArray(c.messages)):[]}catch{chats=[]}}
-function saveChats(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(chats))}catch{console.warn("Penyimpanan riwayat penuh atau tidak tersedia.")}}
+function storageKey(){return STORAGE_KEY+":"+(activeSession?.user?.id||"guest")}
+function loadChats(){try{const saved=JSON.parse(localStorage.getItem(storageKey())||"[]");chats=Array.isArray(saved)?saved.filter(c=>c&&c.id&&Array.isArray(c.messages)):[]}catch{chats=[]}}
+function saveChats(){try{localStorage.setItem(storageKey(),JSON.stringify(chats))}catch{console.warn("Penyimpanan riwayat penuh atau tidak tersedia.")}}
 function currentChat(){return chats.find(c=>c.id===currentChatId)}
 function openDrawer(){document.body.classList.add("drawer-open");document.getElementById("newChatTop").disabled=true;drawer.classList.add("open");backdrop.classList.add("open");renderHistory()}
 function closeDrawer(){document.body.classList.remove("drawer-open");document.getElementById("newChatTop").disabled=false;drawer.classList.remove("open");backdrop.classList.remove("open")}
@@ -177,7 +206,7 @@ function add(text,role,persist=true){
  return el;
 }
 function updateLastMessage(el,text){const content=el.querySelector(".message-content");if(content)renderContent(content,text);const c=currentChat();if(c){const last=c.messages[c.messages.length-1];if(last)last.content=String(text??"");c.updatedAt=Date.now();saveChats();renderHistory()}}
-loadChats();renderHistory();renderMessages([]);
+renderMessages([]);
 // Ikuti tinggi visual viewport saat keyboard mobile muncul, tanpa menggeser seluruh halaman.
 function syncMobileViewport(){
  if(!window.matchMedia("(max-width: 600px)").matches)return;
@@ -198,14 +227,14 @@ input.addEventListener("input",()=>{
  input.style.height=Math.min(input.scrollHeight,160)+"px";
 });
 form.addEventListener("submit",async e=>{
- e.preventDefault();const message=input.value.trim();if(!message)return;input.value="";input.style.height="44px";add(message,"user");send.disabled=true;send.textContent="...";
+ e.preventDefault();const message=input.value.trim();if(!message)return;if(!activeSession){showAuthScreen();return;}input.value="";input.style.height="44px";add(message,"user");send.disabled=true;send.textContent="...";
  const wait=add("","assistant",false);
  const waitContent=wait.querySelector(".message-content");
  const dots=document.createElement("div");dots.className="typing-indicator";dots.setAttribute("aria-label","Lucifer sedang berpikir");
  for(let i=0;i<3;i++)dots.appendChild(document.createElement("span"));
  waitContent.appendChild(dots);
  try{
-  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,history,visitorId,isFirstMessage:currentChat()?.messages.length===1,chatTitle:currentChat()?.title,conversationId:(currentChat()?.serverId||(currentChat().serverId=crypto.randomUUID()))})});
+  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+activeSession.access_token},body:JSON.stringify({message,history,visitorId,isFirstMessage:currentChat()?.messages.length===1,chatTitle:currentChat()?.title,conversationId:(currentChat()?.serverId||(currentChat().serverId=crypto.randomUUID()))})});
   const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(raw.trim().startsWith("<")||raw.startsWith("An error")?"Server sedang bermasalah atau timeout. Coba lagi sebentar.":"Respons server tidak valid: "+raw.slice(0,180))}
   if(!r.ok)throw new Error(data.error||"Permintaan gagal");if(typeof data.reply!=="string")throw new Error("Server tidak mengirim jawaban teks.");
   dots.remove();
@@ -225,6 +254,60 @@ form.addEventListener("submit",async e=>{
   history.push({role:"user",content:message},{role:"assistant",content:answer});history=history.slice(-8);
  }catch(err){wait.remove();add("Error: "+err.message,"assistant")}finally{send.disabled=false;send.textContent="Kirim";input.focus()}
 });
+
+const authForm=document.getElementById("authForm"),authEmail=document.getElementById("authEmail"),authPassword=document.getElementById("authPassword"),authSubmit=document.getElementById("authSubmit"),authMessage=document.getElementById("authMessage");
+function setAuthMode(mode){authMode=mode;document.getElementById("loginTab").classList.toggle("active",mode==="login");document.getElementById("registerTab").classList.toggle("active",mode==="register");authSubmit.textContent=mode==="login"?"Masuk":"Buat akun";authPassword.autocomplete=mode==="login"?"current-password":"new-password";authMessage.textContent="";authMessage.className="auth-message"}
+document.getElementById("loginTab").addEventListener("click",()=>setAuthMode("login"));
+document.getElementById("registerTab").addEventListener("click",()=>setAuthMode("register"));
+function showAuthScreen(){document.body.classList.remove("authenticated");document.getElementById("authScreen").style.display="grid"}
+async function activateSession(session){
+ if(!session){activeSession=null;showAuthScreen();return}
+ activeSession=session;
+ try{
+  const response=await fetch("/api/auth/me",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});
+  const result=await response.json();
+  if(!response.ok)throw new Error(result.error||"Sesi tidak valid.");
+  accountRole=result.role==="admin"?"admin":"user";
+  document.getElementById("accountEmail").textContent=result.email||session.user.email||"Akun";
+  document.getElementById("accountRole").textContent=accountRole.toUpperCase();
+  document.getElementById("authScreen").style.display="none";
+  document.body.classList.add("authenticated");
+  loadChats();renderHistory();renderMessages([]);
+ }catch(error){
+  await authClient.auth.signOut();
+  activeSession=null;showAuthScreen();
+  authMessage.textContent=error.message||"Gagal memverifikasi sesi.";
+ }
+}
+authForm.addEventListener("submit",async e=>{
+ e.preventDefault();authSubmit.disabled=true;authSubmit.textContent="Memproses...";authMessage.textContent="";authMessage.className="auth-message";
+ try{
+  const email=authEmail.value.trim().toLowerCase(),password=authPassword.value;
+  if(authMode==="register"){
+   const {data,error}=await authClient.auth.signUp({email,password});
+   if(error)throw error;
+   if(data.session){authMessage.textContent="Akun berhasil dibuat.";authMessage.className="auth-message success";await activateSession(data.session)}
+   else{authMessage.textContent="Akun dibuat. Cek email untuk verifikasi, lalu masuk.";authMessage.className="auth-message success";setAuthMode("login")}
+  }else{
+   const {data,error}=await authClient.auth.signInWithPassword({email,password});
+   if(error)throw error;
+   await activateSession(data.session);
+  }
+ }catch(error){authMessage.textContent=error.message||"Autentikasi gagal."}
+ finally{authSubmit.disabled=false;authSubmit.textContent=authMode==="login"?"Masuk":"Buat akun"}
+});
+document.getElementById("signOutButton").addEventListener("click",async()=>{
+ closeDrawer();await authClient.auth.signOut();activeSession=null;chats=[];history=[];currentChatId=null;renderMessages([]);showAuthScreen();
+});
+authClient.auth.onAuthStateChange((event,session)=>{
+ if(event==="SIGNED_OUT"){activeSession=null;showAuthScreen();return}
+ if(session)activateSession(session);
+});
+authClient.auth.getSession().then(({data,error})=>{
+ if(error){showAuthScreen();return}
+ activateSession(data.session);
+});
+
 // Enter membuat baris baru; pesan hanya dikirim lewat tombol Kirim.
 input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.stopPropagation()}});
 </script></body></html>
