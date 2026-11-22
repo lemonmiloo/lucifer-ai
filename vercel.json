@@ -1,7 +1,16 @@
 {
   "functions": {
     "api/chat.js": {
-      "maxDuration": 30
+      "maxDuration": 60
+    },
+    "api/queues/process-chat.js": {
+      "maxDuration": 60,
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "dankudo-ai-chat"
+        }
+      ]
     }
   }
 }
