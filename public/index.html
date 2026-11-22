@@ -380,9 +380,14 @@ async function activateSession(session){
   document.body.classList.add("authenticated");
   loadChats();renderHistory();renderMessages([]);
  }catch(error){
-  await authClient.auth.signOut();
-  activeSession=null;verifiedSessionUserId=null;accountRole="user";document.body.classList.remove("is-admin");closeOwnerPanel();showAuthScreen();
-  authMessage.textContent=error.message||"Gagal memverifikasi akun di database.";
+  // Jangan hapus sesi yang tersimpan hanya karena jaringan/database sedang gagal.
+  // Sesi hanya dibersihkan jika server secara tegas menolak autentikasi/perangkat.
+  if(error.status===401||error.status===403){
+   await authClient.auth.signOut();
+   activeSession=null;verifiedSessionUserId=null;accountRole="user";document.body.classList.remove("is-admin");closeOwnerPanel();showAuthScreen();
+  }else{
+   authMessage.textContent="Sesi akun masih tersimpan. Verifikasi sedang bermasalah; coba muat ulang sebentar lagi.";
+  }
  }
 }
 authForm.addEventListener("submit",async e=>{
