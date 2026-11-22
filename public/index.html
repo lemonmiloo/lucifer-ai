@@ -305,7 +305,7 @@ document.getElementById("signOutButton").addEventListener("click",async()=>{
  closeDrawer();await authClient.auth.signOut();activeSession=null;verifiedSessionUserId=null;chats=[];history=[];currentChatId=null;renderMessages([]);showAuthScreen();
 });
 authClient.auth.onAuthStateChange((event,session)=>{
- if(event==="SIGNED_OUT"){activeSession=null;chats=[];history=[];currentChatId=null;renderMessages([]);showAuthScreen();return}
+ if(event==="SIGNED_OUT"){activeSession=null;verifiedSessionUserId=null;chats=[];history=[];currentChatId=null;renderMessages([]);showAuthScreen();return}
  if(session)activateSession(session);
 });
 authClient.auth.getSession().then(({data,error})=>{
