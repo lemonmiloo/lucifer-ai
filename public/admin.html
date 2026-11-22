@@ -3,15 +3,51 @@
 <style>
 :root{color-scheme:dark;--bg:#090b12;--panel:#121725;--line:#282f42;--muted:#98a2b8;--accent:#9b78ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#17132b,#090b12 55%);color:#f5f3fb;font:14px Inter,system-ui,Arial,sans-serif}.wrap{max-width:1100px;margin:auto;padding:24px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.brand{font-size:22px;font-weight:800}.muted{color:var(--muted)}.panel{background:#121725;border:1px solid var(--line);border-radius:16px;padding:18px}.login{max-width:390px;margin:12vh auto}.input{width:100%;padding:13px;border-radius:10px;border:1px solid var(--line);background:#090d17;color:white;margin:12px 0}.btn{background:var(--accent);color:white;border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer}.btn.secondary{background:#242b3d;border:1px solid var(--line)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.metric{font-size:27px;font-weight:800;margin-top:8px}.layout{display:grid;grid-template-columns: minmax(280px, .9fr) minmax(0,1.4fr);gap:14px}.list{display:flex;flex-direction:column;gap:8px;max-height:70vh;overflow:auto}.item{border:1px solid var(--line);background:#0e1421;border-radius:11px;padding:12px;text-align:left;color:#eee;cursor:pointer}.item.active{border-color:var(--accent);background:#211d35}.item small{display:block;color:var(--muted);margin-top:5px}.messages{display:flex;flex-direction:column;gap:10px;max-height:70vh;overflow:auto}.msg{padding:12px;border-radius:11px;border:1px solid var(--line);background:#0c111d;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}.msg.user{background:#211d35}.msg b{display:block;color:#b9a8ff;margin-bottom:5px}.hidden{display:none!important}.error{color:#ff9aab;min-height:20px}.foot{font-size:12px;color:var(--muted);margin-top:12px}@media(max-width:720px){.wrap{padding:15px}.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}.list,.messages{max-height:45vh}}
 </style></head><body><main class="wrap">
-<section id="login" class="panel login"><div class="brand">Lucifer AI <span class="muted">/ Owner</span></div><p class="muted">Dashboard privat pemilik.</p><form id="loginForm"><input class="input" id="password" type="password" placeholder="Password dashboard" autocomplete="current-password" required><button class="btn" type="submit">Masuk</button></form><div id="loginError" class="error"></div></section>
-<section id="dashboard" class="hidden"><header class="top"><div><div class="brand">Lucifer AI / Dashboard</div><div class="muted">Statistik pengunjung dan riwayat percakapan</div></div><button id="logout" class="btn secondary">Keluar</button></header>
+<section id="login" class="panel login"><div class="brand">DanKudo AI <span class="muted">/ Owner</span></div><p class="muted">Masuk menggunakan akun owner DanKudo AI.</p><form id="loginForm"><input class="input" id="email" type="email" placeholder="Email akun" autocomplete="username" required><input class="input" id="password" type="password" placeholder="Password akun" autocomplete="current-password" required><button class="btn" type="submit">Masuk sebagai owner</button></form><div id="loginError" class="error"></div></section>
+<section id="dashboard" class="hidden"><header class="top"><div><div class="brand">DanKudo AI / Owner Dashboard</div><div class="muted">Statistik pengunjung dan riwayat percakapan</div></div><button id="logout" class="btn secondary">Keluar</button></header>
 <div class="grid"><div class="panel"><div class="muted">Pengunjung unik</div><div id="visitors" class="metric">—</div></div><div class="panel"><div class="muted">Percakapan</div><div id="conversations" class="metric">—</div></div><div class="panel"><div class="muted">Pesan tersimpan</div><div id="messagesCount" class="metric">—</div></div><div class="panel"><div class="muted">Token tercatat</div><div id="tokens" class="metric">—</div></div></div>
 <div id="dashboardError" class="error" role="status"></div><div class="layout"><section class="panel"><h3>Percakapan terbaru</h3><div id="conversationList" class="list"></div></section><section class="panel"><h3 id="threadTitle">Isi percakapan</h3><div id="thread" class="messages"><p class="muted">Pilih percakapan di sebelah kiri.</p></div></section></div><p class="foot">ID pengunjung bersifat acak/pseudonim, bukan identitas asli. Pesan yang menyerupai kredensial akan disamarkan saat disimpan.</p></section>
-</main><script>
-const $=id=>document.getElementById(id);let data=null,selected=null;
-$("loginForm").addEventListener("submit",async e=>{e.preventDefault();$("loginError").textContent="";try{const r=await fetch("/api/admin-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("password").value})});const j=await r.json();if(!r.ok)throw new Error(j.error||"Gagal masuk");$("login").classList.add("hidden");$("dashboard").classList.remove("hidden");try{await load()}catch(err){$("dashboardError").textContent=err.message}}catch(err){$("loginError").textContent=err.message}});
-async function load(){const r=await fetch("/api/admin-data",{cache:"no-store"});const j=await r.json();if(!r.ok){const err=new Error(j.error||"Gagal memuat dashboard");err.status=r.status;throw err}$("dashboardError").textContent="";data=j;render()}
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script><script>
+const SUPABASE_URL="https://lxktuagmmugdrgthbgxi.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_hE2aLl_1yNzY5DDKXHt4Gw_MzruLP-_";
+const authClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const $=id=>document.getElementById(id);let data=null,selected=null,activeToken=null;
+function showDashboard(){ $("login").classList.add("hidden");$("dashboard").classList.remove("hidden"); }
+async function verifyOwner(session){
+ if(!session?.access_token)throw new Error("Silakan login menggunakan akun owner.");
+ const response=await fetch("/api/auth/me",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});
+ const result=await response.json();
+ if(!response.ok)throw new Error(result.error||"Sesi tidak valid.");
+ if(result.role!=="admin")throw new Error("Akun ini bukan owner DanKudo AI.");
+ activeToken=session.access_token;
+ showDashboard();
+ await load();
+}
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();$("loginError").textContent="";
+ try{
+  const {data:authData,error}=await authClient.auth.signInWithPassword({email:$("email").value.trim().toLowerCase(),password:$("password").value});
+  if(error)throw error;
+  await verifyOwner(authData.session);
+ }catch(err){$("loginError").textContent=err.message||"Gagal masuk.";activeToken=null;}
+});
+async function load(){
+ const r=await fetch("/api/admin-data",{headers:{Authorization:"Bearer "+activeToken},cache:"no-store"});
+ const j=await r.json();
+ if(!r.ok){const err=new Error(j.error||"Gagal memuat dashboard");err.status=r.status;throw err}
+ $("dashboardError").textContent="";data=j;render();
+}
 function render(){const v=data.visitors||[],c=data.conversations||[],m=data.messages||[];$("visitors").textContent=v.length;$("conversations").textContent=c.length;$("messagesCount").textContent=m.length;const total=m.reduce((n,x)=>n+(x.prompt_tokens||0)+(x.completion_tokens||0),0);$("tokens").textContent=total.toLocaleString("id-ID");const list=$("conversationList");list.replaceChildren();c.forEach(x=>{const b=document.createElement("button");b.className="item"+(selected===x.id?" active":"");b.textContent=x.title||"Percakapan";const small=document.createElement("small");const visitor=v.find(z=>z.visitor_id===x.visitor_id);small.textContent=new Date(x.updated_at).toLocaleString("id-ID")+" · "+(visitor?x.visitor_id.slice(0,8):"visitor");b.appendChild(small);b.addEventListener("click",()=>{selected=x.id;render()});list.appendChild(b)});if(selected){const convo=c.find(x=>x.id===selected);$("threadTitle").textContent=convo?.title||"Isi percakapan";const thread=$("thread");thread.replaceChildren();m.filter(x=>x.conversation_id===selected).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).forEach(x=>{const box=document.createElement("div");box.className="msg "+x.role;const label=document.createElement("b");label.textContent=x.role==="user"?"Pengunjung":"DanKudo AI";const body=document.createElement("div");body.textContent=x.content;const time=document.createElement("small");time.className="muted";time.textContent=new Date(x.created_at).toLocaleString("id-ID");box.append(label,body,time);thread.appendChild(box)})}}
-$("logout").addEventListener("click",async()=>{await fetch("/api/admin-logout",{method:"POST"});location.reload()});
-(async()=>{try{await load();$("login").classList.add("hidden");$("dashboard").classList.remove("hidden")}catch(err){if(err.status!==401){$("login").classList.add("hidden");$("dashboard").classList.remove("hidden");$("dashboardError").textContent=err.message}}})();
+
+$("logout").addEventListener("click",async()=>{await authClient.auth.signOut();activeToken=null;location.reload()});
+(async()=>{
+ try{
+  const {data:sessionData}=await authClient.auth.getSession();
+  if(sessionData.session)await verifyOwner(sessionData.session);
+ }catch(err){
+  $("login").classList.remove("hidden");$("dashboard").classList.add("hidden");
+  $("loginError").textContent=err.message;
+  await authClient.auth.signOut();
+ }
+})();
 </script></body></html>
