@@ -93,23 +93,23 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     }
   }
   // Conservative source-level checks complement the AST checks for common Lua idioms.
-  const lines = src.split(/\\r?\\n/);
+  const lines = src.split(/\r?\n/);
   lines.forEach((line, i) => {
-    if (/\\bif\\s+\\w+\\s*:\\s*(?:hit|place|warp|moveTo|moveTile|say|use|wear|drop|trash|connect|disconnect|leaveWorld|enter|active|respawn)\\s*\\(/.test(line)) out.push({rule:"K1",line:i+1,message:"Jangan gunakan return aksi fire-and-forget sebagai kondisi."});
-    if (/\\bfor\\s+\\w+\\s*=\\s*0\\s*,\\s*#/.test(line) || /\\[[ ]*0[ ]*\\]/.test(line)) out.push({rule:"K4",line:i+1,message:"Array Lua menggunakan index 1-based."});
-    if (/\\b(?:status|setBubble|startRole|addEvent|setMethod)\\s*(?:==|~=|\\()\\s*\\d+/.test(line)) out.push({rule:"K5",line:i+1,message:"Gunakan enum simbolik, bukan angka mentah."});
-    if (/\\b(?:sendPacket|sendRaw)\\s*\\(/.test(line) && !opts.allowRaw) out.push({rule:"K7",line:i+1,message:"Raw packet hanya boleh saat allowRaw=true."});
+    if (/\bif\s+\w+\s*:\s*(?:hit|place|warp|moveTo|moveTile|say|use|wear|drop|trash|connect|disconnect|leaveWorld|enter|active|respawn)\s*\(/.test(line)) out.push({rule:"K1",line:i+1,message:"Jangan gunakan return aksi fire-and-forget sebagai kondisi."});
+    if (/\bfor\s+\w+\s*=\s*0\s*,\s*#/.test(line) || /\[[ ]*0[ ]*\]/.test(line)) out.push({rule:"K4",line:i+1,message:"Array Lua menggunakan index 1-based."});
+    if (/\b(?:status|setBubble|startRole|addEvent|setMethod)\s*(?:==|~=|\()\s*\d+/.test(line)) out.push({rule:"K5",line:i+1,message:"Gunakan enum simbolik, bukan angka mentah."});
+    if (/\b(?:sendPacket|sendRaw)\s*\(/.test(line) && !opts.allowRaw) out.push({rule:"K7",line:i+1,message:"Raw packet hanya boleh saat allowRaw=true."});
   });
-  const transitions = [...src.matchAll(/\\b(?:warp|connect|disconnect|leaveWorld)\\s*\\(/g)];
+  const transitions = [...src.matchAll(/\b(?:warp|connect|disconnect|leaveWorld)\s*\(/g)];
   for (const tr of transitions) {
     const before = src.slice(0,tr.index);
     const after = src.slice((tr.index||0)+tr[0].length);
-    const bound = [...before.matchAll(/local\\s+(\\w+)\\s*=\\s*\\w+\\s*:\\s*(?:getWorld|getTile|getPlayer|getInventory|getObject|getNPC)\\s*\\(/g)].at(-1)?.[1];
-    if (bound && new RegExp("\\\\b"+bound+"\\\\s*\\.").test(after)) out.push({rule:"K2",line:src.slice(0,tr.index).split("\\n").length,message:"Snapshot objek dipakai setelah transisi; query ulang state."});
+    const bound = [...before.matchAll(/local\s+(\w+)\s*=\s*\w+\s*:\s*(?:getWorld|getTile|getPlayer|getInventory|getObject|getNPC)\s*\(/g)].at(-1)?.[1];
+    if (bound && new RegExp("\\b"+bound+"\\s*\.").test(after)) out.push({rule:"K2",line:src.slice(0,tr.index).split("\n").length,message:"Snapshot objek dipakai setelah transisi; query ulang state."});
   }
-  const eventBody = src.match(/addEvent\\s*\\([\\s\\S]*?function\\s*\\([^)]*\\)[\\s\\S]*?end/);
-  if (eventBody && /\\bsleep\\s*\\(|\\bwhile\\b|\\bfor\\s+\\w+\\s*=/.test(eventBody[0])) out.push({rule:"K3",line:src.slice(0,eventBody.index).split("\\n").length,message:"Callback event tidak boleh sleep atau menjalankan loop."});
-  const lookupAssign = src.match(/local\\s+(\\w+)\\s*=\\s*[^\\n]*(?:getWorld|getTile|getPlayer|getInventory|getObject|getNPC)\\s*\\([^\\n]*\\)/);
-  if (lookupAssign && new RegExp("\\\\b"+lookupAssign[1]+"\\\\s*\\.").test(src.slice((lookupAssign.index||0)+lookupAssign[0].length)) && !new RegExp("if\\\\s+"+lookupAssign[1]+"\\\\s+then|if\\\\s+"+lookupAssign[1]+"\\\\s*~=").test(src)) out.push({rule:"K6",line:src.slice(0,lookupAssign.index).split("\\n").length,message:"Lookup berpotensi nil; guard sebelum akses properti."});
+  const eventBody = src.match(/addEvent\s*\([\s\S]*?function\s*\([^)]*\)[\s\S]*?end/);
+  if (eventBody && /\bsleep\s*\(|\bwhile\b|\bfor\s+\w+\s*=/.test(eventBody[0])) out.push({rule:"K3",line:src.slice(0,eventBody.index).split("\n").length,message:"Callback event tidak boleh sleep atau menjalankan loop."});
+  const lookupAssign = src.match(/local\s+(\w+)\s*=\s*[^\n]*(?:getWorld|getTile|getPlayer|getInventory|getObject|getNPC)\s*\([^\n]*\)/);
+  if (lookupAssign && new RegExp("\\b"+lookupAssign[1]+"\\s*\.").test(src.slice((lookupAssign.index||0)+lookupAssign[0].length)) && !new RegExp("if\\s+"+lookupAssign[1]+"\\s+then|if\\s+"+lookupAssign[1]+"\\s*~=").test(src)) out.push({rule:"K6",line:src.slice(0,lookupAssign.index).split("\n").length,message:"Lookup berpotensi nil; guard sebelum akses properti."});
   return out.filter((v,i,a)=>a.findIndex(x=>x.rule===v.rule&&x.line===v.line)===i);
 }
