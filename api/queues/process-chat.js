@@ -37,7 +37,8 @@ async function signedAttachment(file, userId, conversationId) {
   const expected = userId + "/" + conversationId + "/";
   if (typeof file.path !== "string" || !file.path.startsWith(expected)) throw new Error("Invalid attachment ownership");
   const {secret}=dbConfig();
-  const root=process.env.SUPABASE_URL.replace(/\\/$/,"");
+  const configuredUrl=process.env.SUPABASE_URL;
+  const root=configuredUrl.endsWith("/")?configuredUrl.slice(0,-1):configuredUrl;
   const objectPath=file.path.split("/").map(encodeURIComponent).join("/");
   const response=await fetch(root+"/storage/v1/object/sign/dankudo-chat-files/"+objectPath,{
     method:"POST",headers:headers(secret),body:JSON.stringify({expiresIn:3600}),signal:AbortSignal.timeout(10000)
