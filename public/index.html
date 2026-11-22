@@ -291,7 +291,8 @@ function storageKey(){return STORAGE_KEY+":"+(activeSession?.user?.id||"guest")}
 function loadChats(){try{const saved=JSON.parse(localStorage.getItem(storageKey())||"[]");chats=Array.isArray(saved)?saved.filter(c=>c&&c.id&&Array.isArray(c.messages)):[]}catch{chats=[]}}
 function saveChats(){try{localStorage.setItem(storageKey(),JSON.stringify(chats))}catch{console.warn("Penyimpanan riwayat penuh atau tidak tersedia.")}}
 function currentChat(){return chats.find(c=>c.id===currentChatId)}
-function openDrawer(){document.body.classList.add("drawer-open");document.getElementById("newChatTop").disabled=true;drawer.classList.add("open");backdrop.classList.add("open");renderHistory()}
+function dismissMobileKeyboard(){const el=document.activeElement;if(el&&(el.tagName==="INPUT"||el.tagName==="TEXTAREA"||el.isContentEditable)){el.blur()}if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur()}
+function openDrawer(){dismissMobileKeyboard();document.body.classList.add("drawer-open");document.getElementById("newChatTop").disabled=true;drawer.classList.add("open");backdrop.classList.add("open");renderHistory()}
 function closeDrawer(){document.body.classList.remove("drawer-open");document.getElementById("newChatTop").disabled=false;drawer.classList.remove("open");backdrop.classList.remove("open")}
 document.getElementById("historyToggle").addEventListener("click",openDrawer);
 document.getElementById("closeDrawer").addEventListener("click",closeDrawer);
