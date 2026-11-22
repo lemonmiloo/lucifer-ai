@@ -43,15 +43,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     const luaLibraryCall = ["math","string","table","coroutine","os","io","debug","utf8"].includes(root) && WHITELIST.standardGlobals.has(name);
     if (!WHITELIST.all.has(name) && !luaLibraryCall) add("WHITELIST",c,"Pemanggilan API tidak ditemukan di dokumentasi Lucifer atau standard library Lua: " + name + ".");
     if ((name === "sendPacket" || name === "sendRaw") && !opts.allowRaw) add("K7",c,"Raw packet hanya boleh saat allowRaw=true dan diminta eksplisit.");
-    if (actionNames.has(name)) {
-      const p = nodes.find(n => n.type === "IfStatement" && JSON.stringify(n).includes(JSON.stringify(c.base)));
-      if (p) add("K1",c,`Return bot:${name}() tidak boleh dipakai sebagai kondisi sukses.`);
-      const parentAssignment = nodes.find(n => n.type === "AssignmentStatement" && JSON.stringify(n).includes(JSON.stringify(c.base)));
-      if (parentAssignment) {
-        const assigned = (parentAssignment.variables || []).find((v:any)=>v.type==="Identifier")?.name;
-        if (assigned && nodes.some(n => (n.type === "IfStatement" || n.type === "WhileStatement") && JSON.stringify(n).includes(assigned))) add("K1",c,`Return bot:${name}() disimpan lalu dipakai sebagai kondisi.`);
-      }
-    }
+
   }
   if (firstAdd && firstListen && lineOf(firstListen) < lineOf(firstAdd)) add("K3",firstListen,"listenEvents() dipanggil sebelum addEvent().");
   const eventCalls = calls.filter(n=>callName(n.base)==="addEvent");
@@ -86,12 +78,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
       });
     }
   }
-  for (const n of nodes) {
-    if (n.type === "MemberExpression" && n.base?.type === "CallExpression" && lookupNames.has(callName(n.base.base))) {
-      const parent = nodes.find(x=>x.type==="IfStatement" && JSON.stringify(x.test).includes(JSON.stringify(n.base)));
-      if (!parent) add("K6",n,"Hasil lookup berpotensi nil; simpan ke variabel dan guard sebelum akses.");
-    }
-  }
+
   // Conservative source-level checks complement the AST checks for common Lua idioms.
   const lines = src.split(/\r?\n/);
   lines.forEach((line, i) => {
@@ -100,6 +87,12 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     if (/\b(?:status|setBubble|startRole|addEvent|setMethod)\s*(?:==|~=|\()\s*\d+/.test(line)) out.push({rule:"K5",line:i+1,message:"Gunakan enum simbolik, bukan angka mentah."});
     if (/\b(?:sendPacket|sendRaw)\s*\(/.test(line) && !opts.allowRaw) out.push({rule:"K7",line:i+1,message:"Raw packet hanya boleh saat allowRaw=true."});
   });
+  const actionAssign = /local\\s+(\\w+)\\s*=\\s*\\w+\\s*:\\s*(?:hit|place|warp|moveTo|moveTile|say|use|wear|drop|trash|connect|disconnect|leaveWorld|enter|active|respawn)\\s*\\(/g;
+  for (const match of src.matchAll(actionAssign)) {
+    const variable = match[1];
+    const rest = src.slice((match.index||0)+match[0].length);
+    if (new RegExp("\\b(?:if|while)\\s+"+variable+"\\b").test(rest)) out.push({rule:"K1",line:src.slice(0,match.index).split("\\n").length,message:"Return aksi fire-and-forget disimpan lalu dipakai sebagai kondisi."});
+  }
   const transitions = [...src.matchAll(/\b(?:warp|connect|disconnect|leaveWorld)\s*\(/g)];
   for (const tr of transitions) {
     const before = src.slice(0,tr.index);
