@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { verifySupabaseRequest } from "../lib/auth.js";
 
 const docsPath = path.join(process.cwd(), "knowledge", "LUCIFER DOCS.txt");
@@ -90,16 +91,62 @@ async function saveConversation({visitorId,conversationId,message,answer,usage,m
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({error:"Method not allowed"});
+  const workerSecret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const workerKey = req.headers["x-dankudo-worker-key"] || "";
+  const isInternalWorker = Boolean(workerSecret && workerKey && workerKey === workerSecret);
   let auth;
-  try { auth = await verifySupabaseRequest(req); } catch (error) { console.error("Auth verification error:", error); return res.status(503).json({error:"Tidak dapat memverifikasi sesi saat ini."}); }
-  if (!auth.user) return res.status(auth.status || 401).json({error:auth.error || "Silakan login untuk menggunakan DanKudo AI."});
+  if (isInternalWorker) {
+    auth = { user: { id: req.body?.userId }, role: "user" };
+  } else {
+    try { auth = await verifySupabaseRequest(req); } catch (error) { console.error("Auth verification error:", error); return res.status(503).json({error:"Tidak dapat memverifikasi sesi saat ini."}); }
+  }
+  if (!auth.user?.id) return res.status(auth.status || 401).json({error:auth.error || "Silakan login untuk menggunakan DanKudo AI."});
   const ip = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
-  if (!rateLimit(ip)) return res.status(429).json({error:"Terlalu banyak permintaan. Coba lagi satu menit."});
+  if (!isInternalWorker && !rateLimit(ip)) return res.status(429).json({error:"Terlalu banyak permintaan. Coba lagi satu menit."});
   const key = process.env.VIKEY_API_KEY;
   if (!key) return res.status(500).json({error:"API key belum diatur di Vercel Environment Variables."});
   const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
   if (!message) return res.status(400).json({error:"Pesan tidak boleh kosong."});
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-6).filter(x => ["user","assistant"].includes(x?.role) && typeof x?.content === "string").map(x => ({role:x.role,content:x.content.slice(0,1500)})) : [];
+  if (!isInternalWorker) {
+    const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
+    if (!uuidPattern.test(conversationId)) return res.status(400).json({error:"ID percakapan tidak valid."});
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseSecret = workerSecret;
+    if (!supabaseUrl || !supabaseSecret) return res.status(503).json({error:"Penyimpanan pekerjaan belum dikonfigurasi."});
+    const jobId = crypto.randomUUID();
+    const job = {
+      id: jobId,
+      user_id: auth.user.id,
+      conversation_id: conversationId,
+      message: redactSecrets(message),
+      history,
+      is_first_message: req.body?.isFirstMessage === true,
+      chat_title: typeof req.body?.chatTitle === "string" ? req.body.chatTitle.slice(0,100) : null,
+      status: "queued"
+    };
+    const dbHeaders = {
+      apikey: supabaseSecret,
+      ...(supabaseSecret.startsWith("sb_secret_") ? {} : {Authorization:"Bearer " + supabaseSecret}),
+      "Content-Type":"application/json",
+      Prefer:"return=minimal"
+    };
+    try {
+      const saved = await fetch(supabaseUrl.replace(/\\/$/,"") + "/rest/v1/dankudo_ai_jobs", {
+        method:"POST", headers:dbHeaders, body:JSON.stringify(job), signal:AbortSignal.timeout(7000)
+      });
+      if (!saved.ok) throw new Error("Gagal menyimpan pekerjaan: " + saved.status);
+      const { send } = await import("@vercel/queue");
+      await send("dankudo-ai-chat", {jobId}, {idempotencyKey:jobId, retentionSeconds:604800});
+      return res.status(202).json({jobId,status:"queued"});
+    } catch (error) {
+      await fetch(supabaseUrl.replace(/\\/$/,"") + "/rest/v1/dankudo_ai_jobs?id=eq." + jobId, {
+        method:"PATCH", headers:{...dbHeaders,Prefer:"return=minimal"}, body:JSON.stringify({status:"failed",error:"Tidak dapat memasukkan pekerjaan ke antrean.",updated_at:new Date().toISOString()})
+      }).catch(()=>{});
+      console.error("Background enqueue error:",error?.message || error);
+      return res.status(503).json({error:"DanKudo AI belum bisa memasukkan pesan ke antrean. Coba kirim ulang."});
+    }
+  }
   try {
     // Fast-path for standalone greetings: avoid a model round-trip for trivial social messages.
     const simpleGreeting = message.toLowerCase().replace(/[.!?,…]+$/g, "").trim();
