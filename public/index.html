@@ -407,7 +407,37 @@ body.drawer-open #adminMenuButton:hover{
 /* Let the conversation flow underneath the three floating top controls. */
 .top{height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important;overflow:visible!important}
 @media(max-width:600px){.chat{padding-top:0!important}}
-</style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div><span class="boot-loader-label">Memuat akun...</span></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
+
+/* Text-free premium session loader with a soft aurora and orbiting accent. */
+.boot-loader{
+ gap:0!important;
+ background:
+  radial-gradient(ellipse at 50% 46%,rgba(126,94,226,.17),transparent 34%),
+  radial-gradient(ellipse at 50% 54%,rgba(54,133,181,.09),transparent 48%),
+  #080912!important;
+ transition:opacity .38s cubic-bezier(.2,.75,.25,1),visibility .38s ease!important;
+}
+.boot-spinner{
+ position:relative;width:54px!important;height:54px!important;box-sizing:border-box;
+ border:2px solid rgba(171,151,255,.13)!important;
+ border-top-color:#d2c5ff!important;border-right-color:rgba(167,139,250,.72)!important;
+ border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,.10),transparent 68%);
+ box-shadow:0 0 22px rgba(139,108,246,.16),inset 0 0 18px rgba(139,108,246,.08)!important;
+ animation:boot-spin 1.15s cubic-bezier(.55,.08,.35,.96) infinite,boot-breathe 2.2s ease-in-out infinite!important;
+}
+.boot-spinner::before{
+ content:"";position:absolute;inset:7px;border-radius:50%;
+ border:1px solid rgba(196,181,253,.2);border-left-color:#a78bfa;
+ animation:boot-spin 1.8s linear infinite reverse;
+}
+.boot-spinner::after{
+ content:"";position:absolute;width:7px;height:7px;top:0;left:50%;
+ border-radius:50%;background:#e6ddff;box-shadow:0 0 12px 3px rgba(167,139,250,.72);
+ transform:translate(-50%,-50%);
+}
+@keyframes boot-breathe{0%,100%{filter:brightness(.9);transform:scale(.96)}50%{filter:brightness(1.22);transform:scale(1.04)}}
+.pending-job-label{display:none!important}
+</style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
  <div class="dashboard-shell">
   <header class="dashboard-head"><div><p class="dashboard-eyebrow">DANKUDO AI / ADMIN</p><h2>Dashboard</h2><p class="dashboard-subtitle">Monitoring akun dan riwayat percakapan</p></div><button class="dashboard-close" id="dashboardClose" type="button" aria-label="Tutup dashboard">✕</button></header>
   <div class="dashboard-stats" id="dashboardStats"><div class="dashboard-stat"><span>Total akun</span><strong>—</strong></div><div class="dashboard-stat"><span>Percakapan</span><strong>—</strong></div><div class="dashboard-stat"><span>Total pesan</span><strong>—</strong></div></div>
@@ -663,10 +693,9 @@ function add(text,role,persist=true){
 function renderPendingMessage(message){
  const el=document.createElement("div");el.className="msg assistant";
  const content=document.createElement("div");content.className="message-content";
- const label=document.createElement("div");label.className="pending-job-label";label.textContent="DanKudo AI sedang memproses di latar belakang";
- const dots=document.createElement("div");dots.className="typing-indicator";dots.setAttribute("aria-label","DanKudo AI sedang berpikir");
+ const dots=document.createElement("div");dots.className="typing-indicator";dots.setAttribute("aria-label","Sedang memproses");
  for(let i=0;i<3;i++)dots.appendChild(document.createElement("span"));
- content.append(label,dots);el.appendChild(content);chat.appendChild(el);return el;
+ content.appendChild(dots);el.appendChild(content);chat.appendChild(el);return el;
 }
 function updateLastMessage(el,text){const content=el.querySelector(".message-content");if(content)renderContent(content,text);const c=currentChat();if(c){const last=c.messages[c.messages.length-1];if(last)last.content=String(text??"");c.updatedAt=Date.now();saveChats();renderHistory()}}
 renderMessages([]);
