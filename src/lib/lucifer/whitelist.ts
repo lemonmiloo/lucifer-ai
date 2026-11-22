@@ -25,7 +25,10 @@ const tileMethods = collect(/\b(?:tile|t):([A-Za-z_][A-Za-z0-9_]*)\s*\(/g, KNOWL
 const invMethods = collect(/\b(?:inv|inventory):([A-Za-z_][A-Za-z0-9_]*)\s*\(/g, KNOWLEDGE);
 const otherMethods = collect(/\b(?:gs|client|hook|manager|dialog|r|vl|v|extra|console|log):([A-Za-z_][A-Za-z0-9_]*)\s*\(/g, KNOWLEDGE);
 const moduleNames = collect(/\b(auto_[A-Za-z0-9_]+)\b/g, KNOWLEDGE);
-const enums = collect(/\b(Platform|Bubble|Role|Action|GeigerArea|StorageType|Method|Proxy|Event|VariantType|BotStatus|CaptchaStatus|GoogleStatus|PlayerState|TileType|TileFlag|NpcType)\b/g, KNOWLEDGE);
+const enumSection = KNOWLEDGE.split("## 9. ENUMS")[1]?.split("## 10. TROUBLESHOOTING")[0] || "";
+const enums = collect(/\`([A-Z][A-Za-z0-9_]*)\`/g, enumSection);
+for (const heading of enumSection.matchAll(/^###\\s+([A-Z][A-Za-z0-9_]*)/gm)) enums.add(heading[1]);
+for (const entry of enumSection.matchAll(/^-\\s+([A-Z][A-Za-z0-9_]*)\\s*$/gm)) enums.add(entry[1]);
 const enumValues = new Set<string>();
 for (const match of KNOWLEDGE.matchAll(/\|\s*`[A-Z][A-Za-z0-9_]*`\s*\|\s*([^\n]+)/g)) {
   for (const value of match[1].matchAll(/`([A-Za-z_][A-Za-z0-9_]*)`/g)) enumValues.add(value[1]);
@@ -34,8 +37,8 @@ for (const section of KNOWLEDGE.matchAll(/\*\*(?:Normal|Failure|Info):\*\*([^\n]
   for (const value of section[1].matchAll(/\b([a-z][a-z0-9_]*)\b/g)) enumValues.add(value[1]);
 }
 const documentedGlobals = new Set(globalFns);
-const allMethods = new Set([...botMethods,...worldMethods,...tileMethods,...invMethods,...otherMethods]);
-const moduleConstructors = new Set(["variant","variantlist","HttpClient","Webhook","RTVAR"].filter(name => new RegExp("\\b" + name + "\\s*\\.new\\s*\\(").test(KNOWLEDGE)));
+const allMethods = new Set([...botMethods,...worldMethods,...tileMethods,...invMethods,...otherMethods,...globalFns]);
+const moduleConstructors = collect(/(?<![.:])\\b([A-Za-z_][A-Za-z0-9_]*)\\.new\\s*\\(/g, KNOWLEDGE);
 const documentedProperties = collect(/`([A-Za-z_][A-Za-z0-9_]*)`/g, KNOWLEDGE);
 
 export const WHITELIST = {
