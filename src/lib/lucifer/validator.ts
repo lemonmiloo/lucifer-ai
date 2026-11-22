@@ -1,109 +1,222 @@
 import luaparse from "luaparse";
 import { WHITELIST } from "./whitelist.js";
-export type Violation = { rule: string; line: number; message: string };
-type Node = { type?: string; loc?: { start?: { line?: number } }; [key: string]: any };
-const actionNames = new Set(["hit","place","warp","moveTo","moveTile","say","use","wear","drop","trash","connect","disconnect","leaveWorld","enter","active","respawn"]);
-const lookupNames = new Set(["getWorld","getTile","getPlayer","getInventory","getObject","getNPC","getItem"]);
-const transitionNames = new Set(["warp","connect","disconnect","leaveWorld"]);
-const lineOf = (n: Node) => n.loc?.start?.line || 1;
-function walk(n: any, fn: (node: Node, parent?: Node) => void, parent?: Node) {
-  if (!n || typeof n !== "object") return;
-  if (typeof n.type === "string") fn(n, parent);
-  for (const [k,v] of Object.entries(n)) {
-    if (k === "loc" || k === "range" || k === "comments" || k === "tokens") continue;
-    if (Array.isArray(v)) for (const child of v) walk(child, fn, n);
-    else if (v && typeof v === "object") walk(v, fn, n);
-  }
-}
-function callName(n: any): string {
-  if (!n) return "";
-  if (n.type === "Identifier") return n.name;
-  if (n.type === "MemberExpression") return n.identifier?.name || n.property?.name || "";
-  return "";
-}
-function memberBase(n: any): string {
-  if (n?.type === "MemberExpression") return n.base?.name || n.object?.name || "";
-  return "";
-}
-export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violation[] {
-  const out: Violation[] = [];
-  let ast: any;
-  try { ast = luaparse.parse(src, { luaVersion: "5.1", locations: true }); }
-  catch (e: any) { out.push({rule:"SYNTAX",line:e?.line || e?.loc?.line || 1,message:e?.message || "Lua syntax tidak valid"}); return out; }
-  const add = (rule:string,node:any,message:string) => out.push({rule,line:lineOf(node || {}),message});
-  const nodes: Node[] = [];
-  walk(ast, n => nodes.push(n));
-  const calls = nodes.filter(n => n.type === "CallExpression");
-  const firstAdd = calls.find(n => callName(n.base) === "addEvent");
-  const firstListen = calls.find(n => callName(n.base) === "listenEvents");
-  for (const c of calls) {
-    const name = callName(c.base);
-    if (!name) continue;
-    const root = c.base?.type === "MemberExpression" ? (c.base.base?.name || c.base.object?.name || "") : "";
-    const luaLibraryCall = ["math","string","table","coroutine","os","io","debug","utf8"].includes(root) && WHITELIST.standardGlobals.has(name);
-    const documentedConstructor = name === "new" && WHITELIST.moduleConstructors.has(root);
-    if (!WHITELIST.all.has(name) && !luaLibraryCall && !documentedConstructor) add("WHITELIST",c,"Pemanggilan API tidak ditemukan di dokumentasi Lucifer atau standard library Lua: " + name + ".");
-    if ((name === "sendPacket" || name === "sendRaw") && !opts.allowRaw) add("K7",c,"Raw packet hanya boleh saat allowRaw=true dan diminta eksplisit.");
 
+export type Violation = { rule: string; line: number; message: string };
+type AstNode = { type?: string; loc?: { start?: { line?: number } }; range?: [number, number]; [key: string]: any };
+
+const ACTIONS = new Set(["hit","place","warp","moveTo","moveTile","say","use","wear","drop","trash","connect","disconnect","leaveWorld","enter","active","respawn"]);
+const LOOKUPS = new Set(["getWorld","getTile","getPlayer","getInventory","getObject","getNPC","getItem","getExtra","getInfo"]);
+const TRANSITIONS = new Set(["warp","connect","disconnect","leaveWorld"]);
+
+function walk(node: any, visit: (node: AstNode, parent?: AstNode) => void, parent?: AstNode): void {
+  if (!node || typeof node !== "object") return;
+  if (typeof node.type === "string") visit(node, parent);
+  for (const [key, value] of Object.entries(node)) {
+    if (["loc","range","comments","tokens"].includes(key)) continue;
+    if (Array.isArray(value)) for (const child of value) walk(child, visit, node);
+    else if (value && typeof value === "object") walk(value, visit, node);
   }
-  if (firstAdd && firstListen && lineOf(firstListen) < lineOf(firstAdd)) add("K3",firstListen,"listenEvents() dipanggil sebelum addEvent().");
-  const eventCalls = calls.filter(n=>callName(n.base)==="addEvent");
-  for (const ev of eventCalls) {
-    const callback = (ev.arguments || []).find((a:any)=>a.type==="FunctionDeclaration");
-    if (callback) {
-      let heavy = false;
-      walk(callback.body, n => { if (n.type==="WhileStatement" || n.type==="ForNumericStatement" || n.type==="ForGenericStatement") heavy=true; if (n.type==="CallExpression" && callName(n.base)==="sleep") heavy=true; });
-      if (heavy) add("K3",ev,"Callback addEvent tidak boleh berisi sleep atau loop.");
-    }
+}
+function nameOf(node: any): string {
+  if (!node) return "";
+  if (node.type === "Identifier") return node.name;
+  if (node.type === "MemberExpression") return node.identifier?.name || node.property?.name || "";
+  return "";
+}
+function rootOf(node: any): string {
+  if (node?.type !== "MemberExpression") return "";
+  return node.base?.name || node.object?.name || "";
+}
+function lineOf(node: AstNode | undefined): number { return node?.loc?.start?.line || 1; }
+function startOf(node: AstNode | undefined): number { return node?.range?.[0] ?? 0; }
+function endOf(node: AstNode | undefined): number { return node?.range?.[1] ?? 0; }
+function contains(node: any, predicate: (n: AstNode) => boolean): boolean {
+  let found = false;
+  walk(node, n => { if (predicate(n)) found = true; });
+  return found;
+}
+function isLengthExpression(node: any): boolean {
+  return contains(node, n => n.type === "LengthExpression");
+}
+function isLookupCall(node: any): boolean {
+  return node?.type === "CallExpression" && LOOKUPS.has(nameOf(node.base));
+}
+function isActionCall(node: any): boolean {
+  return node?.type === "CallExpression" && ACTIONS.has(nameOf(node.base));
+}
+function hasNilGuard(src: string, variable: string, after: number): boolean {
+  const prefix = src.slice(0, after);
+  const escaped = variable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const guards = [
+    new RegExp("\\bif\\s+" + escaped + "\\s+then\\b"),
+    new RegExp("\\bif\\s+" + escaped + "\\s*(?:~=|==)\\s*nil\\b"),
+    new RegExp("\\bif\\s+not\\s+" + escaped + "\\s+then\\b")
+  ];
+  return guards.some(re => re.test(prefix.slice(Math.max(0, prefix.lastIndexOf("\n", after - 1) - 300))));
+}
+
+export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violation[] {
+  const violations: Violation[] = [];
+  const add = (rule: string, node: AstNode | undefined, message: string) => {
+    const line = lineOf(node);
+    if (!violations.some(v => v.rule === rule && v.line === line && v.message === message)) violations.push({ rule, line, message });
+  };
+
+  let ast: any;
+  try {
+    ast = luaparse.parse(src, { luaVersion: "5.1", locations: true, ranges: true });
+  } catch (error: any) {
+    violations.push({ rule: "SYNTAX", line: error?.line || error?.loc?.line || 1, message: error?.message || "Sintaks Lua 5.1 tidak valid." });
+    return violations;
   }
-  if (eventCalls.length && !calls.some(n=>["removeEvent","removeEvents"].includes(callName(n.base)))) add("K3",eventCalls[0],"Event didaftarkan tetapi tidak ada cleanup removeEvent/removeEvents.");
-  for (const n of nodes) {
-    if (n.type === "ForNumericStatement" && n.start?.type === "NumericLiteral" && n.start.value === 0 && n.end?.type === "UnaryExpression" && n.end.argument?.type === "LengthExpression") add("K4",n,"Loop array dimulai dari 0; Lua memakai indexing 1-based.");
-    if (n.type === "IndexExpression" && n.index?.type === "NumericLiteral" && n.index.value === 0) add("K4",n,"Index array [0] tidak valid untuk array Lua 1-based.");
-  }
+
+  const nodes: AstNode[] = [];
+  walk(ast, node => nodes.push(node));
+  const calls = nodes.filter(node => node.type === "CallExpression");
   const sourceLines = src.split(/\r?\n/);
-  sourceLines.forEach((line,i) => {
-    if (/\b(?:status|setBubble|startRole|addEvent|setMethod)\s*(?:==|~=|\()\s*\d+/.test(line)) out.push({rule:"K5",line:i+1,message:"Gunakan enum simbolik, bukan angka mentah."});
-  });
-  for (const n of nodes) {
-    if (n.type === "LocalStatement" || n.type === "AssignmentStatement") {
-      const init = n.init || [];
-      const vars = n.variables || [];
-      init.forEach((value:any,i:number) => {
-        if (value?.type==="CallExpression" && lookupNames.has(callName(value.base))) {
-          const id=vars[i]?.name;
-          if (!id) return;
-          const trans = calls.find(c=>transitionNames.has(callName(c.base)) && lineOf(c)>lineOf(n));
-          if (trans && nodes.some(x=>x.type==="MemberExpression" && memberBase(x)===id && lineOf(x)>lineOf(trans))) add("K2",trans,`Snapshot '${id}' digunakan lagi setelah transisi world/koneksi; query ulang state.`);
-        }
+
+  // K8: calls must resolve to documented API names or Lua 5.1 standard library.
+  for (const call of calls) {
+    const called = nameOf(call.base);
+    if (!called) continue;
+    const receiver = rootOf(call.base);
+    const isStandardMember = ["math","string","table","coroutine","os","io","debug","utf8"].includes(receiver) && WHITELIST.standardGlobals.has(called);
+    const isConstructor = called === "new" && WHITELIST.moduleConstructors.has(receiver);
+    const allowed = call.base?.type === "Identifier"
+      ? WHITELIST.globalFns.has(called) || WHITELIST.standardGlobals.has(called) || WHITELIST.moduleNames.has(called)
+      : WHITELIST.allMethods.has(called) || isStandardMember || isConstructor;
+    if (!allowed) add("WHITELIST", call, "Pemanggilan tidak ditemukan di dokumentasi Lucifer atau Lua standard library: " + called + ".");
+  }
+
+  // K1: fire-and-forget results cannot be used as booleans or success indicators.
+  for (const node of nodes) {
+    if (node.type === "IfStatement" && contains(node.clauses, n => n.type === "CallExpression" && isActionCall(n))) {
+      add("K1", node, "Return aksi fire-and-forget tidak boleh menjadi kondisi if.");
+    }
+    if (node.type === "WhileStatement" && contains(node.condition, n => n.type === "CallExpression" && isActionCall(n))) {
+      add("K1", node, "Return aksi fire-and-forget tidak boleh menjadi kondisi while.");
+    }
+    if (node.type === "LocalStatement" || node.type === "AssignmentStatement") {
+      const vars = node.variables || [];
+      const init = node.init || [];
+      init.forEach((value: any, index: number) => {
+        if (!isActionCall(value)) return;
+        const variable = vars[index]?.name;
+        if (!variable) return;
+        const laterCondition = nodes.find(candidate =>
+          (candidate.type === "IfStatement" && contains(candidate.clauses, n => n.type === "Identifier" && n.name === variable) ||
+           candidate.type === "WhileStatement" && contains(candidate.condition, n => n.type === "Identifier" && n.name === variable)) &&
+          startOf(candidate) > endOf(node));
+        if (laterCondition) add("K1", node, "Return aksi fire-and-forget disimpan lalu dipakai sebagai kondisi.");
       });
     }
   }
 
-  // Conservative source-level checks complement the AST checks for common Lua idioms.
-  const lines = src.split(/\r?\n/);
-  lines.forEach((line, i) => {
-    if (/\bif\s+\w+\s*:\s*(?:hit|place|warp|moveTo|moveTile|say|use|wear|drop|trash|connect|disconnect|leaveWorld|enter|active|respawn)\s*\(/.test(line)) out.push({rule:"K1",line:i+1,message:"Jangan gunakan return aksi fire-and-forget sebagai kondisi."});
-    if (/\bfor\s+\w+\s*=\s*0\s*,\s*#/.test(line) || /\[[ ]*0[ ]*\]/.test(line)) out.push({rule:"K4",line:i+1,message:"Array Lua menggunakan index 1-based."});
-    if (/\b(?:status|setBubble|startRole|addEvent|setMethod)\s*(?:==|~=|\()\s*\d+/.test(line)) out.push({rule:"K5",line:i+1,message:"Gunakan enum simbolik, bukan angka mentah."});
-    if (/\b(?:sendPacket|sendRaw)\s*\(/.test(line) && !opts.allowRaw) out.push({rule:"K7",line:i+1,message:"Raw packet hanya boleh saat allowRaw=true."});
+  // K2: snapshots acquired before a world/connection transition must not be reused after it.
+  const bindings: Array<{ name: string; node: AstNode }> = [];
+  for (const node of nodes) {
+    if (node.type !== "LocalStatement" && node.type !== "AssignmentStatement") continue;
+    (node.init || []).forEach((value: any, index: number) => {
+      if (contains(value, n => n.type === "CallExpression" && isLookupCall(n))) {
+        const name = node.variables?.[index]?.name;
+        if (name) bindings.push({ name, node });
+      }
+    });
+  }
+  const transitions = calls.filter(call => TRANSITIONS.has(nameOf(call.base)));
+  for (const binding of bindings) {
+    for (const transition of transitions) {
+      if (startOf(transition) <= endOf(binding.node)) continue;
+      const rebind = nodes.find(node =>
+        (node.type === "LocalStatement" || node.type === "AssignmentStatement") &&
+        startOf(node) > endOf(transition) &&
+        (node.variables || []).some((v: any) => v?.name === binding.name));
+      const use = nodes.find(node =>
+        node.type === "MemberExpression" &&
+        (node.base?.name || node.object?.name) === binding.name &&
+        startOf(node) > endOf(transition) &&
+        (!rebind || startOf(node) < startOf(rebind)));
+      if (use) add("K2", transition, `Snapshot '${binding.name}' dipakai setelah transisi; query ulang state dan objek dari bot:getWorld().`);
+    }
+  }
+
+  // K3: event registration order, lightweight callbacks, and cleanup.
+  const addEvents = calls.filter(call => nameOf(call.base) === "addEvent");
+  const listenCalls = calls.filter(call => nameOf(call.base) === "listenEvents");
+  if (addEvents.length && listenCalls.length && startOf(listenCalls[0]) < startOf(addEvents[0])) {
+    add("K3", listenCalls[0], "listenEvents() dipanggil sebelum addEvent().");
+  }
+  for (const eventCall of addEvents) {
+    const callback = (eventCall.arguments || []).find((arg: any) => arg.type === "FunctionDeclaration");
+    if (callback && contains(callback.body, n =>
+      n.type === "WhileStatement" || n.type === "RepeatStatement" ||
+      n.type === "ForNumericStatement" || n.type === "ForGenericStatement" ||
+      n.type === "CallExpression" && nameOf(n.base) === "sleep")) {
+      add("K3", eventCall, "Callback addEvent tidak boleh sleep atau menjalankan loop.");
+    }
+  }
+  if (addEvents.length && !calls.some(call => ["removeEvent","removeEvents"].includes(nameOf(call.base)))) {
+    add("K3", addEvents[0], "Event didaftarkan tetapi tidak ada cleanup removeEvent/removeEvents.");
+  }
+
+  // K4: arrays in Lua are 1-based.
+  for (const node of nodes) {
+    if (node.type === "ForNumericStatement" &&
+        node.start?.type === "NumericLiteral" && node.start.value === 0 &&
+        isLengthExpression(node.end)) {
+      add("K4", node, "Loop array dimulai dari 0; gunakan indeks 1-based.");
+    }
+    if (node.type === "IndexExpression" && node.index?.type === "NumericLiteral" && node.index.value === 0) {
+      add("K4", node, "Index [0] tidak valid untuk array Lua 1-based.");
+    }
+  }
+
+  // K5: enum arguments/status comparisons must be symbolic.
+  for (const call of calls) {
+    const called = nameOf(call.base);
+    const first = call.arguments?.[0];
+    if (["setBubble","startRole","setMethod","addEvent"].includes(called) && first?.type === "NumericLiteral") {
+      add("K5", call, `Gunakan enum simbolik pada argumen ${called}(), bukan angka mentah.`);
+    }
+  }
+  for (const node of nodes) {
+    if (node.type === "BinaryExpression" && ["==","~="].includes(node.operator)) {
+      const left = node.left, right = node.right;
+      const statusComparison = left?.type === "MemberExpression" && nameOf(left) === "status" && right?.type === "NumericLiteral" ||
+        right?.type === "MemberExpression" && nameOf(right) === "status" && left?.type === "NumericLiteral";
+      if (statusComparison) add("K5", node, "Bandingkan bot.status dengan BotStatus simbolik, bukan angka.");
+    }
+  }
+
+  // K6: nil-capable lookups need a guard before their result is dereferenced.
+  for (const call of calls.filter(isLookupCall)) {
+    const parentUse = nodes.find(node => node.type === "MemberExpression" && node.base === call);
+    if (parentUse) add("K6", call, "Hasil lookup yang dapat nil dipakai langsung; simpan dan nil-guard sebelum akses lanjutan.");
+  }
+  for (const binding of bindings) {
+    const declaration = binding.node;
+    const use = nodes.find(node =>
+      node.type === "MemberExpression" &&
+      (node.base?.name || node.object?.name) === binding.name &&
+      startOf(node) > endOf(declaration));
+    if (use && !hasNilGuard(src, binding.name, startOf(use))) {
+      add("K6", use, `Lookup '${binding.name}' berpotensi nil; periksa nil sebelum mengakses properti/method.`);
+    }
+  }
+
+  // K7: raw packets require an explicit user opt-in.
+  if (!opts.allowRaw) {
+    for (const call of calls) if (["sendPacket","sendRaw"].includes(nameOf(call.base))) {
+      add("K7", call, "sendPacket/sendRaw hanya boleh jika pengguna meminta raw packet secara eksplisit.");
+    }
+  }
+
+  // Source fallback catches common compact syntax that can be hard to infer from a single AST shape.
+  sourceLines.forEach((line, index) => {
+    if (/\bfor\s+\w+\s*=\s*0\s*,\s*#/.test(line)) {
+      add("K4", { loc: { start: { line: index + 1 } } }, "Loop array dimulai dari 0; gunakan indeks 1-based.");
+    }
   });
-  const actionAssign = /local\s+(\w+)\s*=\s*\w+\s*:\s*(?:hit|place|warp|moveTo|moveTile|say|use|wear|drop|trash|connect|disconnect|leaveWorld|enter|active|respawn)\s*\(/g;
-  for (const match of src.matchAll(actionAssign)) {
-    const variable = match[1];
-    const rest = src.slice((match.index||0)+match[0].length);
-    if (new RegExp("\\b(?:if|while)\\s+"+variable+"\\b").test(rest)) out.push({rule:"K1",line:src.slice(0,match.index).split("\\n").length,message:"Return aksi fire-and-forget disimpan lalu dipakai sebagai kondisi."});
-  }
-  const transitions = [...src.matchAll(/\b(?:warp|connect|disconnect|leaveWorld)\s*\(/g)];
-  for (const tr of transitions) {
-    const before = src.slice(0,tr.index);
-    const after = src.slice((tr.index||0)+tr[0].length);
-    const bound = [...before.matchAll(/local\s+(\w+)\s*=\s*\w+\s*:\s*(?:getWorld|getTile|getPlayer|getInventory|getObject|getNPC)\s*\(/g)].at(-1)?.[1];
-    if (bound && new RegExp("\\b"+bound+"\\s*\.").test(after)) out.push({rule:"K2",line:src.slice(0,tr.index).split("\n").length,message:"Snapshot objek dipakai setelah transisi; query ulang state."});
-  }
-  const eventBody = src.match(/addEvent\s*\([\s\S]*?function\s*\([^)]*\)[\s\S]*?end/);
-  if (eventBody && /\bsleep\s*\(|\bwhile\b|\bfor\s+\w+\s*=/.test(eventBody[0])) out.push({rule:"K3",line:src.slice(0,eventBody.index).split("\n").length,message:"Callback event tidak boleh sleep atau menjalankan loop."});
-  const lookupAssign = src.match(/local\s+(\w+)\s*=\s*[^\n]*(?:getWorld|getTile|getPlayer|getInventory|getObject|getNPC)\s*\([^\n]*\)/);
-  if (lookupAssign && new RegExp("\\b"+lookupAssign[1]+"\\s*\\.").test(src.slice((lookupAssign.index||0)+lookupAssign[0].length)) && !new RegExp("if\\s+(?:not\\s+)?"+lookupAssign[1]+"\\b|if\\s+"+lookupAssign[1]+"\\s*(?:~=|==)\\s*nil").test(src)) out.push({rule:"K6",line:src.slice(0,lookupAssign.index).split("\n").length,message:"Lookup berpotensi nil; guard sebelum akses properti."});
-  return out.filter((v,i,a)=>a.findIndex(x=>x.rule===v.rule&&x.line===v.line)===i);
+
+  return violations.sort((a, b) => a.line - b.line || a.rule.localeCompare(b.rule));
 }
