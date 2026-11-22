@@ -174,7 +174,7 @@ export default async function handler(req, res) {
       "apa kabar": "Baik, aman. Lu sendiri gimana?",
       "apa kabar?": "Baik, aman. Lu sendiri gimana?"
     };
-    if (Object.prototype.hasOwnProperty.call(greetingReplies, simpleGreeting)) {
+    if (!attachments.length && Object.prototype.hasOwnProperty.call(greetingReplies, simpleGreeting)) {
       const reply = greetingReplies[simpleGreeting];
       const visitorId = auth.user.id;
       const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
