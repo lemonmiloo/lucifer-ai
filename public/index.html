@@ -10,6 +10,8 @@
 /* Floating top controls stay visible while the conversation scrolls */
 /* Keep the history toggle behind the drawer/backdrop when the drawer is open */
 body.drawer-open #historyToggle{display:none}
+body.drawer-open #newChatTop{opacity:.38;pointer-events:none;cursor:default;filter:saturate(.55)}
+body.drawer-open #newChatTop:hover{background:#211b35}
 #historyToggle{z-index:9}
 #historyToggle{position:fixed;top:16px;left:16px;z-index:20;box-shadow:0 6px 22px #0006}
 #newChatTop{position:fixed;top:16px;right:16px;z-index:20;box-shadow:0 6px 22px #0006;margin:0}
@@ -29,8 +31,8 @@ let chats=[],currentChatId=null,history=[];
 function loadChats(){try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");chats=Array.isArray(saved)?saved.filter(c=>c&&c.id&&Array.isArray(c.messages)):[]}catch{chats=[]}}
 function saveChats(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(chats))}catch{console.warn("Penyimpanan riwayat penuh atau tidak tersedia.")}}
 function currentChat(){return chats.find(c=>c.id===currentChatId)}
-function openDrawer(){document.body.classList.add("drawer-open");drawer.classList.add("open");backdrop.classList.add("open");renderHistory()}
-function closeDrawer(){document.body.classList.remove("drawer-open");drawer.classList.remove("open");backdrop.classList.remove("open")}
+function openDrawer(){document.body.classList.add("drawer-open");document.getElementById("newChatTop").disabled=true;drawer.classList.add("open");backdrop.classList.add("open");renderHistory()}
+function closeDrawer(){document.body.classList.remove("drawer-open");document.getElementById("newChatTop").disabled=false;drawer.classList.remove("open");backdrop.classList.remove("open")}
 document.getElementById("historyToggle").addEventListener("click",openDrawer);
 document.getElementById("closeDrawer").addEventListener("click",closeDrawer);
 backdrop.addEventListener("click",closeDrawer);
