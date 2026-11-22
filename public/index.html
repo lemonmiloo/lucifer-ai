@@ -11,9 +11,10 @@
 @media(max-width:600px){
  html,body{height:100%;overflow:hidden}
  body{height:var(--app-height,100dvh)}
- .app{height:var(--app-height,100dvh);min-height:0;overflow:hidden}
- .chat{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
- .composer{position:relative;flex-shrink:0;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+ .app{position:fixed;top:var(--viewport-top,0px);left:0;right:0;height:var(--app-height,100dvh);min-height:0;overflow:hidden}
+ .top{height:68px;min-height:68px}
+ .chat{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:38px}
+ .composer{position:relative;flex-shrink:0;padding-bottom:8px}
 }
 /* Floating top controls stay visible while the conversation scrolls */
 /* Keep the history toggle behind the drawer/backdrop when the drawer is open */
