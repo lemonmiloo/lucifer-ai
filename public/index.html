@@ -670,6 +670,261 @@ button:active{transform:scale(.965)!important}
  .app-brand-live{width:5px;height:5px}
 }
 
+
+/* DanKudo interaction polish — scoped to the signed-in workspace */
+body.authenticated .app button,
+body.authenticated .app .history-item,
+body.authenticated .dashboard-overlay button,
+body.authenticated .dashboard-overlay input{
+  -webkit-tap-highlight-color:transparent;
+}
+body.authenticated .app button,
+body.authenticated .dashboard-overlay button{
+  transition:background .22s cubic-bezier(.2,.75,.25,1),border-color .22s ease,color .22s ease,box-shadow .25s ease,transform .25s cubic-bezier(.2,.75,.25,1),opacity .22s ease,filter .22s ease;
+}
+body.authenticated .app button:active,
+body.authenticated .dashboard-overlay button:active{transform:scale(.965)}
+body.authenticated .app button:focus-visible,
+body.authenticated .dashboard-overlay button:focus-visible{
+  outline:2px solid rgba(185,160,255,.9);outline-offset:3px
+}
+
+/* Composer: one tactile surface, with a clear focus state */
+body.authenticated .composer{padding-top:20px}
+body.authenticated .composer .form{
+  position:relative;isolation:isolate;gap:10px;align-items:flex-end;
+  padding:9px;border:1px solid rgba(169,148,238,.22);border-radius:22px;
+  background:linear-gradient(145deg,rgba(24,25,43,.96),rgba(13,16,28,.96));
+  box-shadow:0 12px 36px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.055);
+  transition:border-color .24s ease,box-shadow .28s ease,background .24s ease,transform .24s ease;
+}
+body.authenticated .composer .form:focus-within{
+  border-color:rgba(179,153,255,.68);
+  background:linear-gradient(145deg,rgba(29,27,51,.98),rgba(14,17,31,.98));
+  box-shadow:0 0 0 3px rgba(151,117,255,.11),0 16px 42px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.08);
+}
+body.authenticated .composer .form textarea{
+  min-height:46px;padding:12px 7px;color:#f5f2ff;line-height:1.55;
+  caret-color:#c4b5fd;transition:height .16s ease;
+}
+body.authenticated .composer .form textarea::placeholder{color:#81869e}
+body.authenticated .attach-button{
+  width:44px;height:44px;min-width:44px;align-self:flex-end;display:grid;place-items:center;
+  border:1px solid rgba(172,153,232,.18);border-radius:15px;
+  background:rgba(255,255,255,.045);color:#c9baff;font-size:23px;
+}
+body.authenticated .attach-button:hover{background:rgba(160,132,255,.14);border-color:#8870c5;color:#fff}
+body.authenticated .composer .send{
+  height:46px;min-height:46px;padding:0 19px;border-radius:15px;
+  background:linear-gradient(135deg,#b49aff 0%,#8b68ed 55%,#6949d1 100%);
+  box-shadow:0 7px 18px rgba(113,78,211,.27),inset 0 1px 0 rgba(255,255,255,.22);
+  letter-spacing:.1px;
+}
+body.authenticated .composer .send:hover:not(:disabled){
+  box-shadow:0 9px 24px rgba(130,96,230,.4),inset 0 1px 0 rgba(255,255,255,.25);
+  filter:brightness(1.08);transform:translateY(-1px)
+}
+body.authenticated .composer .send:disabled{filter:saturate(.6);box-shadow:none}
+body.authenticated .attachment-tray{padding:0 4px 10px;gap:8px}
+body.authenticated .attachment-chip{
+  border:1px solid rgba(169,148,238,.24);border-radius:13px;
+  background:rgba(25,25,43,.94);box-shadow:0 6px 18px #0003
+}
+
+/* Floating navigation controls */
+body.authenticated #historyToggle{
+  width:44px;height:44px;border-radius:15px;border:1px solid rgba(181,159,245,.26);
+  background:linear-gradient(145deg,rgba(35,31,57,.96),rgba(20,21,36,.96));
+  color:#e9e1ff;font-size:20px;
+  box-shadow:0 9px 26px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+body.authenticated #historyToggle:hover{background:linear-gradient(145deg,#393052,#211d36);border-color:#927bd0;box-shadow:0 10px 30px #0006,0 0 18px #927bd022;transform:translateY(-2px)}
+body.authenticated #newChatTop,
+body.authenticated #adminMenuButton{
+  height:44px!important;border-radius:15px!important;
+  border:1px solid rgba(181,159,245,.26)!important;
+  background:linear-gradient(145deg,rgba(38,32,61,.97),rgba(24,22,40,.97))!important;
+  color:#f3edff!important;font-weight:650!important;letter-spacing:.05px;
+  box-shadow:0 9px 26px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07)!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+body.authenticated #newChatTop:hover,
+body.authenticated #adminMenuButton:hover{
+  background:linear-gradient(145deg,#44365f,#29223f)!important;border-color:#927bd0!important;
+  box-shadow:0 10px 30px #0006,0 0 18px #927bd022!important;transform:translateY(-2px)
+}
+body.authenticated #newChatTop:active,
+body.authenticated #adminMenuButton:active{transform:scale(.96)!important}
+body.authenticated #newChatTop:disabled{opacity:.36!important}
+
+/* History drawer: clearer hierarchy and softer, consistent surfaces */
+body.authenticated .drawer{
+  width:min(360px,88vw);padding:20px 16px 16px;gap:15px;
+  border-right:1px solid rgba(180,157,244,.2);
+  background:radial-gradient(ellipse at 15% 0,rgba(125,91,206,.18),transparent 42%),linear-gradient(165deg,#151627 0%,#0d111d 70%);
+  box-shadow:22px 0 70px rgba(0,0,0,.38);
+}
+body.authenticated .drawer-head{font-size:18px;letter-spacing:-.35px;padding:2px 2px 4px}
+body.authenticated .drawer-head>span{display:flex;align-items:center;gap:10px}
+body.authenticated .drawer-head>span::before{content:"";width:8px;height:8px;border-radius:50%;background:#a78bfa;box-shadow:0 0 14px #a78bfa}
+body.authenticated .drawer-btn{
+  border:1px solid rgba(177,157,235,.2);border-radius:12px;
+  background:rgba(255,255,255,.055);color:#e9e4f8;padding:10px 12px
+}
+body.authenticated .drawer-btn:hover{background:rgba(157,126,239,.16);border-color:rgba(177,157,235,.45)}
+body.authenticated #newChat{width:100%;text-align:left;padding:12px 14px;background:linear-gradient(120deg,rgba(132,102,219,.2),rgba(255,255,255,.045));border-color:rgba(177,157,235,.27);font-weight:650}
+body.authenticated .drawer-user{
+  padding:12px;border-radius:14px;border-color:rgba(177,157,235,.16);
+  background:linear-gradient(135deg,rgba(255,255,255,.065),rgba(255,255,255,.025))
+}
+body.authenticated .drawer-user-email{font-weight:650;color:#f0ecfb}
+body.authenticated .drawer-user-role{letter-spacing:1px;font-weight:750;color:#a99bd4}
+body.authenticated .history-list{gap:7px;padding:2px 1px 8px;scrollbar-width:thin;scrollbar-color:#51456e transparent}
+body.authenticated .history-item{
+  min-height:46px;padding:12px 11px;border:1px solid transparent;border-radius:13px;
+  background:rgba(255,255,255,.035);color:#e9e6f3;
+  transition:background .2s ease,border-color .2s ease,transform .2s ease
+}
+body.authenticated .history-item:hover{background:rgba(150,124,222,.11);border-color:rgba(177,157,235,.17);transform:translateX(2px)}
+body.authenticated .history-item.active{
+  background:linear-gradient(110deg,rgba(137,106,220,.24),rgba(137,106,220,.08));
+  border-color:rgba(177,157,235,.42);box-shadow:inset 3px 0 #a78bfa
+}
+body.authenticated .history-title{font-size:13px;line-height:1.4}
+body.authenticated .history-delete{width:30px;height:30px;border-radius:9px;font-size:19px}
+body.authenticated .history-delete:hover{background:rgba(255,100,120,.13);color:#ff9eae}
+body.authenticated .history-empty{padding:18px 12px;border:1px dashed rgba(177,157,235,.2);border-radius:13px;background:rgba(255,255,255,.025);text-align:center}
+body.authenticated .drawer-footer{border-top:1px solid rgba(255,255,255,.07);padding-top:13px}
+body.authenticated .profile-open-btn{
+  border:1px solid rgba(177,157,235,.23);border-radius:12px;
+  background:rgba(255,255,255,.055);color:#e9e2fb;padding:11px 14px
+}
+body.authenticated .profile-open-btn:hover{background:rgba(157,126,239,.15);border-color:#7663a9}
+
+/* Thinking state: give the animated dots a calm, intentional home */
+body.authenticated .msg.assistant:has(.typing-indicator){
+  width:max-content;min-width:76px;max-width:85%;padding:13px 17px;
+  border-radius:18px 18px 18px 7px;
+  background:linear-gradient(145deg,rgba(30,31,49,.98),rgba(19,22,35,.98));
+  border-color:rgba(177,157,235,.22);box-shadow:0 8px 24px rgba(0,0,0,.2)
+}
+body.authenticated .typing-indicator{gap:7px;min-height:20px;align-items:center}
+body.authenticated .typing-indicator span{
+  width:7px;height:7px;background:#c4b5fd;box-shadow:0 0 9px rgba(177,157,235,.35);
+  animation:lucifer-dot-bounce 1.05s ease-in-out infinite
+}
+
+/* Dashboard: premium admin workspace with readable layers */
+body.authenticated .dashboard-overlay{
+  background:rgba(5,6,13,.78);backdrop-filter:blur(22px) saturate(125%);-webkit-backdrop-filter:blur(22px) saturate(125%);
+  padding:clamp(10px,2vw,24px)
+}
+body.authenticated .dashboard-shell{
+  border:1px solid rgba(177,157,235,.24);border-radius:24px;
+  background:radial-gradient(ellipse at 5% 0,rgba(122,91,198,.16),transparent 38%),linear-gradient(145deg,#191827 0%,#10121f 58%,#0d111c 100%);
+  box-shadow:0 30px 100px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.055);
+  animation:dashboard-enter .34s cubic-bezier(.2,.8,.2,1) both
+}
+@keyframes dashboard-enter{from{opacity:.6;transform:translateY(12px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+body.authenticated .dashboard-head{padding:23px 25px 18px;border-bottom-color:rgba(255,255,255,.075)}
+body.authenticated .dashboard-head h2{font-size:25px;letter-spacing:-.8px}
+body.authenticated .dashboard-subtitle{color:#a5a2b6}
+body.authenticated .dashboard-close{
+  border:1px solid rgba(177,157,235,.25);border-radius:13px;background:rgba(255,255,255,.055);color:#eee8ff
+}
+body.authenticated .dashboard-close:hover{background:rgba(255,110,130,.13);border-color:rgba(255,140,155,.35);color:#ffb5c0;transform:rotate(4deg)}
+body.authenticated .dashboard-stats{gap:12px;padding-top:17px;padding-bottom:17px}
+body.authenticated .dashboard-stat{
+  position:relative;overflow:hidden;padding:15px 16px;border:1px solid rgba(177,157,235,.16);border-radius:16px;
+  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045)
+}
+body.authenticated .dashboard-stat::after{content:"";position:absolute;inset:auto -15% -55% 35%;height:90px;background:radial-gradient(ellipse,rgba(155,120,255,.15),transparent 68%);pointer-events:none}
+body.authenticated .dashboard-stat span{color:#aaa6bb;font-size:11px;font-weight:650;letter-spacing:.25px}
+body.authenticated .dashboard-stat strong{font-size:25px;letter-spacing:-.7px;color:#f4efff}
+body.authenticated .dashboard-workspace{gap:13px}
+body.authenticated .dashboard-accounts,
+body.authenticated .dashboard-conversations,
+body.authenticated .dashboard-thread{
+  border:1px solid rgba(177,157,235,.15);border-radius:16px;
+  background:rgba(8,11,21,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.035)
+}
+body.authenticated .dashboard-accounts,
+body.authenticated .dashboard-conversations,
+body.authenticated .dashboard-thread{padding:14px}
+body.authenticated .dashboard-section-title{display:flex;align-items:center;gap:8px;color:#e8e1fa;font-size:12px;letter-spacing:.45px}
+body.authenticated .dashboard-section-title::before{content:"";width:6px;height:6px;border-radius:50%;background:#a78bfa;box-shadow:0 0 10px #a78bfa88}
+body.authenticated .dashboard-search{
+  border:1px solid rgba(177,157,235,.19);border-radius:11px;background:rgba(5,8,17,.72);
+  padding:11px 12px;color:#f3efff;transition:border-color .2s ease,box-shadow .2s ease
+}
+body.authenticated .dashboard-search:focus{border-color:#9e83e8;box-shadow:0 0 0 3px rgba(151,117,255,.12)}
+body.authenticated .dashboard-account-item,
+body.authenticated .dashboard-conversation-item{
+  position:relative;margin:0 0 6px;padding:12px;border:1px solid transparent;border-radius:12px;
+  background:rgba(255,255,255,.035);transition:background .2s ease,border-color .2s ease,transform .2s ease
+}
+body.authenticated .dashboard-account-item:hover,
+body.authenticated .dashboard-conversation-item:hover{background:rgba(150,124,222,.1);border-color:rgba(177,157,235,.17);transform:translateY(-1px)}
+body.authenticated .dashboard-account-item.active,
+body.authenticated .dashboard-conversation-item.active{
+  background:linear-gradient(110deg,rgba(137,106,220,.22),rgba(137,106,220,.07));
+  border-color:rgba(177,157,235,.4);box-shadow:inset 3px 0 #a78bfa
+}
+body.authenticated .dashboard-account-item strong,
+body.authenticated .dashboard-conversation-item strong{font-size:12px;color:#f0ebfb}
+body.authenticated .dashboard-account-item span,
+body.authenticated .dashboard-conversation-item span{color:#aaa5ba;line-height:1.45}
+body.authenticated .dashboard-thread-head{padding:2px 2px 12px;border-bottom-color:rgba(255,255,255,.08);color:#eee8fb}
+body.authenticated .dashboard-message{
+  border:1px solid rgba(177,157,235,.14);border-radius:14px;
+  background:linear-gradient(145deg,rgba(29,31,47,.95),rgba(19,22,35,.95));
+  box-shadow:0 5px 18px rgba(0,0,0,.16);padding:12px 13px;line-height:1.6
+}
+body.authenticated .dashboard-message.user{
+  background:linear-gradient(145deg,rgba(69,52,105,.82),rgba(39,32,62,.94));
+  border-color:rgba(177,157,235,.25);border-radius:14px 14px 5px 14px
+}
+body.authenticated .dashboard-message.assistant{border-radius:14px 14px 14px 5px}
+body.authenticated .dashboard-message-label{color:#c3b2f1;letter-spacing:.9px}
+body.authenticated .dashboard-message time{color:#888ba1}
+body.authenticated .dashboard-empty{padding:18px 12px;border:1px dashed rgba(177,157,235,.16);border-radius:12px;text-align:center;background:rgba(255,255,255,.02)}
+body.authenticated .dashboard-notice{border-top-color:rgba(255,255,255,.07);color:#8e8da2}
+
+@media(max-width:760px){
+ body.authenticated .dashboard-overlay{padding:0}
+ body.authenticated .dashboard-shell{border-radius:0}
+ body.authenticated .dashboard-head{padding:18px 16px 14px}
+ body.authenticated .dashboard-stats{padding:12px 14px;gap:8px}
+ body.authenticated .dashboard-stat{padding:11px 10px;border-radius:13px}
+ body.authenticated .dashboard-stat strong{font-size:21px}
+ body.authenticated .dashboard-workspace{gap:10px;padding:0 12px 12px}
+ body.authenticated .dashboard-accounts,
+ body.authenticated .dashboard-conversations,
+ body.authenticated .dashboard-thread{padding:11px;border-radius:14px}
+ body.authenticated .dashboard-account-item{min-width:132px;padding:10px}
+ body.authenticated .dashboard-conversation-item{min-width:155px;padding:10px}
+ body.authenticated .dashboard-thread{min-height:300px}
+}
+@media(max-width:600px){
+ body.authenticated .composer{padding-top:12px}
+ body.authenticated .composer .form{gap:7px;padding:7px;border-radius:19px}
+ body.authenticated .attach-button{width:40px;height:42px;min-width:40px;border-radius:13px}
+ body.authenticated .composer .form textarea{min-height:44px;padding:11px 5px;font-size:15px}
+ body.authenticated .composer .send{height:44px;min-height:44px;padding:0 14px;border-radius:13px;font-size:13px}
+ body.authenticated #historyToggle{width:42px;height:42px;border-radius:14px}
+ body.authenticated #newChatTop{height:42px!important;border-radius:14px!important}
+ body.authenticated #adminMenuButton{height:42px!important;border-radius:14px!important}
+ body.authenticated .drawer{padding:17px 13px 13px}
+}
+@media(prefers-reduced-motion:reduce){
+ body.authenticated .app button,
+ body.authenticated .dashboard-overlay button,
+ body.authenticated .dashboard-shell,
+ body.authenticated .typing-indicator span{animation:none!important;transition:none!important}
+}
+
 </style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><div class="app-brand-lockup" aria-label="DanKudo AI"><span class="app-brand-mark">D</span><span class="app-brand-copy"><strong>DanKudo</strong><small>AI WORKSPACE</small></span><span class="app-brand-live"></span></div><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
  <div class="dashboard-shell">
   <header class="dashboard-head"><div><p class="dashboard-eyebrow">DANKUDO AI / ADMIN</p><h2>Dashboard</h2><p class="dashboard-subtitle">Monitoring akun dan riwayat percakapan</p></div><button class="dashboard-close" id="dashboardClose" type="button" aria-label="Tutup dashboard">✕</button></header>
