@@ -60,10 +60,12 @@ body.drawer-open #newChatTop:hover{background:#211b35}
 @media(max-width:600px){.profile-panel{padding:17px}.profile-overlay{padding:10px}}
 
 
-/* Owner menu: only visible to verified admin accounts */
-#ownerMenuButton{display:none;position:fixed;top:16px;right:126px;z-index:9;padding:10px 13px;border:1px solid #6854a1;border-radius:10px;background:#211b35;color:#eee7ff;font-size:12px;font-weight:650;cursor:pointer;box-shadow:0 6px 22px #0006}
+/* Owner menu: matches the New Chat control, with a subtle premium accent */
+#ownerMenuButton{display:none;position:fixed;top:16px;right:126px;z-index:9;height:42px;padding:0 13px;border:1px solid #494064;border-radius:12px;background:linear-gradient(145deg,#29213f,#211b35);color:#eee7ff;font:600 13px Inter,system-ui,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 22px #0006;transition:background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+#ownerMenuButton:hover{background:linear-gradient(145deg,#382b59,#29213f);border-color:#8068c2;box-shadow:0 8px 26px #0008,0 0 18px #8b6be833;transform:translateY(-1px)}
+#ownerMenuButton:active{transform:translateY(0);box-shadow:0 4px 14px #0006}
 body.is-admin #ownerMenuButton{display:block}
-@media(max-width:600px){#ownerMenuButton{top:12px;right:112px;padding:10px 9px;font-size:11px}}
+@media(max-width:600px){#ownerMenuButton{top:12px;right:112px;height:40px;padding:0 10px;font-size:11px}}
 .owner-overlay{display:none;position:fixed;inset:0;z-index:25;background:#05060bd9;backdrop-filter:blur(8px);padding:22px;overflow:auto}
 .owner-overlay.open{display:block}
 .owner-panel{width:min(100%,900px);margin:42px auto 24px;background:#111522;border:1px solid #303449;border-radius:18px;padding:20px;box-shadow:0 24px 90px #0009;color:#f4f2ff}
