@@ -13,7 +13,7 @@ const expected: Record<string, string> = {
   "k6.lua": "K6",
   "k7.lua": "K7",
   "whitelist.lua": "WHITELIST",
-  "unknown-global.lua": "WHITELIST",
+  "unknown-global.lua": "WHITELIST",\n  "unknown-enum.lua": "WHITELIST",\n  "k6-nonreturn-guard.lua": "K6",\n  "k3-cleanup-order.lua": "K3",
   "syntax.lua": "SYNTAX"
 };
 
