@@ -1,0 +1,2 @@
+local bot = getBot()
+inventedLuciferFunction()
