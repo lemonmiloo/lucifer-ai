@@ -53,7 +53,9 @@ function sectionBetween(start: string, end: string): string {
   return KNOWLEDGE.slice(from, to < 0 ? undefined : to);
 }
 function propertySet(section: string): Set<string> {
-  return collect(/\x60([A-Za-z_][A-Za-z0-9_]*)\x60/g, section);
+  const properties = collect(/\x60([A-Za-z_][A-Za-z0-9_]*)\x60/g, section);
+  for (const match of section.matchAll(/\x60[A-Za-z_][A-Za-z0-9_]*\.([A-Za-z_][A-Za-z0-9_]*)\x60/g)) properties.add(match[1]);
+  return properties;
 }
 const propertiesByType = {
   bot: propertySet(sectionBetween("## 2. BOT OBJECT", "## 3. AUTOMATION MODULES")),
