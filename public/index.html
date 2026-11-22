@@ -683,7 +683,8 @@ function syncMobileViewport(){
  if(!window.matchMedia("(max-width: 600px)").matches)return;
  const vv=window.visualViewport;
  const height=vv?vv.height:window.innerHeight;
- const top=vv?vv.offsetTop:0;
+ const keyboardOpen=!!vv&&vv.height<window.innerHeight-120;
+ const top=keyboardOpen?vv.offsetTop:0;
  document.documentElement.style.setProperty("--app-height",height+"px");
  document.documentElement.style.setProperty("--viewport-top",top+"px");
  if(document.activeElement===input)scrollChatToBottom("auto");
