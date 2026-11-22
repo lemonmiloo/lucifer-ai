@@ -50,7 +50,8 @@ document.addEventListener("touchstart",e=>{
  const t=e.touches[0];if(!t)return;
  swipeStartX=swipeLastX=t.clientX;swipeStartY=t.clientY;swipeTarget=e.target;swipeLastTime=performance.now();swipeVelocity=0;
  const isOpen=drawer.classList.contains("open");
- if(!isOpen&&t.clientX<=36)swipeMode="opening";
+ const interactive=e.target.closest("button,a,input,textarea,select,pre,.code-wrap");
+ if(!isOpen&&!interactive)swipeMode="opening";
  else if(isOpen&&(drawer.contains(e.target)||t.clientX<=drawer.getBoundingClientRect().right))swipeMode="closing";
  else swipeMode=null;
 },{passive:true});
