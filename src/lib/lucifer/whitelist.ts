@@ -45,10 +45,33 @@ const allMethods = new Set([...botMethods,...worldMethods,...tileMethods,...invM
 const moduleConstructors = collect(/(?<![.:])\b([A-Za-z_][A-Za-z0-9_]*)\.new\s*\(/g, KNOWLEDGE);
 const documentedProperties = collect(/\x60([A-Za-z_][A-Za-z0-9_]*)\x60/g, KNOWLEDGE);
 
+
+function sectionBetween(start: string, end: string): string {
+  const from = KNOWLEDGE.indexOf(start);
+  if (from < 0) return "";
+  const to = KNOWLEDGE.indexOf(end, from + start.length);
+  return KNOWLEDGE.slice(from, to < 0 ? undefined : to);
+}
+function propertySet(section: string): Set<string> {
+  return collect(/\x60([A-Za-z_][A-Za-z0-9_]*)\x60/g, section);
+}
+const propertiesByType = {
+  bot: propertySet(sectionBetween("## 2. BOT OBJECT", "## 3. AUTOMATION MODULES")),
+  world: propertySet(sectionBetween("### 4.1 World", "### 4.2 Tile")),
+  tile: propertySet(sectionBetween("### 4.2 Tile", "### 4.3 Player")),
+  player: propertySet(sectionBetween("### 4.3 Player", "### 4.4 Clothes")),
+  inventory: propertySet(sectionBetween("### 4.8 Inventory", "### 4.9 ItemDescription")),
+  inventoryitem: propertySet(sectionBetween("### 4.8 Inventory", "### 4.9 ItemDescription")),
+  netobject: propertySet(sectionBetween("### 4.5 NetObject", "### 4.6 Login")),
+  npc: propertySet(sectionBetween("### 4.5 NetObject", "### 4.6 Login")),
+  signal: propertySet(sectionBetween("### 4.7 Signal", "### 4.8 Inventory")),
+  growscan: propertySet(sectionBetween("### 4.11 Growscan", "### 4.12 Vector2"))
+};
+
 export const WHITELIST = {
   globalFns: documentedGlobals,
   botMethods, botProps: documentedProperties, worldMethods, tileMethods, invMethods,
   otherMethods, moduleNames, moduleConstructors, enums, enumValues,
-  standardGlobals, standardMembers, allMethods,
+  standardGlobals, standardMembers, allMethods, propertiesByType,
   all: new Set([...documentedGlobals,...allMethods,...documentedProperties,...moduleNames,...moduleConstructors,...enums,...enumValues,...standardGlobals,...standardMembers])
 };
