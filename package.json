@@ -15,7 +15,6 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "@types/node": "^22.10.2",
-    "@types/luaparse": "^0.2.3",
-    "@vercel/node": "^5.1.7"
+    "@types/luaparse": "^0.2.3"
   }
 }
