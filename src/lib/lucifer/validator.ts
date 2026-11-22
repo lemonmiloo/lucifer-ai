@@ -93,7 +93,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
   const typeByGetter: Record<string, string> = {
     getBot: "bot", getWorld: "world", getTile: "tile", getInventory: "inventory",
     getPlayer: "player", getLocal: "player", getObject: "netobject", getNPC: "npc",
-    getItem: "inventoryitem", getExtra: "tileextra", getSignal: "signal"
+    getItem: "inventoryitem", getInfo: "itemdescription", getExtra: "tileextra", getSignal: "signal",\n    getLogin: "login", getProxy: "proxy", getPath: "pathnode", getConsole: "console", getLog: "log", getDialog: "dialog"
   };
   const typedVariables = new Map<string, string>();
   for (const statement of nodes) {
@@ -143,7 +143,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     const property = nameOf(node);
     const allowed = WHITELIST.propertiesByType[type as keyof typeof WHITELIST.propertiesByType]?.has(property) ||
       WHITELIST.allMethods.has(property) || WHITELIST.standardMembers.has(property) ||
-      WHITELIST.moduleNames.has(property) || WHITELIST.documentedProperties?.has(property);
+      WHITELIST.moduleNames.has(property) || WHITELIST.botProps.has(property);
     if (!allowed) add("WHITELIST", node, \`Properti/API '\${property}' tidak terdokumentasi untuk objek \${type}.\`);
   }
 
