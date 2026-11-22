@@ -530,6 +530,7 @@ function renderMessages(messages){
   welcome.append(title,description);chat.appendChild(welcome);return;
  }
  messages.forEach(m=>m.jobId?renderPendingMessage(m):add(m.content,m.role,false));
+ scrollChatToBottom("auto");
 }
 function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory();pollPendingJobs()}
 function newChat(){currentChatId=null;history=[];renderMessages([]);closeDrawer();renderHistory();input.focus()}
@@ -665,6 +666,11 @@ function renderPendingMessage(message){
 function updateLastMessage(el,text){const content=el.querySelector(".message-content");if(content)renderContent(content,text);const c=currentChat();if(c){const last=c.messages[c.messages.length-1];if(last)last.content=String(text??"");c.updatedAt=Date.now();saveChats();renderHistory()}}
 renderMessages([]);
 // Ikuti tinggi visual viewport saat keyboard mobile muncul, tanpa menggeser seluruh halaman.
+function scrollChatToBottom(behavior="auto"){
+ if(!window.matchMedia("(max-width: 600px)").matches)return;
+ const move=()=>chat.scrollTo({top:chat.scrollHeight,behavior});
+ requestAnimationFrame(()=>{move();requestAnimationFrame(move)});
+}
 function syncMobileViewport(){
  if(!window.matchMedia("(max-width: 600px)").matches)return;
  const vv=window.visualViewport;
@@ -672,8 +678,14 @@ function syncMobileViewport(){
  const top=vv?vv.offsetTop:0;
  document.documentElement.style.setProperty("--app-height",height+"px");
  document.documentElement.style.setProperty("--viewport-top",top+"px");
+ if(document.activeElement===input)scrollChatToBottom("auto");
 }
 syncMobileViewport();
+input.addEventListener("focus",()=>{
+ scrollChatToBottom("auto");
+ setTimeout(()=>scrollChatToBottom("auto"),100);
+ setTimeout(()=>scrollChatToBottom("auto"),260);
+});
 if(window.visualViewport){
  window.visualViewport.addEventListener("resize",syncMobileViewport);
  window.visualViewport.addEventListener("scroll",syncMobileViewport);
