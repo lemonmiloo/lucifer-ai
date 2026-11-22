@@ -860,7 +860,7 @@ form.addEventListener("submit",async e=>{
  const requestHistory=(previousChat?.messages||[]).filter(m=>m.content&&["user","assistant"].includes(m.role)).slice(-6).map(m=>({role:m.role,content:m.content}));
  const isFirstMessage=!previousChat||previousChat.messages.length===0;
  input.value="";input.style.height="44px";
- add(message||("Lampiran: "+attachmentCaption),"user");
+ add(message?(attachmentCaption?message+"\n\nLampiran: "+attachmentCaption:message):("Lampiran: "+attachmentCaption),"user");
  const active=currentChat();
  active.messages[active.messages.length-1].attachments=attachmentsToSend.map(file=>({name:file.name,mimeType:file.mimeType,size:file.size}));
  selectedAttachments.forEach(file=>{if(file.previewUrl)URL.revokeObjectURL(file.previewUrl)});selectedAttachments=[];renderAttachmentTray();
