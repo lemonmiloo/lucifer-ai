@@ -82,10 +82,10 @@ async function saveConversation({visitorId,conversationId,message,answer,usage,m
   await write("lucifer_conversations?on_conflict=id", [{id:conversationId,visitor_id:visitorId,title:redactSecrets(title || message).slice(0,100),updated_at:now}]);
   const promptTokens = Number.isInteger(usage?.prompt_tokens) ? usage.prompt_tokens : null;
   const completionTokens = Number.isInteger(usage?.completion_tokens) ? usage.completion_tokens : null;
-  await write("lucifer_messages", [
-    {conversation_id:conversationId,role:"user",content:redactSecrets(message),model},
-    {conversation_id:conversationId,role:"assistant",content:redactSecrets(answer),model,prompt_tokens:promptTokens,completion_tokens:completionTokens}
-  ]);
+  const userMessage={conversation_id:conversationId,role:"user",content:redactSecrets(message),model};
+  const assistantMessage={conversation_id:conversationId,role:"assistant",content:redactSecrets(answer),model,prompt_tokens:promptTokens,completion_tokens:completionTokens};
+  await write("lucifer_messages", [userMessage]);
+  await write("lucifer_messages", [assistantMessage]);
 }
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -120,8 +120,11 @@ export default async function handler(req, res) {
       const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
       const model = process.env.VIKEY_MODEL || "deepseek/deepseek-v4-pro";
       if (visitorId && conversationId) {
-        saveConversation({visitorId,conversationId,message,answer:reply,usage:null,model,title:"Sapaan"})
-          .catch(logError => console.error("Dashboard logging error:",logError));
+        try {
+          await saveConversation({visitorId,conversationId,message,answer:reply,usage:null,model,title:"Sapaan"});
+        } catch (logError) {
+          console.error("Dashboard logging error:",logError?.message || logError);
+        }
       }
       return res.status(200).json({reply,title:"Sapaan"});
     }
@@ -164,7 +167,7 @@ export default async function handler(req, res) {
       try {
         await saveConversation({visitorId,conversationId,message,answer,usage:data?.usage,model,title});
       } catch (logError) {
-        console.error("Dashboard logging error:",logError);
+        console.error("Dashboard logging error:",logError?.message || logError);
       }
     }
     return res.status(200).json({reply:answer,title});
