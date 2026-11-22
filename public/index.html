@@ -306,6 +306,52 @@ button:not(:disabled):active,.chip:active,.history-item:active,.owner-row:active
 body.drawer-open #ownerMenuButton{opacity:.38;pointer-events:none;cursor:default;filter:saturate(.55)}
 body.drawer-open #ownerMenuButton:hover{background:#211b35}
 @media(max-width:600px){#ownerMenuButton{height:auto;padding:10px 11px;font-size:13px}}
+
+/* Admin control shares the exact fixed alignment and drawer dimming of New Chat. */
+#adminMenuButton{
+ position:fixed!important;
+ top:16px!important;
+ right:148px!important;
+ z-index:9!important;
+ height:42px!important;
+ box-sizing:border-box!important;
+ padding:10px 11px!important;
+ margin:0!important;
+ display:none;
+ align-items:center;
+ justify-content:center;
+ border:1px solid #494064;
+ border-radius:12px;
+ background:#211b35;
+ color:#f4f0ff;
+ font:600 13px Inter,system-ui,sans-serif;
+ line-height:1;
+ white-space:nowrap;
+ box-shadow:0 6px 22px #0006;
+}
+body.is-admin #adminMenuButton{display:flex}
+#adminMenuButton:hover{background:#30264b}
+@media(max-width:600px){
+ #adminMenuButton{top:12px!important;right:144px!important;height:42px!important;padding:10px 11px!important}
+}
+body.drawer-open #adminMenuButton{
+ opacity:.38!important;
+ pointer-events:none!important;
+ cursor:default!important;
+ filter:saturate(.55)!important;
+ background:#211b35!important;
+ border-color:#494064!important;
+ color:#f4f0ff!important;
+ box-shadow:0 6px 22px #0006!important;
+ transform:none!important;
+}
+body.drawer-open #adminMenuButton:hover{
+ background:#211b35!important;
+ border-color:#494064!important;
+ color:#f4f0ff!important;
+ box-shadow:0 6px 22px #0006!important;
+ transform:none!important;
+}
 </style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div><span class="boot-loader-label">Memuat akun...</span></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Menu Admin">Admin</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="profile-overlay" id="profileOverlay" aria-hidden="true"><div class="profile-panel"><div class="profile-head"><div><h2>Profil akun</h2><p>Kelola username dan password akun kamu.</p></div><button class="profile-close" id="profileClose" type="button">✕</button></div><form id="usernameForm" class="profile-form"><h3>Ganti username</h3><label>Username baru<input id="newUsername" type="text" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username" required></label><label>Password saat ini<input id="usernameCurrentPassword" type="password" autocomplete="current-password" required></label><button class="profile-submit" id="usernameSave" type="submit">Simpan username</button><p class="profile-message" id="usernameMessage" role="status"></p></form><form id="passwordForm" class="profile-form"><h3>Ganti password</h3><label>Password saat ini<input id="passwordCurrentPassword" type="password" autocomplete="current-password" required></label><label>Password baru<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label><label>Ulangi password baru<input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label><button class="profile-submit" id="passwordSave" type="submit">Simpan password</button><p class="profile-message" id="passwordMessage" role="status"></p></form></div></section><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script>
