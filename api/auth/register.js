@@ -1,4 +1,4 @@
-import { normalizeUsername,validUsername,getDeviceId,bindDeviceAndLog,passwordSignIn,URL,SECRET,adminHeaders } from "../../lib/account-auth.js";
+import { normalizeUsername,validUsername,getDeviceId,bindDeviceAndLog,passwordSignIn,URL,SECRET,adminHeaders,hashIp,db } from "../../lib/account-auth.js";
 export default async function handler(req,res){
   res.setHeader("Cache-Control","no-store");
   if(req.method!=="POST")return res.status(405).json({error:"Method not allowed"});
@@ -8,6 +8,12 @@ export default async function handler(req,res){
     if(!validUsername(username))return res.status(400).json({error:"Username harus 3–20 karakter: huruf, angka, atau underscore."});
     if(password.length<8)return res.status(400).json({error:"Password minimal 8 karakter."});
     if(!deviceId)return res.status(400).json({error:"Identitas perangkat tidak valid."});
+    const ipHash=hashIp(req);
+    if(ipHash){
+      const since=encodeURIComponent(new Date(Date.now()-24*60*60*1000).toISOString());
+      const recent=await db("dankudo_signup_attempts?ip_hash=eq."+ipHash+"&created_at=gte."+since+"&select=id&limit=5");
+      if(recent.length>=5)return res.status(429).json({error:"Batas pendaftaran dari jaringan ini tercapai. Coba lagi 24 jam kemudian."});
+    }
     const base=URL.replace(/\/$/,"");
     const deviceResponse=await fetch(base+"/rest/v1/dankudo_device_accounts?device_id=eq."+encodeURIComponent(deviceId)+"&select=user_id&limit=1",{headers:adminHeaders(),signal:AbortSignal.timeout(7000)});
     if(!deviceResponse.ok)throw new Error("Gagal memeriksa perangkat.");
@@ -31,6 +37,7 @@ export default async function handler(req,res){
     if(!profileResponse.ok)throw new Error("Username sudah digunakan atau profil gagal disimpan.");
     const bound=await bindDeviceAndLog({userId:created.id,username,deviceId,req});
     if(!bound.ok)throw new Error(bound.error);
+    if(ipHash)await db("dankudo_signup_attempts",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({user_id:created.id,ip_hash:ipHash})});
     const session=await passwordSignIn(email,password);
     return res.status(201).json({session});
   }catch(error){
