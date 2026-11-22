@@ -33,6 +33,6 @@ const documentedGlobals = new Set(["getBot","getBots","addBot","addTokenBot","ad
 for (const n of documentedGlobals) globalFns.add(n);
 export const WHITELIST = {
   globalFns, botMethods, botProps, worldMethods, tileMethods, invMethods,
-  moduleNames, enums, enumValues, standardGlobals,
+  moduleNames, moduleConstructors: new Set(["variant","variantlist","HttpClient","Webhook","RTVAR"]), enums, enumValues, standardGlobals,
   all: new Set([...globalFns,...botMethods,...botProps,...worldMethods,...tileMethods,...invMethods,...moduleNames,...enums,...enumValues,...standardGlobals])
 };
