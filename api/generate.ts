@@ -1,5 +1,7 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { runPipeline } from "../src/lib/lucifer/pipeline.js";
+
+type VercelRequest = { method?: string; body?: any };
+type VercelResponse = { setHeader(name: string, value: string): this; status(code: number): this; json(body: unknown): this };
 
 export const config = { maxDuration: 120 };
 
