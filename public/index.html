@@ -1069,11 +1069,15 @@ body.authenticated .attachment-tray{max-width:100%;padding:0 4px 8px!important}
  body.authenticated .composer .form{width:100%!important;box-sizing:border-box!important}
 }
 
-/* Keep the welcome screen visible; let the keyboard cover only its lower portion */
+/* Keyboard overlays the welcome workspace; only the composer follows the visible viewport */
 @media(max-width:600px){
- body.keyboard-open .chat{padding-top:88px!important;padding-bottom:76px!important}
- body.keyboard-open .welcome{display:block!important}
- body.keyboard-open .composer{bottom:0!important;padding-bottom:8px!important}
+ body.keyboard-open .composer{
+  position:fixed!important;left:14px!important;right:14px!important;bottom:0!important;
+  z-index:20!important;width:auto!important;max-width:860px!important;
+  margin:0 auto!important;padding:8px 0 max(8px,env(safe-area-inset-bottom))!important;
+  background:linear-gradient(180deg,transparent,rgba(8,9,18,.94) 24%)!important;
+ }
+ body.keyboard-open .chat{padding-top:38px!important;padding-bottom:26px!important}
 }
 
 /* Center the composer itself and prevent flex children from pushing it sideways */
@@ -1372,16 +1376,20 @@ function scrollChatToBottom(behavior="auto"){
  const move=()=>{chat.scrollTo({top:chat.scrollHeight,behavior})};
  requestAnimationFrame(()=>{move();requestAnimationFrame(move)});
 }
+let mobileBaseHeight=window.innerHeight;
 function syncMobileViewport(){
  if(!window.matchMedia("(max-width: 600px)").matches)return;
  const vv=window.visualViewport;
- const height=vv?vv.height:window.innerHeight;
  const keyboardOpen=!!vv&&vv.height<window.innerHeight-120;
  document.body.classList.toggle("keyboard-open",keyboardOpen);
- const top=keyboardOpen?vv.offsetTop:0;
- document.documentElement.style.setProperty("--app-height",height+"px");
- document.documentElement.style.setProperty("--viewport-top",top+"px");
- /* Do not force-scroll while the keyboard opens; preserve the reader position. */
+ /* Keep the workspace at its pre-keyboard height so the keyboard overlays it,
+    rather than shrinking/re-centering the welcome screen. */
+ if(!keyboardOpen){
+  mobileBaseHeight=window.innerHeight;
+  document.documentElement.style.setProperty("--app-height",mobileBaseHeight+"px");
+  document.documentElement.style.setProperty("--viewport-top","0px");
+ }
+ /* Do not force-scroll or resize the welcome workspace when the keyboard opens. */
 }
 syncMobileViewport();
 /* Focusing the composer no longer jumps the conversation. */
