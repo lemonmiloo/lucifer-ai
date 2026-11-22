@@ -116,6 +116,7 @@ export default async function handler(req, res) {
     signedUrl: isInternalWorker && typeof file?.signedUrl === "string" ? file.signedUrl.slice(0,2000) : ""
   })).filter(file => file.path || file.signedUrl || file.textContent);
   if (!message && !attachments.length) return res.status(400).json({error:"Pesan atau lampiran harus diisi."});
+  const loggedMessage = message || ("Lampiran: " + attachments.map(file => file.name).join(", "));
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-6).filter(x => ["user","assistant"].includes(x?.role) && typeof x?.content === "string").map(x => ({role:x.role,content:x.content.slice(0,1500)})) : [];
   if (!isInternalWorker) {
     const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
@@ -223,12 +224,12 @@ export default async function handler(req, res) {
       return res.status(502).json({error:reason === "length" ? "Jawaban terpotong karena batas token. Coba pertanyaan lebih singkat." : "Model tidak mengembalikan jawaban teks. Coba kirim ulang."});
     }
     const isFirstMessage = req.body?.isFirstMessage === true;
-    const title = isFirstMessage ? await generateTitle(message, base, key, model) : (typeof req.body?.chatTitle === "string" ? req.body.chatTitle : fallbackTitle(message));
+    const title = isFirstMessage ? await generateTitle(loggedMessage, base, key, model) : (typeof req.body?.chatTitle === "string" ? req.body.chatTitle : fallbackTitle(message));
     const visitorId = auth.user.id;
     const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
     if (visitorId && conversationId) {
       try {
-        await saveConversation({visitorId,conversationId,message,answer,usage:data?.usage,model,title});
+        await saveConversation({visitorId,conversationId,message:loggedMessage,answer,usage:data?.usage,model,title});
       } catch (logError) {
         console.error("Dashboard logging error:",logError?.message || logError);
       }
