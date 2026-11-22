@@ -712,6 +712,33 @@ document.getElementById("loginTab").addEventListener("click",()=>setAuthMode("lo
 document.getElementById("registerTab").addEventListener("click",()=>setAuthMode("register"));
 function hideBootLoader(){document.getElementById("bootLoader")?.classList.add("hidden")}
 function showAuthScreen(){hideBootLoader();document.body.classList.remove("authenticated","session-checking");document.getElementById("authScreen").style.display="grid"}
+let chatHistorySyncedUserId=null,chatHistorySyncPromise=null;
+async function syncLocalChatHistory(){
+ if(!activeSession?.access_token||chatHistorySyncedUserId===activeSession.user.id||chatHistorySyncPromise||!chats.length)return;
+ const userId=activeSession.user.id;
+ const payload=[];
+ for(const chatItem of chats.slice(-150)){
+  if(!chatItem.serverId||!/^[0-9a-f-]{36}$/i.test(chatItem.serverId))chatItem.serverId=crypto.randomUUID();
+  const messages=(chatItem.messages||[]).filter(m=>["user","assistant"].includes(m.role)&&typeof m.content==="string").slice(-200).map(m=>({role:m.role,content:m.content.slice(0,30000)}));
+  if(!messages.length)continue;
+  const candidate={serverId:chatItem.serverId,title:String(chatItem.title||"Percakapan").slice(0,100),updatedAt:chatItem.updatedAt,messages};
+  payload.push(candidate);
+  if(JSON.stringify({conversations:payload}).length>3200000){payload.pop();break}
+ }
+ saveChats();
+ if(!payload.length){chatHistorySyncedUserId=userId;return}
+ chatHistorySyncPromise=(async()=>{
+  try{
+   const response=await fetch("/api/chat-sync",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+activeSession.access_token},body:JSON.stringify({conversations:payload}),cache:"no-store"});
+   if(!response.ok)throw new Error("history sync "+response.status);
+   const result=await response.json();
+   chatHistorySyncedUserId=userId;
+   if(result.importedMessages)console.info("Riwayat chat tersinkron:",result.importedMessages,"pesan");
+  }catch(error){console.warn("Sinkronisasi riwayat chat ditunda:",error.message)}
+  finally{chatHistorySyncPromise=null}
+ })();
+ return chatHistorySyncPromise;
+}
 async function activateSession(session){
  if(!session){activeSession=null;verifiedSessionUserId=null;accountRole="user";document.body.classList.remove("is-admin");showAuthScreen();return}
  if(activeSession?.user?.id===session.user.id&&verifiedSessionUserId===session.user.id){activeSession=session;hideBootLoader();return}
@@ -732,7 +759,7 @@ async function activateSession(session){
    document.getElementById("authScreen").style.display="none";
    document.body.classList.remove("session-checking");
    document.body.classList.add("authenticated");
-   loadChats();renderHistory();renderMessages([]);
+   loadChats();renderHistory();renderMessages([]);syncLocalChatHistory();
    hideBootLoader();
   }catch(error){
    if(error.status===401||error.status===403){
