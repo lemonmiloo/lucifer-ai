@@ -119,7 +119,7 @@ export default async function handler(req, res) {
         saveConversation({visitorId,conversationId,message,answer:reply,usage:null,model,title:"Sapaan"})
           .catch(logError => console.error("Dashboard logging error:",logError));
       }
-      return res.status(200).json({reply});
+      return res.status(200).json({reply,title:"Sapaan"});
     }
     const source = getDocs();
     const context = relevantDocs(message, source);
@@ -152,7 +152,8 @@ export default async function handler(req, res) {
       const reason = data?.choices?.[0]?.finish_reason;
       return res.status(502).json({error:reason === "length" ? "Jawaban terpotong karena batas token. Coba pertanyaan lebih singkat." : "Model tidak mengembalikan jawaban teks. Coba kirim ulang."});
     }
-    const title = await generateTitle(message, base, key, model);
+    const isFirstMessage = req.body?.isFirstMessage === true;
+    const title = isFirstMessage ? await generateTitle(message, base, key, model) : (typeof req.body?.chatTitle === "string" ? req.body.chatTitle : fallbackTitle(message));
     const visitorId = typeof req.body?.visitorId === "string" ? req.body.visitorId : "";
     const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
     if (visitorId && conversationId) {
