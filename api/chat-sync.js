@@ -36,6 +36,8 @@ export default async function handler(req,res){
         .slice(0,300)
         .map(m=>({role:m.role,content:redact(m.content).slice(0,50000)}));
       if(!messages.length)continue;
+      const ownership=await request("lucifer_conversations?id=eq."+encodeURIComponent(id)+"&select=visitor_id&limit=1",{method:"GET"});
+      if(Array.isArray(ownership)&&ownership.length&&ownership[0].visitor_id!==userId)continue;
       await request("lucifer_conversations?on_conflict=id",{method:"POST",body:JSON.stringify([{id,visitor_id:userId,title,updated_at:new Date(Number(item.updatedAt)||Date.now()).toISOString()}])});
       const existing=await request("lucifer_messages?conversation_id=eq."+encodeURIComponent(id)+"&select=id&limit=1",{method:"GET"});
       if(Array.isArray(existing)&&existing.length)continue;
