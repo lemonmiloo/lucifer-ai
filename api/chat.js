@@ -69,6 +69,30 @@ export default async function handler(req, res) {
   if (message.length > 6000) return res.status(413).json({error:"Pesan terlalu panjang (maksimal 6.000 karakter)."});
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-6).filter(x => ["user","assistant"].includes(x?.role) && typeof x?.content === "string").map(x => ({role:x.role,content:x.content.slice(0,1500)})) : [];
   try {
+    // Fast-path for standalone greetings: avoid a model round-trip for trivial social messages.
+    const simpleGreeting = message.toLowerCase().replace(/[.!?,…]+$/g, "").trim();
+    const greetingReplies = {
+      "hi": "Yo! Ada yang bisa gw bantu?",
+      "hai": "Hai juga! Ada apa nih?",
+      "halo": "Halo! Mau ngobrol atau ada yang mau dibantu?",
+      "hello": "Hello! Ada yang bisa gw bantu?",
+      "hey": "Hey! Gas, ada apa?",
+      "yo": "Yo! Ada apa nih?",
+      "p": "P juga wkwk. Ada apa?",
+      "apa kabar": "Baik, aman. Lu sendiri gimana?",
+      "apa kabar?": "Baik, aman. Lu sendiri gimana?"
+    };
+    if (Object.prototype.hasOwnProperty.call(greetingReplies, simpleGreeting)) {
+      const reply = greetingReplies[simpleGreeting];
+      const visitorId = typeof req.body?.visitorId === "string" ? req.body.visitorId : "";
+      const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
+      const model = process.env.VIKEY_MODEL || "deepseek/deepseek-v4-pro";
+      if (visitorId && conversationId) {
+        saveConversation({visitorId,conversationId,message,answer:reply,usage:null,model})
+          .catch(logError => console.error("Dashboard logging error:",logError));
+      }
+      return res.status(200).json({reply});
+    }
     const source = getDocs();
     const context = relevantDocs(message, source);
     const base = (process.env.VIKEY_BASE_URL || "https://api.vikey.ai/v1").replace(/\/$/,"");
