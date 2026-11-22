@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { send } from "@vercel/queue";
 import { verifySupabaseRequest } from "../lib/auth.js";
 
 const docsPath = path.join(process.cwd(), "knowledge", "LUCIFER DOCS.txt");
@@ -83,7 +84,7 @@ async function saveConversation({visitorId,conversationId,message,answer,usage,m
   await write("lucifer_conversations?on_conflict=id", [{id:conversationId,visitor_id:visitorId,title:redactSecrets(title || message).slice(0,100),updated_at:now}]);
   const promptTokens = Number.isInteger(usage?.prompt_tokens) ? usage.prompt_tokens : null;
   const completionTokens = Number.isInteger(usage?.completion_tokens) ? usage.completion_tokens : null;
-  const userMessage={conversation_id:conversationId,role:"user",content:redactSecrets(message),model};
+  const userMessage={conversation_id:conversationId,role:"user",content:redactSecrets(message),model,prompt_tokens:promptTokens,completion_tokens:null};
   const assistantMessage={conversation_id:conversationId,role:"assistant",content:redactSecrets(answer),model,prompt_tokens:promptTokens,completion_tokens:completionTokens};
   await write("lucifer_messages", [userMessage]);
   await write("lucifer_messages", [assistantMessage]);
@@ -136,7 +137,6 @@ export default async function handler(req, res) {
         method:"POST", headers:dbHeaders, body:JSON.stringify(job), signal:AbortSignal.timeout(7000)
       });
       if (!saved.ok) throw new Error("Gagal menyimpan pekerjaan: " + saved.status);
-      const { send } = await import("@vercel/queue");
       await send("dankudo-ai-chat", {jobId}, {idempotencyKey:jobId, retentionSeconds:604800});
       return res.status(202).json({jobId,status:"queued"});
     } catch (error) {
