@@ -44,9 +44,9 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     if (!WHITELIST.all.has(name) && !luaLibraryCall) add("WHITELIST",c,"Pemanggilan API tidak ditemukan di dokumentasi Lucifer atau standard library Lua: " + name + ".");
     if ((name === "sendPacket" || name === "sendRaw") && !opts.allowRaw) add("K7",c,"Raw packet hanya boleh saat allowRaw=true dan diminta eksplisit.");
     if (actionNames.has(name)) {
-      const p = nodes.find(n => n.type === "IfStatement" && JSON.stringify(n.test).includes(JSON.stringify(c.base)));
+      const p = nodes.find(n => n.type === "IfStatement" && JSON.stringify(n).includes(JSON.stringify(c.base)));
       if (p) add("K1",c,`Return bot:${name}() tidak boleh dipakai sebagai kondisi sukses.`);
-      const parentAssignment = nodes.find(n => n.type === "AssignmentStatement" && JSON.stringify(n.init).includes(JSON.stringify(c.base)));
+      const parentAssignment = nodes.find(n => n.type === "AssignmentStatement" && JSON.stringify(n).includes(JSON.stringify(c.base)));
       if (parentAssignment) {
         const assigned = (parentAssignment.variables || []).find((v:any)=>v.type==="Identifier")?.name;
         if (assigned && nodes.some(n => (n.type === "IfStatement" || n.type === "WhileStatement") && JSON.stringify(n).includes(assigned))) add("K1",c,`Return bot:${name}() disimpan lalu dipakai sebagai kondisi.`);
