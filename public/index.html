@@ -352,7 +352,67 @@ body.drawer-open #adminMenuButton:hover{
  box-shadow:0 6px 22px #0006!important;
  transform:none!important;
 }
-</style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div><span class="boot-loader-label">Memuat akun...</span></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="profile-overlay" id="profileOverlay" aria-hidden="true"><div class="profile-panel"><div class="profile-head"><div><h2>Profil akun</h2><p>Kelola username dan password akun kamu.</p></div><button class="profile-close" id="profileClose" type="button">✕</button></div><form id="usernameForm" class="profile-form"><h3>Ganti username</h3><label>Username baru<input id="newUsername" type="text" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username" required></label><label>Password saat ini<input id="usernameCurrentPassword" type="password" autocomplete="current-password" required></label><button class="profile-submit" id="usernameSave" type="submit">Simpan username</button><p class="profile-message" id="usernameMessage" role="status"></p></form><form id="passwordForm" class="profile-form"><h3>Ganti password</h3><label>Password saat ini<input id="passwordCurrentPassword" type="password" autocomplete="current-password" required></label><label>Password baru<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label><label>Ulangi password baru<input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label><button class="profile-submit" id="passwordSave" type="submit">Simpan password</button><p class="profile-message" id="passwordMessage" role="status"></p></form></div></section><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
+
+.dashboard-overlay{position:fixed;inset:0;z-index:120;background:#05050bd9;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:none;align-items:center;justify-content:center;padding:18px;opacity:0;transition:opacity .22s ease}
+.dashboard-overlay.open{display:flex;opacity:1}
+.dashboard-shell{width:min(1120px,100%);height:min(820px,94dvh);display:flex;flex-direction:column;overflow:hidden;border:1px solid #38324f;border-radius:22px;background:linear-gradient(145deg,#171526,#0d0e18 65%);box-shadow:0 24px 90px #000b;color:#f4f0ff}
+.dashboard-head{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 16px;border-bottom:1px solid #ffffff12}
+.dashboard-eyebrow{margin:0 0 5px;color:#a99bd4;font-size:10px;font-weight:800;letter-spacing:1.6px}
+.dashboard-head h2{margin:0;font-size:24px;letter-spacing:-.5px}
+.dashboard-subtitle{margin:5px 0 0;color:#9895aa;font-size:13px}
+.dashboard-close{width:40px;height:40px;border:1px solid #494064;border-radius:12px;background:#211b35;color:#f4f0ff;font-size:18px}
+.dashboard-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px 24px}
+.dashboard-stat{padding:13px 15px;border:1px solid #ffffff12;border-radius:14px;background:#ffffff06}
+.dashboard-stat span{display:block;color:#a5a1b4;font-size:12px}.dashboard-stat strong{display:block;margin-top:5px;font-size:22px;font-weight:750}
+.dashboard-workspace{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;flex:1;min-height:0;padding:0 24px 14px}
+.dashboard-accounts,.dashboard-conversations,.dashboard-thread{min-height:0;display:flex;flex-direction:column}
+.dashboard-accounts{border:1px solid #ffffff12;border-radius:15px;background:#ffffff04;padding:12px}
+.dashboard-section-title{font-size:12px;font-weight:750;letter-spacing:.3px;margin-bottom:10px;color:#ded9ef}
+.dashboard-search{width:100%;box-sizing:border-box;border:1px solid #3a354e;border-radius:10px;background:#0d0e18;color:#f4f0ff;padding:10px 11px;font:13px Inter,system-ui,sans-serif;outline:none;margin-bottom:10px}
+.dashboard-search:focus{border-color:#8b70d7}
+.dashboard-account-list,.dashboard-conversation-list,.dashboard-message-list{overflow:auto;min-height:0;overscroll-behavior:contain}
+.dashboard-account-item,.dashboard-conversation-item{width:100%;display:block;text-align:left;border:1px solid transparent;border-radius:11px;background:transparent;color:#eeeaf8;padding:11px;margin-bottom:5px;font:inherit;cursor:pointer}
+.dashboard-account-item.active,.dashboard-conversation-item.active{background:#29223e;border-color:#594a7c}
+.dashboard-account-item strong,.dashboard-conversation-item strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.dashboard-account-item span,.dashboard-conversation-item span{display:block;margin-top:4px;color:#9e99b0;font-size:11px}
+.dashboard-detail{display:grid;grid-template-columns:230px minmax(0,1fr);gap:12px;min-width:0;min-height:0}
+.dashboard-conversations,.dashboard-thread{border:1px solid #ffffff12;border-radius:15px;background:#ffffff04;padding:12px;min-width:0}
+.dashboard-thread-head{font-size:13px;font-weight:750;padding:0 0 10px;border-bottom:1px solid #ffffff12;overflow-wrap:anywhere}
+.dashboard-message-list{padding:12px 2px 4px;display:flex;flex-direction:column;gap:10px}
+.dashboard-message{max-width:94%;padding:11px 12px;border-radius:13px;border:1px solid #ffffff12;background:#171827;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;color:#e8e5f2}
+.dashboard-message.user{align-self:flex-end;background:#29213f;border-color:#51416f}
+.dashboard-message.assistant{align-self:flex-start}
+.dashboard-message-label{display:block;color:#b4a3e3;font-size:10px;font-weight:800;letter-spacing:.7px;margin-bottom:6px}
+.dashboard-message time{display:block;margin-top:7px;color:#88849a;font-size:10px}
+.dashboard-empty{padding:16px 8px;color:#858197;font-size:12px;line-height:1.5}
+.dashboard-notice{margin:0;padding:10px 24px 14px;border-top:1px solid #ffffff12;color:#88849a;font-size:10px;line-height:1.5}
+@media(max-width:760px){
+ .dashboard-overlay{padding:0;align-items:stretch}
+ .dashboard-shell{height:100dvh;max-height:100dvh;border-radius:0;border:0}
+ .dashboard-head{padding:17px 16px 13px}.dashboard-head h2{font-size:21px}
+ .dashboard-stats{padding:12px 16px;gap:8px}.dashboard-stat{padding:10px}.dashboard-stat strong{font-size:19px}
+ .dashboard-workspace{display:flex;flex-direction:column;gap:10px;padding:0 12px 10px;overflow:auto}
+ .dashboard-accounts{flex:none;max-height:220px}
+ .dashboard-account-list{display:flex;gap:6px;overflow-x:auto}
+ .dashboard-account-item{min-width:120px;width:auto;flex:none;margin:0}
+ .dashboard-detail{display:flex;flex-direction:column;min-height:480px;flex:1}
+ .dashboard-conversations{max-height:150px;flex:none}
+ .dashboard-conversation-list{display:flex;gap:6px;overflow-x:auto}
+ .dashboard-conversation-item{min-width:145px;width:auto;flex:none;margin:0}
+ .dashboard-thread{flex:1;min-height:280px}
+ .dashboard-notice{padding:9px 14px}
+}
+</style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div><span class="boot-loader-label">Memuat akun...</span></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
+ <div class="dashboard-shell">
+  <header class="dashboard-head"><div><p class="dashboard-eyebrow">DANKUDO AI / ADMIN</p><h2>Dashboard</h2><p class="dashboard-subtitle">Monitoring akun dan riwayat percakapan</p></div><button class="dashboard-close" id="dashboardClose" type="button" aria-label="Tutup dashboard">✕</button></header>
+  <div class="dashboard-stats" id="dashboardStats"><div class="dashboard-stat"><span>Total akun</span><strong>—</strong></div><div class="dashboard-stat"><span>Percakapan</span><strong>—</strong></div><div class="dashboard-stat"><span>Total pesan</span><strong>—</strong></div></div>
+  <div class="dashboard-workspace">
+   <aside class="dashboard-accounts"><div class="dashboard-section-title">Daftar akun</div><input class="dashboard-search" id="dashboardSearch" type="search" placeholder="Cari username..."><div class="dashboard-account-list" id="dashboardAccountList"><div class="dashboard-empty">Memuat akun...</div></div></aside>
+   <section class="dashboard-detail"><div class="dashboard-conversations"><div class="dashboard-section-title">Percakapan</div><div class="dashboard-conversation-list" id="dashboardConversationList"><div class="dashboard-empty">Pilih akun untuk melihat percakapan.</div></div></div><div class="dashboard-thread"><div class="dashboard-thread-head" id="dashboardThreadHead">Pilih percakapan</div><div class="dashboard-message-list" id="dashboardMessageList"><div class="dashboard-empty">Isi percakapan akan muncul di sini.</div></div></div></section>
+  </div>
+  <p class="dashboard-notice">Isi percakapan ditampilkan hanya untuk admin yang berwenang. Pengguna diberi tahu bahwa chat dapat ditinjau untuk operasional dan keamanan.</p>
+ </div>
+</section><section class="profile-overlay" id="profileOverlay" aria-hidden="true"><div class="profile-panel"><div class="profile-head"><div><h2>Profil akun</h2><p>Kelola username dan password akun kamu.</p></div><button class="profile-close" id="profileClose" type="button">✕</button></div><form id="usernameForm" class="profile-form"><h3>Ganti username</h3><label>Username baru<input id="newUsername" type="text" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username" required></label><label>Password saat ini<input id="usernameCurrentPassword" type="password" autocomplete="current-password" required></label><button class="profile-submit" id="usernameSave" type="submit">Simpan username</button><p class="profile-message" id="usernameMessage" role="status"></p></form><form id="passwordForm" class="profile-form"><h3>Ganti password</h3><label>Password saat ini<input id="passwordCurrentPassword" type="password" autocomplete="current-password" required></label><label>Password baru<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label><label>Ulangi password baru<input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label><button class="profile-submit" id="passwordSave" type="submit">Simpan password</button><p class="profile-message" id="passwordMessage" role="status"></p></form></div></section><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script>
 const SUPABASE_URL="https://lxktuagmmugdrgthbgxi.supabase.co";
@@ -484,6 +544,87 @@ profileOverlay.addEventListener("click",e=>{if(e.target===profileOverlay)closePr
 async function updateProfile(payload){const response=await fetch("/api/auth/profile",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+activeSession.access_token},body:JSON.stringify(payload),cache:"no-store"});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Gagal memperbarui profil.");return result}
 document.getElementById("usernameForm").addEventListener("submit",async e=>{e.preventDefault();const button=document.getElementById("usernameSave"),message=document.getElementById("usernameMessage");button.disabled=true;button.textContent="Menyimpan...";message.className="profile-message";message.textContent="";try{const username=document.getElementById("newUsername").value.trim().toLowerCase(),currentPassword=document.getElementById("usernameCurrentPassword").value;const result=await updateProfile({action:"username",username,currentPassword});document.getElementById("accountEmail").textContent=result.username;document.getElementById("newUsername").value=result.username;message.textContent="Username berhasil diganti. Login berikutnya gunakan username baru.";message.classList.add("success");document.getElementById("usernameCurrentPassword").value=""}catch(error){message.textContent=error.message}finally{button.disabled=false;button.textContent="Simpan username"}});
 document.getElementById("passwordForm").addEventListener("submit",async e=>{e.preventDefault();const button=document.getElementById("passwordSave"),message=document.getElementById("passwordMessage");const currentPassword=document.getElementById("passwordCurrentPassword").value,newPassword=document.getElementById("newPassword").value,confirmPassword=document.getElementById("confirmPassword").value;message.className="profile-message";message.textContent="";if(newPassword!==confirmPassword){message.textContent="Konfirmasi password baru tidak sama.";return}button.disabled=true;button.textContent="Menyimpan...";try{await updateProfile({action:"password",currentPassword,newPassword});message.textContent="Password berhasil diganti. Akun tetap login; login berikutnya gunakan password baru.";message.classList.add("success");document.getElementById("passwordCurrentPassword").value="";document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value=""}catch(error){message.textContent=error.message}finally{button.disabled=false;button.textContent="Simpan password"}});
+
+
+// Admin Dashboard: data is served only by the server-side admin-verified endpoint.
+const dashboardOverlay=document.getElementById("dashboardOverlay");
+const dashboardAccountList=document.getElementById("dashboardAccountList");
+const dashboardConversationList=document.getElementById("dashboardConversationList");
+const dashboardMessageList=document.getElementById("dashboardMessageList");
+const dashboardSearch=document.getElementById("dashboardSearch");
+let dashboardData=null,dashboardAccountId=null,dashboardConversationId=null;
+function dashboardNode(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=String(text);return node}
+function dashboardClose(){dashboardOverlay.classList.remove("open");dashboardOverlay.setAttribute("aria-hidden","true")}
+function dashboardShowEmpty(target,text){target.replaceChildren(dashboardNode("div","dashboard-empty",text))}
+function dashboardRenderAccounts(){
+ const term=dashboardSearch.value.trim().toLowerCase();
+ const accounts=(dashboardData?.accounts||[]).filter(a=>String(a.username||"").toLowerCase().includes(term));
+ dashboardAccountList.replaceChildren();
+ if(!accounts.length){dashboardShowEmpty(dashboardAccountList,"Akun tidak ditemukan.");return}
+ accounts.forEach(account=>{
+  const conversations=(dashboardData.conversations||[]).filter(c=>c.visitor_id===account.user_id);
+  const messages=(dashboardData.messages||[]).filter(m=>conversations.some(c=>c.id===m.conversation_id));
+  const btn=dashboardNode("button","dashboard-account-item"+(dashboardAccountId===account.user_id?" active":""));
+  btn.type="button";btn.append(dashboardNode("strong","",account.username||"Tanpa username"),dashboardNode("span","",conversations.length+" chat · "+messages.length+" pesan"));
+  btn.addEventListener("click",()=>{dashboardAccountId=account.user_id;dashboardConversationId=null;dashboardRenderAccounts();dashboardRenderConversations()});
+  dashboardAccountList.appendChild(btn);
+ });
+}
+function dashboardRenderConversations(){
+ const list=(dashboardData?.conversations||[]).filter(c=>c.visitor_id===dashboardAccountId).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
+ dashboardConversationList.replaceChildren();
+ if(!list.length){dashboardShowEmpty(dashboardConversationList,"Belum ada percakapan tersimpan untuk akun ini.");dashboardConversationId=null;dashboardRenderMessages();return}
+ if(!list.some(c=>c.id===dashboardConversationId))dashboardConversationId=list[0].id;
+ list.forEach(conversation=>{
+  const count=(dashboardData.messages||[]).filter(m=>m.conversation_id===conversation.id).length;
+  const btn=dashboardNode("button","dashboard-conversation-item"+(dashboardConversationId===conversation.id?" active":""));
+  btn.type="button";btn.append(dashboardNode("strong","",conversation.title||"Percakapan"),dashboardNode("span","",count+" pesan · "+new Date(conversation.updated_at).toLocaleString("id-ID")));
+  btn.addEventListener("click",()=>{dashboardConversationId=conversation.id;dashboardRenderConversations()});
+  dashboardConversationList.appendChild(btn);
+ });
+ dashboardRenderMessages();
+}
+function dashboardRenderMessages(){
+ const conversation=(dashboardData?.conversations||[]).find(c=>c.id===dashboardConversationId);
+ const threadHead=document.getElementById("dashboardThreadHead");
+ threadHead.textContent=conversation?conversation.title||"Percakapan":"Pilih percakapan";
+ const messages=(dashboardData?.messages||[]).filter(m=>m.conversation_id===dashboardConversationId).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+ dashboardMessageList.replaceChildren();
+ if(!conversation){dashboardShowEmpty(dashboardMessageList,"Pilih akun dan percakapan.");return}
+ if(!messages.length){dashboardShowEmpty(dashboardMessageList,"Belum ada isi pesan yang tersimpan untuk percakapan ini. Chat baru akan tersimpan lengkap.");return}
+ messages.forEach(message=>{
+  const item=dashboardNode("article","dashboard-message "+(message.role==="user"?"user":"assistant"));
+  item.appendChild(dashboardNode("span","dashboard-message-label",message.role==="user"?"USER":"DANKUDO AI"));
+  item.appendChild(dashboardNode("div","",message.content||""));
+  item.appendChild(dashboardNode("time","",new Date(message.created_at).toLocaleString("id-ID")));
+  dashboardMessageList.appendChild(item);
+ });
+ dashboardMessageList.scrollTop=0;
+}
+async function dashboardOpen(){
+ if(accountRole!=="admin"||!activeSession)return;
+ dashboardOverlay.classList.add("open");dashboardOverlay.setAttribute("aria-hidden","false");
+ dashboardShowEmpty(dashboardAccountList,"Memuat akun...");
+ dashboardShowEmpty(dashboardConversationList,"Memuat percakapan...");
+ dashboardShowEmpty(dashboardMessageList,"Memuat pesan...");
+ try{
+  const response=await fetch("/api/admin-data",{headers:{Authorization:"Bearer "+activeSession.access_token},cache:"no-store"});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||"Gagal memuat data admin.");
+  dashboardData=result;dashboardAccountId=null;dashboardConversationId=null;
+  const totalMessages=(result.messages||[]).length;
+  document.getElementById("dashboardStats").replaceChildren(
+   ...[["Total akun",(result.accounts||[]).length],["Percakapan",(result.conversations||[]).length],["Pesan tersimpan",totalMessages]].map(([label,value])=>{const card=dashboardNode("div","dashboard-stat");card.append(dashboardNode("span","",label),dashboardNode("strong","",value));return card})
+  );
+  dashboardRenderAccounts();
+  dashboardShowEmpty(dashboardConversationList,"Pilih akun untuk melihat percakapan.");
+  dashboardShowEmpty(dashboardMessageList,"Isi percakapan akan muncul di sini.");
+ }catch(error){dashboardShowEmpty(dashboardAccountList,error.message);dashboardShowEmpty(dashboardConversationList,"Data tidak tersedia.");dashboardShowEmpty(dashboardMessageList,"Coba muat ulang Dashboard.")}
+}
+document.getElementById("adminMenuButton").addEventListener("click",dashboardOpen);
+document.getElementById("dashboardClose").addEventListener("click",dashboardClose);
+dashboardOverlay.addEventListener("click",event=>{if(event.target===dashboardOverlay)dashboardClose()});
+dashboardSearch.addEventListener("input",dashboardRenderAccounts);
 
 function appendInline(parent,text){
  const pattern=/(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*)/g;let last=0,match;
