@@ -32,6 +32,22 @@ async function updateJob(jobId, patch) {
   });
   if(!r.ok)throw new Error("Unable to update chat job: "+r.status);
 }
+async function signedAttachment(file, userId, conversationId) {
+  if (file?.textContent || !file?.mimeType?.startsWith("image/")) return file;
+  const expected = userId + "/" + conversationId + "/";
+  if (typeof file.path !== "string" || !file.path.startsWith(expected)) throw new Error("Invalid attachment ownership");
+  const {secret}=dbConfig();
+  const root=process.env.SUPABASE_URL.replace(/\\/$/,"");
+  const objectPath=file.path.split("/").map(encodeURIComponent).join("/");
+  const response=await fetch(root+"/storage/v1/object/sign/dankudo-chat-files/"+objectPath,{
+    method:"POST",headers:headers(secret),body:JSON.stringify({expiresIn:3600}),signal:AbortSignal.timeout(10000)
+  });
+  if(!response.ok)throw new Error("Unable to create private attachment link");
+  const data=await response.json();
+  const signed=data.signedURL||data.signedUrl;
+  if(typeof signed!=="string")throw new Error("Storage did not return a signed attachment URL");
+  return {...file,signedUrl:signed.startsWith("http")?signed:root+(signed.startsWith("/")?signed:"/"+signed)};
+}
 export default queue.handleNodeCallback(async (message, metadata) => {
   const jobId=message?.jobId;
   if(typeof jobId!=="string")return;
@@ -41,12 +57,14 @@ export default queue.handleNodeCallback(async (message, metadata) => {
   try {
     const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
     const deployment=process.env.VERCEL_URL||"lucifer-ai-lemonmilo.vercel.app";
+    const attachments=await Promise.all((Array.isArray(job.attachments)?job.attachments:[]).map(file=>signedAttachment(file,job.user_id,job.conversation_id)));
     const response=await fetch("https://"+deployment+"/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json","x-dankudo-worker-key":secret},
       body:JSON.stringify({
         userId:job.user_id,
         message:job.message,
+        attachments,
         history:job.history||[],
         conversationId:job.conversation_id,
         isFirstMessage:job.is_first_message===true,
