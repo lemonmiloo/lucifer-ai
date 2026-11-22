@@ -101,6 +101,16 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     if (!allowed) add("WHITELIST", call, "Pemanggilan tidak ditemukan di dokumentasi Lucifer atau Lua standard library: " + called + ".");
   }
 
+  // Enum members must be declared in the documented enum value set.
+  for (const node of nodes) {
+    if (node.type !== "MemberExpression") continue;
+    const namespace = node.base?.name || node.object?.name || "";
+    const member = nameOf(node);
+    if (WHITELIST.enums.has(namespace) && !WHITELIST.enumValues.has(member)) {
+      add("WHITELIST", node, `Enum ${namespace}.${member} tidak ditemukan di dokumentasi.`);
+    }
+  }
+
   // K1: fire-and-forget results cannot be used as booleans or success indicators.
   for (const node of nodes) {
     if (node.type === "IfStatement" && (node.clauses || []).some((clause: any) => contains(clause.condition, n => n.type === "CallExpression" && isActionCall(n)))) {
