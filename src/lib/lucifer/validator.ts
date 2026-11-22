@@ -63,10 +63,12 @@ function hasNilGuard(src: string, variable: string, after: number, nodes: AstNod
       (contains(clause.body, child => child === use) || contains(clause.condition, child => child === use))
     )
   );
-  const escaped = variable.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&");
   const prefix = src.slice(0, after);
-  const earlyReturn = new RegExp("if\\\\s+not\\\\s+" + escaped + "\\\\s+then\\\\s+return\\\\b[\\\\s\\\\S]*?\\\\bend\\\\b").test(prefix);
-  return guardedBranch || earlyReturn;
+  const context = prefix.slice(Math.max(0, prefix.lastIndexOf("\n", after - 1) - 300));
+  const positiveGuard = new RegExp("\\bif\\s+" + variable + "\\s+(?:then\\b|and\\b)").test(context);
+  const comparisonGuard = new RegExp("\\bif\\s+" + variable + "\\s*~=\\s*nil\\s+then\\b").test(context);
+  const earlyReturn = new RegExp("\\bif\\s+not\\s+" + variable + "\\s+then\\s+return\\b[\\s\\S]*?\\bend\\b").test(prefix);
+  return guardedBranch || positiveGuard || comparisonGuard || earlyReturn;
 }
 export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violation[] {
   const violations: Violation[] = [];
