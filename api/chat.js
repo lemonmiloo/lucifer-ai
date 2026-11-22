@@ -204,7 +204,7 @@ export default async function handler(req, res) {
           ...history,
           {role:"user",content:attachments.length ? [
             {type:"text",text:message || "Tolong analisis lampiran berikut."},
-            ...attachments.filter(file => file.textContent).map(file => ({type:"text",text:"\\n\\nIsi file "+file.name+":\\n"+file.textContent})),
+            ...attachments.filter(file => file.textContent).map(file => ({type:"text",text:"\n\nIsi file "+file.name+":\n"+file.textContent})),
             ...attachments.filter(file => file.mimeType.startsWith("image/") && file.signedUrl).map(file => ({type:"image_url",image_url:{url:file.signedUrl}}))
           ] : message}
         ]
