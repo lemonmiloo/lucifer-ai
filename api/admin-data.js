@@ -14,7 +14,7 @@ function authorized(req) {
 }
 async function getRows(url,secret,table,query) {
   const r=await fetch(url.replace(/\/$/,"")+"/rest/v1/"+table+"?"+query,{
-    headers:{apikey:secret,Authorization:"Bearer "+secret},
+    headers:{apikey:secret,...(secret.startsWith("sb_secret_")?{}:{Authorization:"Bearer "+secret})},
     signal:AbortSignal.timeout(10000)
   });
   if(!r.ok) throw new Error("Database query failed: "+r.status);
