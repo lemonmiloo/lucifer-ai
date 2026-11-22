@@ -96,11 +96,18 @@ document.addEventListener("touchend",e=>{
    // berlanjut ke kiri (tertutup), bukan kembali ke posisi terbuka.
    drawer.classList.remove("dragging");
    backdrop.classList.remove("dragging");
+   // Commit posisi drag saat ini sebelum menghapus transform inline.
+   // Dua frame memastikan browser memulai transisi dari posisi jari terakhir
+   // menuju posisi tertutup, bukan melompat kembali ke posisi terbuka.
    closeDrawer();
-   drawer.style.transform="";
-   backdrop.style.opacity="";
-   backdrop.style.pointerEvents="";
    touchMode=null;touchMoved=false;
+   requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+     drawer.style.transform="";
+     backdrop.style.opacity="";
+     backdrop.style.pointerEvents="";
+    });
+   });
   }else{
    // Swipe terlalu pendek: kembalikan panel ke posisi terbuka.
    resetTouchDrag();
