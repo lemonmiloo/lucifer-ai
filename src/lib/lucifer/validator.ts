@@ -44,17 +44,30 @@ function isLookupCall(node: any): boolean {
 function isActionCall(node: any): boolean {
   return node?.type === "CallExpression" && ACTIONS.has(nameOf(node.base));
 }
-function hasNilGuard(src: string, variable: string, after: number): boolean {
-  const prefix = src.slice(0, after);
-  const escaped = variable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const guards = [
-    new RegExp("\\bif\\s+" + escaped + "(?:\\s+then\\b|\\s+and\\b)"),
-    new RegExp("\\bif\\s+" + escaped + "\\s*(?:~=|==)\\s*nil\\b"),
-    new RegExp("\\bif\\s+not\\s+" + escaped + "\\s+then\\b")
-  ];
-  return guards.some(re => re.test(prefix.slice(Math.max(0, prefix.lastIndexOf("\n", after - 1) - 300))));
+function isPositiveNilGuard(condition: any, variable: string): boolean {
+  if (condition?.type === "Identifier" && condition.name === variable) return true;
+  if (condition?.type === "BinaryExpression" && condition.operator === "~=") {
+    return condition.left?.type === "Identifier" && condition.left.name === variable && condition.right?.type === "NilLiteral" ||
+      condition.right?.type === "Identifier" && condition.right.name === variable && condition.left?.type === "NilLiteral";
+  }
+  if (condition?.type === "LogicalExpression" && condition.operator === "and") {
+    return isPositiveNilGuard(condition.left, variable);
+  }
+  return false;
 }
-
+function hasNilGuard(src: string, variable: string, after: number, nodes: AstNode[], use: AstNode): boolean {
+  const guardedBranch = nodes.some(node =>
+    node.type === "IfStatement" &&
+    (node.clauses || []).some((clause: any) =>
+      isPositiveNilGuard(clause.condition, variable) &&
+      (contains(clause.body, child => child === use) || contains(clause.condition, child => child === use))
+    )
+  );
+  const escaped = variable.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&");
+  const prefix = src.slice(0, after);
+  const earlyReturn = new RegExp("if\\\\s+not\\\\s+" + escaped + "\\\\s+then\\\\s+return\\\\b[\\\\s\\\\S]*?\\\\bend\\\\b").test(prefix);
+  return guardedBranch || earlyReturn;
+}
 export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violation[] {
   const violations: Violation[] = [];
   const add = (rule: string, node: AstNode | undefined, message: string) => {
@@ -143,7 +156,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
   // K3: event registration order, lightweight callbacks, and cleanup.
   const addEvents = calls.filter(call => nameOf(call.base) === "addEvent");
   const listenCalls = calls.filter(call => nameOf(call.base) === "listenEvents");
-  if (addEvents.length && listenCalls.length && startOf(listenCalls[0]) < startOf(addEvents[0])) {
+  if (addEvents.length && listenCalls.length && addEvents.some(event => startOf(event) > startOf(listenCalls[0]))) {
     add("K3", listenCalls[0], "listenEvents() dipanggil sebelum addEvent().");
   }
   for (const eventCall of addEvents) {
@@ -155,7 +168,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
       add("K3", eventCall, "Callback addEvent tidak boleh sleep atau menjalankan loop.");
     }
   }
-  if (addEvents.length && !calls.some(call => ["removeEvent","removeEvents"].includes(nameOf(call.base)))) {
+  if (addEvents.length && !calls.some(call => ["removeEvent","removeEvents"].includes(nameOf(call.base)) && startOf(call) > Math.max(...addEvents.map(event => startOf(event)))) {
     add("K3", addEvents[0], "Event didaftarkan tetapi tidak ada cleanup removeEvent/removeEvents.");
   }
 
@@ -199,7 +212,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
       node.type === "MemberExpression" &&
       (node.base?.name || node.object?.name) === binding.name &&
       startOf(node) > endOf(declaration));
-    if (use && !hasNilGuard(src, binding.name, startOf(use))) {
+    if (use && !hasNilGuard(src, binding.name, startOf(use), nodes, use)) {
       add("K6", use, `Lookup '${binding.name}' berpotensi nil; periksa nil sebelum mengakses properti/method.`);
     }
   }
