@@ -178,7 +178,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
       add("K3", eventCall, "Callback addEvent tidak boleh sleep atau menjalankan loop.");
     }
   }
-  if (addEvents.length && !calls.some(call => ["removeEvent","removeEvents"].includes(nameOf(call.base)) && startOf(call) > Math.max(...addEvents.map(event => startOf(event)))) {
+  if (addEvents.length && !calls.some(call => ["removeEvent","removeEvents"].includes(nameOf(call.base)) && startOf(call) > Math.max(...addEvents.map(event => startOf(event))))) {
     add("K3", addEvents[0], "Event didaftarkan tetapi tidak ada cleanup removeEvent/removeEvents.");
   }
 
