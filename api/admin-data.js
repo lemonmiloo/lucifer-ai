@@ -1,19 +1,7 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { verifySupabaseRequest } from "../lib/auth.js";
 
-function authorized(req) {
-  const password=process.env.OWNER_DASHBOARD_PASSWORD;
-  const raw=req.headers.cookie||"";
-  const token=raw.split(";").map(x=>x.trim()).find(x=>x.startsWith("lucifer_admin="))?.slice("lucifer_admin=".length);
-  if(!password||!token) return false;
-  const [issued,signature]=token.split(".");
-  const time=Number(issued);
-  if(!Number.isFinite(time)||Date.now()-time>12*60*60*1000||time>Date.now()+60000) return false;
-  const expected=createHmac("sha256",password).update(issued).digest();
-  let actual;try{actual=Buffer.from(signature,"base64url")}catch{return false}
-  return actual.length===expected.length&&timingSafeEqual(actual,expected);
-}
 async function getRows(url,secret,table,query) {
-  const r=await fetch(url.replace(/\/$/,"")+"/rest/v1/"+table+"?"+query,{
+  const r=await fetch(url.replace(/\\/$/, "")+"/rest/v1/"+table+"?"+query,{
     headers:{apikey:secret,...(secret.startsWith("sb_secret_")?{}:{Authorization:"Bearer "+secret})},
     signal:AbortSignal.timeout(10000)
   });
@@ -23,11 +11,13 @@ async function getRows(url,secret,table,query) {
 export default async function handler(req,res) {
   res.setHeader("Cache-Control","no-store");
   if(req.method!=="GET") return res.status(405).json({error:"Method not allowed"});
-  if(!authorized(req)) return res.status(401).json({error:"Unauthorized"});
-  const url=process.env.SUPABASE_URL;
-  const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if(!url||!secret) return res.status(503).json({error:"Konfigurasi Supabase belum lengkap di Vercel."});
   try {
+    const auth=await verifySupabaseRequest(req);
+    if(!auth.user) return res.status(auth.status||401).json({error:auth.error||"Unauthorized"});
+    if(auth.role!=="admin") return res.status(403).json({error:"Akses khusus owner."});
+    const url=process.env.SUPABASE_URL;
+    const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if(!url||!secret) return res.status(503).json({error:"Konfigurasi Supabase belum lengkap di Vercel."});
     const [visitors,conversations,messages]=await Promise.all([
       getRows(url,secret,"lucifer_visitors","select=visitor_id,first_seen,last_seen&order=last_seen.desc&limit=500"),
       getRows(url,secret,"lucifer_conversations","select=id,visitor_id,title,created_at,updated_at&order=updated_at.desc&limit=200"),
