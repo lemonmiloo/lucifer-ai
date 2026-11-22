@@ -87,7 +87,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     if (/\b(?:status|setBubble|startRole|addEvent|setMethod)\s*(?:==|~=|\()\s*\d+/.test(line)) out.push({rule:"K5",line:i+1,message:"Gunakan enum simbolik, bukan angka mentah."});
     if (/\b(?:sendPacket|sendRaw)\s*\(/.test(line) && !opts.allowRaw) out.push({rule:"K7",line:i+1,message:"Raw packet hanya boleh saat allowRaw=true."});
   });
-  const actionAssign = /local\\s+(\\w+)\\s*=\\s*\\w+\\s*:\\s*(?:hit|place|warp|moveTo|moveTile|say|use|wear|drop|trash|connect|disconnect|leaveWorld|enter|active|respawn)\\s*\\(/g;
+  const actionAssign = /local\s+(\w+)\s*=\s*\w+\s*:\s*(?:hit|place|warp|moveTo|moveTile|say|use|wear|drop|trash|connect|disconnect|leaveWorld|enter|active|respawn)\s*\(/g;
   for (const match of src.matchAll(actionAssign)) {
     const variable = match[1];
     const rest = src.slice((match.index||0)+match[0].length);
