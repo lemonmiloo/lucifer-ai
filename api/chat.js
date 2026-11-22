@@ -124,7 +124,7 @@ export default async function handler(req, res) {
     const supabaseSecret = workerSecret;
     if (!supabaseUrl || !supabaseSecret) return res.status(503).json({error:"Penyimpanan pekerjaan belum dikonfigurasi."});
     const jobId = uuidPattern.test(req.body?.jobId || "") ? req.body.jobId : crypto.randomUUID();
-    if (attachments.some(file => !file.path.startsWith(auth.user.id + "/" + conversationId + "/"))) return res.status(403).json({error:"Lampiran tidak sesuai dengan akun atau percakapan."});
+    if (attachments.some(file => file.path && !file.path.startsWith(auth.user.id + "/" + conversationId + "/")) ) return res.status(403).json({error:"Lampiran tidak sesuai dengan akun atau percakapan."});
     const job = {
       id: jobId,
       user_id: auth.user.id,
