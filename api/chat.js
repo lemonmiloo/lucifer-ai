@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { send } from "@vercel/queue";
 import { verifySupabaseRequest } from "../lib/auth.js";
 
 const docsPath = path.join(process.cwd(), "knowledge", "LUCIFER DOCS.txt");
@@ -137,7 +136,9 @@ export default async function handler(req, res) {
         method:"POST", headers:dbHeaders, body:JSON.stringify(job), signal:AbortSignal.timeout(7000)
       });
       if (!saved.ok) throw new Error("Gagal menyimpan pekerjaan: " + saved.status);
-      await send("dankudo-ai-chat", {jobId}, {idempotencyKey:jobId, retentionSeconds:604800});
+      const queueSdk = await import("@vercel/queue");
+      if (typeof queueSdk.send !== "function") throw new Error("Queue SDK send export is unavailable");
+      await queueSdk.send("dankudo-ai-chat", {jobId}, {idempotencyKey:jobId, retentionSeconds:604800});
       return res.status(202).json({jobId,status:"queued"});
     } catch (error) {
       await fetch(supabaseUrl.replace(/\\/$/,"") + "/rest/v1/dankudo_ai_jobs?id=eq." + jobId, {
