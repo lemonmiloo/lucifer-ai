@@ -61,7 +61,7 @@ body.drawer-open #newChatTop:hover{background:#211b35}
 const SUPABASE_URL="https://lxktuagmmugdrgthbgxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_hE2aLl_1yNzY5DDKXHt4Gw_MzruLP-_";
 const authClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-let activeSession=null,accountRole="user",authMode="login";
+let activeSession=null,verifiedSessionUserId=null,accountRole="user",authMode="login";
 const chat=document.getElementById("chat"),input=document.getElementById("input"),form=document.getElementById("form"),send=document.getElementById("send");
 const drawer=document.getElementById("historyDrawer"),backdrop=document.getElementById("drawerBackdrop"),historyList=document.getElementById("historyList");
 const STORAGE_KEY="lucifer-ai-chat-history-v1";
@@ -261,14 +261,17 @@ document.getElementById("loginTab").addEventListener("click",()=>setAuthMode("lo
 document.getElementById("registerTab").addEventListener("click",()=>setAuthMode("register"));
 function showAuthScreen(){document.body.classList.remove("authenticated");document.getElementById("authScreen").style.display="grid"}
 async function activateSession(session){
- if(!session){activeSession=null;showAuthScreen();return}
- if(activeSession?.user?.id===session.user.id){activeSession=session;return}
- chats=[];history=[];currentChatId=null;
+ if(!session){activeSession=null;verifiedSessionUserId=null;showAuthScreen();return}
+ if(activeSession?.user?.id===session.user.id&&verifiedSessionUserId===session.user.id){activeSession=session;return}
  activeSession=session;
  try{
+  // Server checks the access token against Supabase Auth (auth.users).
+  // A cached client session alone is never enough to enter the workspace.
   const response=await fetch("/api/auth/me",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});
   const result=await response.json();
-  if(!response.ok)throw new Error(result.error||"Sesi tidak valid.");
+  if(!response.ok||result.id!==session.user.id)throw new Error(result.error||"Akun tidak ditemukan atau sesi tidak valid. Silakan daftar terlebih dahulu.");
+  if(verifiedSessionUserId!==session.user.id){chats=[];history=[];currentChatId=null}
+  verifiedSessionUserId=session.user.id;
   accountRole=result.role==="admin"?"admin":"user";
   document.getElementById("accountEmail").textContent=result.email||session.user.email||"Akun";
   document.getElementById("accountRole").textContent=accountRole.toUpperCase();
@@ -277,8 +280,8 @@ async function activateSession(session){
   loadChats();renderHistory();renderMessages([]);
  }catch(error){
   await authClient.auth.signOut();
-  activeSession=null;showAuthScreen();
-  authMessage.textContent=error.message||"Gagal memverifikasi sesi.";
+  activeSession=null;verifiedSessionUserId=null;showAuthScreen();
+  authMessage.textContent=error.message||"Gagal memverifikasi akun di database.";
  }
 }
 authForm.addEventListener("submit",async e=>{
@@ -299,7 +302,7 @@ authForm.addEventListener("submit",async e=>{
  finally{authSubmit.disabled=false;authSubmit.textContent=authMode==="login"?"Masuk":"Buat akun"}
 });
 document.getElementById("signOutButton").addEventListener("click",async()=>{
- closeDrawer();await authClient.auth.signOut();activeSession=null;chats=[];history=[];currentChatId=null;renderMessages([]);showAuthScreen();
+ closeDrawer();await authClient.auth.signOut();activeSession=null;verifiedSessionUserId=null;chats=[];history=[];currentChatId=null;renderMessages([]);showAuthScreen();
 });
 authClient.auth.onAuthStateChange((event,session)=>{
  if(event==="SIGNED_OUT"){activeSession=null;chats=[];history=[];currentChatId=null;renderMessages([]);showAuthScreen();return}
