@@ -397,7 +397,8 @@ async function activateSession(session){
     // Keep the workspace visible and preserve the stored session during transient failures.
     document.body.classList.remove("session-checking");
     document.body.classList.add("authenticated");
-    authMessage.textContent="Verifikasi sesi sementara gagal. Akun tetap tersimpan; coba muat ulang.";\n    hideBootLoader();
+    authMessage.textContent="Verifikasi sesi sementara gagal. Akun tetap tersimpan; coba muat ulang.";
+    hideBootLoader();
    }
   }finally{
    sessionVerificationPromise=null;
