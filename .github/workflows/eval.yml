@@ -3,6 +3,8 @@ on:
   pull_request:
   push:
     branches: [main]
+permissions:
+  contents: read
 jobs:
   eval:
     runs-on: ubuntu-latest
@@ -11,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install --package-lock-only
+          cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run eval
