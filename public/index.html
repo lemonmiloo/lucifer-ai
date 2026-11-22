@@ -16,8 +16,9 @@
  .app{position:fixed;top:var(--viewport-top,0px);left:0;right:0;height:var(--app-height,100dvh);min-height:0;overflow:hidden}
  .top{height:68px;min-height:68px}
  .chat{position:relative;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:16px}
- .chat::before{content:"";position:sticky;top:0;z-index:3;display:block;flex:0 0 0;height:0;margin-bottom:0;pointer-events:none;opacity:0;transition:height .22s ease,margin-bottom .22s ease,opacity .22s ease;backdrop-filter:blur(0);background:linear-gradient(to bottom,rgba(9,11,18,.96),rgba(9,11,18,.62),transparent)}
- .chat.has-scrolled-top::before{height:34px;margin-bottom:-34px;opacity:1;backdrop-filter:blur(9px)}
+ .chat::before{content:"";position:sticky;top:0;z-index:5;display:block;flex:0 0 88px;height:88px;margin-bottom:-88px;pointer-events:none;opacity:0;transition:opacity .28s ease;backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);background:linear-gradient(to bottom,rgba(8,9,18,.98) 0%,rgba(8,9,18,.78) 32%,rgba(8,9,18,.34) 68%,transparent 100%)}
+ .chat.has-scrolled-top{ -webkit-mask-image:linear-gradient(to bottom,transparent 0,rgba(0,0,0,.12) 22px,rgba(0,0,0,.58) 58px,#000 112px);mask-image:linear-gradient(to bottom,transparent 0,rgba(0,0,0,.12) 22px,rgba(0,0,0,.58) 58px,#000 112px)}
+ .chat.has-scrolled-top::before{opacity:1;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
  .composer{position:relative;flex-shrink:0;padding-bottom:8px}
 }
 /* Floating top controls stay visible while the conversation scrolls */
