@@ -117,7 +117,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
         const variable = vars[index]?.name;
         if (!variable) return;
         const laterCondition = nodes.find(candidate =>
-          (candidate.type === "IfStatement" && contains(candidate.clauses, n => n.type === "Identifier" && n.name === variable) ||
+          (candidate.type === "IfStatement" && (candidate.clauses || []).some((clause: any) => contains(clause.condition, n => n.type === "Identifier" && n.name === variable)) ||
            candidate.type === "WhileStatement" && contains(candidate.condition, n => n.type === "Identifier" && n.name === variable)) &&
           startOf(candidate) > endOf(node));
         if (laterCondition) add("K1", node, "Return aksi fire-and-forget disimpan lalu dipakai sebagai kondisi.");
