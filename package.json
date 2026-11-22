@@ -5,5 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/queue": "0.11.0"
   }
 }
