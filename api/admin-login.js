@@ -10,7 +10,15 @@ export default async function handler(req,res) {
   if(req.method!=="POST") return res.status(405).json({error:"Method not allowed"});
   const password=process.env.OWNER_DASHBOARD_PASSWORD;
   if(!password) return res.status(503).json({error:"OWNER_DASHBOARD_PASSWORD belum diatur di Vercel."});
-  if(!safeEqual(req.body?.password||"",password)) return res.status(401).json({error:"Password salah."});
+  let body=req.body;
+  if(typeof body==="string") {
+    try { body=JSON.parse(body); } catch { body={}; }
+  }
+  if(Buffer.isBuffer(body)) {
+    try { body=JSON.parse(body.toString("utf8")); } catch { body={}; }
+  }
+  const submitted=body && typeof body==="object" ? body.password : "";
+  if(typeof submitted!=="string" || !safeEqual(submitted,password)) return res.status(401).json({error:"Password salah."});
   const issued=String(Date.now());
   const signature=createHmac("sha256",password).update(issued).digest("base64url");
   res.setHeader("Set-Cookie",`lucifer_admin=${issued}.${signature}; HttpOnly; Secure; SameSite=Strict; Path=/api; Max-Age=43200`);
