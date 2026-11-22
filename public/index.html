@@ -369,7 +369,7 @@ async function activateSession(session){
   // A cached client session alone is never enough to enter the workspace.
   const response=await fetch("/api/auth/me",{headers:{Authorization:"Bearer "+session.access_token,"X-Device-ID":deviceId},cache:"no-store"});
   const result=await response.json();
-  if(!response.ok||result.id!==session.user.id)throw new Error(result.error||"Akun tidak ditemukan atau sesi tidak valid. Silakan daftar terlebih dahulu.");
+  if(!response.ok||result.id!==session.user.id){const verificationError=new Error(result.error||"Akun tidak ditemukan atau sesi tidak valid. Silakan daftar terlebih dahulu.");verificationError.status=response.status||403;throw verificationError;}
   if(verifiedSessionUserId!==session.user.id){chats=[];history=[];currentChatId=null}
   verifiedSessionUserId=session.user.id;
   accountRole=result.role==="admin"?"admin":"user";
