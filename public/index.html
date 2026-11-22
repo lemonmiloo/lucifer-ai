@@ -504,8 +504,10 @@ body.drawer-open #adminMenuButton:hover{
   </div>
   <p class="dashboard-notice">Isi percakapan ditampilkan hanya untuk admin yang berwenang. Pengguna diberi tahu bahwa chat dapat ditinjau untuk operasional dan keamanan.</p>
  </div>
-</section><section class="profile-overlay" id="profileOverlay" aria-hidden="true"><div class="profile-panel"><div class="profile-head"><div><h2>Profil akun</h2><p>Kelola username dan password akun kamu.</p></div><button class="profile-close" id="profileClose" type="button">✕</button></div><form id="usernameForm" class="profile-form"><h3>Ganti username</h3><label>Username baru<input id="newUsername" type="text" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username" required></label><label>Password saat ini<input id="usernameCurrentPassword" type="password" autocomplete="current-password" required></label><button class="profile-submit" id="usernameSave" type="submit">Simpan username</button><p class="profile-message" id="usernameMessage" role="status"></p></form><form id="passwordForm" class="profile-form"><h3>Ganti password</h3><label>Password saat ini<input id="passwordCurrentPassword" type="password" autocomplete="current-password" required></label><label>Password baru<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label><label>Ulangi password baru<input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label><button class="profile-submit" id="passwordSave" type="submit">Simpan password</button><p class="profile-message" id="passwordMessage" role="status"></p></form></div></section><section class="chat" id="chat"></section><footer class="composer"><div class="attachment-tray" id="attachmentTray" hidden></div><form class="form" id="form"><button class="attach-button" id="attachButton" type="button" aria-label="Tambah lampiran" title="Tambah file atau gambar">＋</button><input id="attachmentInput" type="file" hidden multiple accept="image/jpeg,image/png,image/webp,image/gif,.txt,.md,.csv,.json,.js,.ts,.tsx,.jsx,.py,.lua,.html,.css,.xml,.yaml,.yml,.log"><textarea id="input" placeholder="Tulis pesan..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
+</section><section class="profile-overlay" id="profileOverlay" aria-hidden="true"><div class="profile-panel"><div class="profile-head"><div><h2>Profil akun</h2><p>Kelola username dan password akun kamu.</p></div><button class="profile-close" id="profileClose" type="button">✕</button></div><form id="usernameForm" class="profile-form"><h3>Ganti username</h3><label>Username baru<input id="newUsername" type="text" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username" required></label><label>Password saat ini<input id="usernameCurrentPassword" type="password" autocomplete="current-password" required></label><button class="profile-submit" id="usernameSave" type="submit">Simpan username</button><p class="profile-message" id="usernameMessage" role="status"></p></form><form id="passwordForm" class="profile-form"><h3>Ganti password</h3><label>Password saat ini<input id="passwordCurrentPassword" type="password" autocomplete="current-password" required></label><label>Password baru<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label><label>Ulangi password baru<input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label><button class="profile-submit" id="passwordSave" type="submit">Simpan password</button><p class="profile-message" id="passwordMessage" role="status"></p></form></div></section><section class="chat" id="chat"></section><footer class="composer"><div class="attachment-tray" id="attachmentTray" hidden></div><form class="form" id="form"><button class="attach-button" id="attachButton" type="button" aria-label="Tambah lampiran" title="Tambah file atau gambar">＋</button><input id="attachmentInput" type="file" hidden multiple accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.docx,.txt,.md,.csv,.json,.js,.ts,.tsx,.jsx,.py,.lua,.html,.css,.xml,.yaml,.yml,.log"><textarea id="input" placeholder="Tulis pesan..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
 <script>
 const SUPABASE_URL="https://lxktuagmmugdrgthbgxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_hE2aLl_1yNzY5DDKXHt4Gw_MzruLP-_";
@@ -818,7 +820,7 @@ async function pollPendingJobs(){
 }
 const attachButton=document.getElementById("attachButton"),attachmentInput=document.getElementById("attachmentInput"),attachmentTray=document.getElementById("attachmentTray");
 let selectedAttachments=[];
-const textExtensions=new Set(["txt","md","csv","json","js","ts","tsx","jsx","py","lua","html","css","xml","yaml","yml","log"]);
+const textExtensions=new Set(["txt","md","csv","json","js","ts","tsx","jsx","py","lua","html","css","xml","yaml","yml","log","pdf","docx"]);
 function renderAttachmentTray(){
  attachmentTray.replaceChildren();attachmentTray.hidden=!selectedAttachments.length;
  selectedAttachments.forEach((file,index)=>{
@@ -837,8 +839,10 @@ attachmentInput.addEventListener("change",async()=>{
   const ext=(file.name.split(".").pop()||"").toLowerCase(),isImage=["image/jpeg","image/png","image/webp","image/gif"].includes(file.type);
   if(!isImage&&!textExtensions.has(ext)){alert("Format belum didukung: "+file.name);continue}
   if(isImage&&file.size>3*1024*1024){alert("Ukuran gambar maksimal 3 MB: "+file.name);continue}
-  if(!isImage&&file.size>1024*1024){alert("Ukuran file teks maksimal 1 MB: "+file.name);continue}
-  const item={name:file.name,mimeType:isImage?file.type:"text/plain",size:file.size,path:"",textContent:"",previewUrl:isImage?URL.createObjectURL(file):""};
+  const isDocument=ext==="pdf"||ext==="docx";
+  if(!isImage&&file.size>(isDocument?10:1)*1024*1024){alert("Ukuran file maksimal "+(isDocument?"10":"1")+" MB: "+file.name);continue}
+  const documentMime=ext==="pdf"?"application/pdf":ext==="docx"?"application/vnd.openxmlformats-officedocument.wordprocessingml.document":"text/plain";
+  const item={name:file.name,mimeType:isImage?file.type:documentMime,size:file.size,path:"",textContent:"",previewUrl:isImage?URL.createObjectURL(file):""};
   try{
    if(isImage){
     const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(new Error("File tidak dapat dibaca."));reader.readAsDataURL(file)});
@@ -847,6 +851,17 @@ attachmentInput.addEventListener("change",async()=>{
     item.conversationId=conversationId;
     const response=await fetch("/api/chat-upload",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+activeSession.access_token},body:JSON.stringify({conversationId,fileName:file.name,mimeType:file.type,data:dataUrl})});
     const result=await response.json();if(!response.ok)throw new Error(result.error||"Upload gagal");item.path=result.path;item.size=result.size;
+   }else if(ext==="pdf"){
+    if(!window.pdfjsLib)throw new Error("Pembaca PDF belum termuat. Refresh halaman lalu coba lagi.");
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+    const pages=[];
+    for(let pageNo=1;pageNo<=Math.min(pdf.numPages,30);pageNo++){const page=await pdf.getPage(pageNo);const content=await page.getTextContent();pages.push(content.items.map(item=>item.str||"").join(" "))}
+    item.textContent=pages.join("\n\n").slice(0,50000);
+    if(pdf.numPages>30)item.textContent+="\n\n[Hanya 30 halaman pertama yang diekstrak.]";
+   }else if(ext==="docx"){
+    if(!window.mammoth)throw new Error("Pembaca DOCX belum termuat. Refresh halaman lalu coba lagi.");
+    const result=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});item.textContent=String(result.value||"").slice(0,50000);
    }else{item.textContent=await file.text()}
    selectedAttachments.push(item);renderAttachmentTray();
   }catch(error){if(item.previewUrl)URL.revokeObjectURL(item.previewUrl);alert(error.message||"Gagal menambahkan file.")}
