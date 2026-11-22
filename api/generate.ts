@@ -1,6 +1,6 @@
 import type { VercelRequest,VercelResponse } from "@vercel/node";
 import { runPipeline } from "../src/lib/lucifer/pipeline.js";
-export const config={runtime:"nodejs20.x"};
+export const config={maxDuration:120};
 export default async function handler(req:VercelRequest,res:VercelResponse) {
   res.setHeader("Cache-Control","no-store");
   if(req.method!=="POST") return res.status(405).json({error:"Method not allowed"});
