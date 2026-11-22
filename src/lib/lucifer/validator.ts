@@ -84,7 +84,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     const isConstructor = called === "new" && WHITELIST.moduleConstructors.has(receiver);
     const allowed = call.base?.type === "Identifier"
       ? WHITELIST.globalFns.has(called) || WHITELIST.standardGlobals.has(called) || WHITELIST.moduleNames.has(called)
-      : WHITELIST.allMethods.has(called) || isStandardMember || isConstructor;
+      : WHITELIST.allMethods.has(called) || WHITELIST.standardMembers.has(called) || isStandardMember || isConstructor;
     if (!allowed) add("WHITELIST", call, "Pemanggilan tidak ditemukan di dokumentasi Lucifer atau Lua standard library: " + called + ".");
   }
 
