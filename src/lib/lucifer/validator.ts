@@ -90,7 +90,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
 
   // K1: fire-and-forget results cannot be used as booleans or success indicators.
   for (const node of nodes) {
-    if (node.type === "IfStatement" && contains(node.clauses, n => n.type === "CallExpression" && isActionCall(n))) {
+    if (node.type === "IfStatement" && (node.clauses || []).some((clause: any) => contains(clause.condition, n => n.type === "CallExpression" && isActionCall(n)))) {
       add("K1", node, "Return aksi fire-and-forget tidak boleh menjadi kondisi if.");
     }
     if (node.type === "WhileStatement" && contains(node.condition, n => n.type === "CallExpression" && isActionCall(n))) {
