@@ -93,7 +93,8 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
   const typeByGetter: Record<string, string> = {
     getBot: "bot", getWorld: "world", getTile: "tile", getInventory: "inventory",
     getPlayer: "player", getLocal: "player", getObject: "netobject", getNPC: "npc",
-    getItem: "inventoryitem", getInfo: "itemdescription", getExtra: "tileextra", getSignal: "signal",\n    getLogin: "login", getProxy: "proxy", getPath: "pathnode", getConsole: "console", getLog: "log", getDialog: "dialog"
+    getItem: "inventoryitem", getInfo: "itemdescription", getExtra: "tileextra", getSignal: "signal",
+    getLogin: "login", getProxy: "proxy", getPath: "pathnode", getConsole: "console", getLog: "log", getDialog: "dialog"
   };
   const typedVariables = new Map<string, string>();
   for (const statement of nodes) {
@@ -144,7 +145,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     const allowed = WHITELIST.propertiesByType[type as keyof typeof WHITELIST.propertiesByType]?.has(property) ||
       WHITELIST.allMethods.has(property) || WHITELIST.standardMembers.has(property) ||
       WHITELIST.moduleNames.has(property) || WHITELIST.botProps.has(property);
-    if (!allowed) add("WHITELIST", node, \`Properti/API '\${property}' tidak terdokumentasi untuk objek \${type}.\`);
+    if (!allowed) add("WHITELIST", node, "Properti/API '" + property + "' tidak terdokumentasi untuk objek " + type + ".");
   }
 
   // K1: fire-and-forget results cannot be used as booleans or success indicators.
