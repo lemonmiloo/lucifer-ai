@@ -40,8 +40,8 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     const name = callName(c.base);
     if (!name) continue;
     const root = c.base?.type === "MemberExpression" ? (c.base.base?.name || c.base.object?.name || "") : "";
-    const luaLibraryCall = ["math","string","table","coroutine","os","io","debug","utf8"].includes(root) && WHITELIST.standardGlobals.has(name);
-    if (!WHITELIST.all.has(name) && !luaLibraryCall) add("WHITELIST",c,"Pemanggilan API tidak ditemukan di dokumentasi Lucifer atau standard library Lua: " + name + ".");
+    const luaLibraryCall = ["math","string","table","coroutine","os","io","debug","utf8"].includes(root) && WHITELIST.standardGlobals.has(name);\n    const documentedConstructor = name === "new" && WHITELIST.moduleConstructors.has(root);
+    if (!WHITELIST.all.has(name) && !luaLibraryCall && !documentedConstructor) add("WHITELIST",c,"Pemanggilan API tidak ditemukan di dokumentasi Lucifer atau standard library Lua: " + name + ".");
     if ((name === "sendPacket" || name === "sendRaw") && !opts.allowRaw) add("K7",c,"Raw packet hanya boleh saat allowRaw=true dan diminta eksplisit.");
 
   }
