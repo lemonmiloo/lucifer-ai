@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { verifySupabaseRequest } from "../lib/auth.js";
 
 const docsPath = path.join(process.cwd(), "knowledge", "LUCIFER DOCS.txt");
 let docsCache = "";
@@ -89,6 +90,9 @@ async function saveConversation({visitorId,conversationId,message,answer,usage,m
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({error:"Method not allowed"});
+  let auth;
+  try { auth = await verifySupabaseRequest(req); } catch (error) { console.error("Auth verification error:", error); return res.status(503).json({error:"Tidak dapat memverifikasi sesi saat ini."}); }
+  if (!auth.user) return res.status(auth.status || 401).json({error:auth.error || "Silakan login untuk menggunakan DanKudo AI."});
   const ip = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
   if (!rateLimit(ip)) return res.status(429).json({error:"Terlalu banyak permintaan. Coba lagi satu menit."});
   const key = process.env.VIKEY_API_KEY;
@@ -112,7 +116,7 @@ export default async function handler(req, res) {
     };
     if (Object.prototype.hasOwnProperty.call(greetingReplies, simpleGreeting)) {
       const reply = greetingReplies[simpleGreeting];
-      const visitorId = typeof req.body?.visitorId === "string" ? req.body.visitorId : "";
+      const visitorId = auth.user.id;
       const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
       const model = process.env.VIKEY_MODEL || "deepseek/deepseek-v4-pro";
       if (visitorId && conversationId) {
@@ -154,7 +158,7 @@ export default async function handler(req, res) {
     }
     const isFirstMessage = req.body?.isFirstMessage === true;
     const title = isFirstMessage ? await generateTitle(message, base, key, model) : (typeof req.body?.chatTitle === "string" ? req.body.chatTitle : fallbackTitle(message));
-    const visitorId = typeof req.body?.visitorId === "string" ? req.body.visitorId : "";
+    const visitorId = auth.user.id;
     const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
     if (visitorId && conversationId) {
       try {
