@@ -1069,10 +1069,10 @@ body.authenticated .attachment-tray{max-width:100%;padding:0 4px 8px!important}
  body.authenticated .composer .form{width:100%!important;box-sizing:border-box!important}
 }
 
-/* Keyboard-open layout: prioritize the input area on the empty welcome screen */
+/* Keep the welcome screen visible; let the keyboard cover only its lower portion */
 @media(max-width:600px){
- body.keyboard-open .chat{padding-top:72px!important;padding-bottom:76px!important}
- body.keyboard-open .welcome{display:none!important}
+ body.keyboard-open .chat{padding-top:88px!important;padding-bottom:76px!important}
+ body.keyboard-open .welcome{display:block!important}
  body.keyboard-open .composer{bottom:0!important;padding-bottom:8px!important}
 }
 
