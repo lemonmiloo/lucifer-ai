@@ -372,11 +372,6 @@ async function activateSession(session){
  if(activeSession?.user?.id===session.user.id&&verifiedSessionUserId===session.user.id){activeSession=session;hideBootLoader();return}
  if(sessionVerificationPromise&&pendingSessionUserId===session.user.id){activeSession=session;return sessionVerificationPromise}
  activeSession=session;
- // Tampilkan workspace dan pulihkan riwayat lokal segera; verifikasi server tetap berjalan di belakang layar.
- document.body.classList.remove("session-checking");
- document.body.classList.add("authenticated");
- loadChats();renderHistory();renderMessages([]);
- hideBootLoader();
  pendingSessionUserId=session.user.id;
  sessionVerificationPromise=(async()=>{
   try{
