@@ -990,6 +990,36 @@ body.authenticated .profile-message.success{color:#91e5b5}
  body.authenticated .profile-close,body.authenticated .profile-submit{animation:none!important;transition:none!important}
 }
 
+
+/* Profile entry button — visually aligned with the refreshed profile panel */
+body.authenticated .drawer-footer{
+ padding-top:14px!important;margin-top:auto!important;border-top:1px solid rgba(169,151,220,.12)
+}
+body.authenticated .profile-open-btn{
+ position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+ min-width:112px;padding:10px 16px;border:1px solid rgba(177,153,255,.34);border-radius:12px;
+ background:linear-gradient(135deg,rgba(145,112,225,.2),rgba(75,57,126,.2));
+ color:#eee8ff;font:650 12px Inter,system-ui,sans-serif;letter-spacing:.12px;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 5px 16px rgba(0,0,0,.16);
+ transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease,color .22s ease
+}
+body.authenticated .profile-open-btn::before{
+ content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;
+ background:linear-gradient(135deg,#d5c4ff,#9674f5);box-shadow:0 0 10px rgba(165,137,255,.65)
+}
+body.authenticated .profile-open-btn:hover{
+ border-color:rgba(195,174,255,.65);background:linear-gradient(135deg,rgba(157,125,239,.3),rgba(91,68,151,.3));
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 8px 22px rgba(101,75,177,.2);transform:translateY(-1px)
+}
+body.authenticated .profile-open-btn:active{transform:scale(.97)}
+body.authenticated .profile-open-btn:focus-visible{outline:2px solid #bba5ff;outline-offset:3px}
+@media(max-width:600px){
+ body.authenticated .drawer-footer{padding-top:12px!important}
+ body.authenticated .profile-open-btn{min-height:42px;padding:10px 17px}
+}
+@media(prefers-reduced-motion:reduce){
+ body.authenticated .profile-open-btn{transition:none!important}
+}
 </style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><div class="app-brand-lockup" aria-label="DanKudo AI"><span class="app-brand-mark">D</span><span class="app-brand-copy"><strong>DanKudo</strong><small>AI WORKSPACE</small></span><span class="app-brand-live"></span></div><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
  <div class="dashboard-shell">
   <header class="dashboard-head"><div><p class="dashboard-eyebrow">DANKUDO AI / ADMIN</p><h2>Dashboard</h2><p class="dashboard-subtitle">Monitoring akun dan riwayat percakapan</p></div><button class="dashboard-close" id="dashboardClose" type="button" aria-label="Tutup dashboard">✕</button></header>
