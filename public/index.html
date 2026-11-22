@@ -199,7 +199,10 @@ form.addEventListener("submit",async e=>{
   const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,history,visitorId,conversationId:(currentChat()?.serverId||(currentChat().serverId=crypto.randomUUID()))})});
   const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(raw.trim().startsWith("<")||raw.startsWith("An error")?"Server sedang bermasalah atau timeout. Coba lagi sebentar.":"Respons server tidak valid: "+raw.slice(0,180))}
   if(!r.ok)throw new Error(data.error||"Permintaan gagal");if(typeof data.reply!=="string")throw new Error("Server tidak mengirim jawaban teks.");
-  updateLastMessage(wait,data.reply);history.push({role:"user",content:message},{role:"assistant",content:data.reply});history=history.slice(-8);
+  updateLastMessage(wait,data.reply);
+  const active=currentChat();
+  if(active&&typeof data.title==="string"&&data.title.trim()){active.title=data.title.trim();saveChats();renderHistory()}
+  history.push({role:"user",content:message},{role:"assistant",content:data.reply});history=history.slice(-8);
  }catch(err){updateLastMessage(wait,"Error: "+err.message)}finally{send.disabled=false;send.textContent="Kirim";input.focus()}
 });
 // Enter membuat baris baru; pesan hanya dikirim lewat tombol Kirim.
