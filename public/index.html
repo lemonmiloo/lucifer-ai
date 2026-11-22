@@ -352,7 +352,7 @@ async function activateSession(session){
  try{
   // Server checks the access token against Supabase Auth (auth.users).
   // A cached client session alone is never enough to enter the workspace.
-  const response=await fetch("/api/auth/me",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});
+  const response=await fetch("/api/auth/me",{headers:{Authorization:"Bearer "+session.access_token,"X-Device-ID":deviceId},cache:"no-store"});
   const result=await response.json();
   if(!response.ok||result.id!==session.user.id)throw new Error(result.error||"Akun tidak ditemukan atau sesi tidak valid. Silakan daftar terlebih dahulu.");
   if(verifiedSessionUserId!==session.user.id){chats=[];history=[];currentChatId=null}
