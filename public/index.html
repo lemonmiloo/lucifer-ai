@@ -8,6 +8,13 @@
 .msg{white-space:normal;max-width:88%;padding:15px 17px}.assistant{width:min(100%,760px)}.message-content{overflow-wrap:anywhere;line-height:1.75}.message-content p{margin:0 0 12px}.message-content p:last-child{margin-bottom:0}.message-content h1,.message-content h2,.message-content h3{line-height:1.3;margin:18px 0 9px}.message-content h1{font-size:1.25em}.message-content h2{font-size:1.13em}.message-content h3{font-size:1.04em}.message-content ul,.message-content ol{padding-left:23px;margin:8px 0 14px}.message-content li{margin:5px 0}.message-content blockquote{border-left:3px solid var(--accent);margin:12px 0;padding:4px 12px;color:#c6c1d6}.message-content code.inline-code{background:#080a10;border:1px solid var(--line);border-radius:5px;padding:2px 6px;font: .9em ui-monospace,monospace;color:#d8caff}.code-wrap{margin:13px 0 15px;border:1px solid #343044;border-radius:12px;overflow:hidden;background:#080a10}.code-head{height:38px;padding:0 10px 0 13px;display:flex;align-items:center;justify-content:space-between;background:#171827;border-bottom:1px solid #343044;color:#a9a4b9;font-size:11px}.copy-code{border:1px solid #454057;background:#242236;color:#eee;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer}.copy-code:hover{background:#35304d}.code-wrap pre{margin:0;border:0;border-radius:0;padding:14px;max-height:480px;overflow:auto;white-space:pre;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e2ddf5}.assistant .message-content> :first-child{margin-top:0}.assistant .message-content> :last-child{margin-bottom:0}@media(max-width:600px){.msg{max-width:98%;padding:13px}.assistant{width:100%}.code-wrap pre{font-size:12px}}
 
 .top{height:56px;min-height:56px;padding:0;border:0;gap:0}
+@media(max-width:600px){
+ html,body{height:100%;overflow:hidden}
+ body{height:var(--app-height,100dvh)}
+ .app{height:var(--app-height,100dvh);min-height:0;overflow:hidden}
+ .chat{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+ .composer{position:relative;flex-shrink:0;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+}
 /* Floating top controls stay visible while the conversation scrolls */
 /* Keep the history toggle behind the drawer/backdrop when the drawer is open */
 body.drawer-open #historyToggle{display:none}
@@ -160,12 +167,31 @@ function renderContent(container,text){
  }
 }
 function add(text,role,persist=true){
- const w=document.getElementById("welcome");if(w)w.remove();const el=document.createElement("div");el.className="msg "+role;const content=document.createElement("div");content.className="message-content";renderContent(content,text);el.appendChild(content);chat.appendChild(el);el.scrollIntoView({behavior:"smooth",block:"end"});
+ const w=document.getElementById("welcome");if(w)w.remove();const el=document.createElement("div");el.className="msg "+role;const content=document.createElement("div");content.className="message-content";renderContent(content,text);el.appendChild(content);chat.appendChild(el);chat.scrollTo({top:chat.scrollHeight,behavior:"smooth"});
  if(persist){let c=currentChat();if(!c){c={id:String(Date.now())+Math.random().toString(36).slice(2,7),serverId:crypto.randomUUID(),title:String(text).slice(0,42)||"Chat baru",messages:[],updatedAt:Date.now()};chats.push(c);currentChatId=c.id}c.messages.push({role,content:String(text??"")});c.updatedAt=Date.now();saveChats();renderHistory()}
  return el;
 }
 function updateLastMessage(el,text){const content=el.querySelector(".message-content");if(content)renderContent(content,text);const c=currentChat();if(c){const last=c.messages[c.messages.length-1];if(last)last.content=String(text??"");c.updatedAt=Date.now();saveChats();renderHistory()}}
 loadChats();renderHistory();
+// Ikuti tinggi visual viewport saat keyboard mobile muncul, tanpa menggeser seluruh halaman.
+function syncMobileViewport(){
+ if(!window.matchMedia("(max-width: 600px)").matches)return;
+ const vv=window.visualViewport;
+ const height=vv?vv.height:window.innerHeight;
+ const top=vv?vv.offsetTop:0;
+ document.documentElement.style.setProperty("--app-height",height+"px");
+ document.documentElement.style.setProperty("--viewport-top",top+"px");
+}
+syncMobileViewport();
+if(window.visualViewport){
+ window.visualViewport.addEventListener("resize",syncMobileViewport);
+ window.visualViewport.addEventListener("scroll",syncMobileViewport);
+}
+window.addEventListener("resize",syncMobileViewport);
+input.addEventListener("input",()=>{
+ input.style.height="auto";
+ input.style.height=Math.min(input.scrollHeight,160)+"px";
+});
 form.addEventListener("submit",async e=>{
  e.preventDefault();const message=input.value.trim();if(!message)return;input.value="";add(message,"user");send.disabled=true;send.textContent="...";
  const wait=add("Lucifer sedang berpikir...","assistant");try{
