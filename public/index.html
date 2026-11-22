@@ -713,14 +713,10 @@ function syncMobileViewport(){
  const top=keyboardOpen?vv.offsetTop:0;
  document.documentElement.style.setProperty("--app-height",height+"px");
  document.documentElement.style.setProperty("--viewport-top",top+"px");
- if(document.activeElement===input)scrollChatToBottom("auto");
+ /* Do not force-scroll while the keyboard opens; preserve the reader position. */
 }
 syncMobileViewport();
-input.addEventListener("focus",()=>{
- scrollChatToBottom("auto");
- setTimeout(()=>scrollChatToBottom("auto"),100);
- setTimeout(()=>scrollChatToBottom("auto"),260);
-});
+/* Focusing the composer no longer jumps the conversation. */
 if(window.visualViewport){
  window.visualViewport.addEventListener("resize",syncMobileViewport);
  window.visualViewport.addEventListener("scroll",syncMobileViewport);
@@ -928,4 +924,11 @@ input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.stopPropagation()}});
   transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
  }
  .composer .send:active{transform:scale(.96);filter:brightness(1.08)}
+}
+
+/* Keep the message viewport independent from the floating composer on mobile. */
+@media(max-width:600px){
+ .chat{min-height:0;flex:1 1 0;overflow-y:auto;scroll-padding-top:96px;scroll-padding-bottom:140px;padding-top:88px!important;padding-bottom:140px!important}
+ .composer{position:absolute!important;left:14px;right:14px;bottom:0;z-index:5}
+ .app{min-height:0}
 }
