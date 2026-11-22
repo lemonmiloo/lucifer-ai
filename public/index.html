@@ -1077,7 +1077,6 @@ body.authenticated .attachment-tray{max-width:100%;padding:0 4px 8px!important}
   margin:0 auto!important;padding:8px 0 max(8px,env(safe-area-inset-bottom))!important;
   background:linear-gradient(180deg,transparent,rgba(8,9,18,.94) 24%)!important;
  }
- body.keyboard-open .chat{padding-top:38px!important;padding-bottom:26px!important}
 }
 
 /* Center the composer itself and prevent flex children from pushing it sideways */
@@ -1376,20 +1375,21 @@ function scrollChatToBottom(behavior="auto"){
  const move=()=>{chat.scrollTo({top:chat.scrollHeight,behavior})};
  requestAnimationFrame(()=>{move();requestAnimationFrame(move)});
 }
-let mobileBaseHeight=window.innerHeight;
+let mobileBaseHeight=Math.max(window.innerHeight,window.visualViewport?.height||0);
 function syncMobileViewport(){
  if(!window.matchMedia("(max-width: 600px)").matches)return;
  const vv=window.visualViewport;
- const keyboardOpen=!!vv&&vv.height<window.innerHeight-120;
+ const visibleHeight=Math.round(vv?.height||window.innerHeight);
+ /* Compare against the last keyboard-closed height. Android may shrink
+    window.innerHeight and visualViewport.height together when typing. */
+ const keyboardOpen=!!vv&&visibleHeight<mobileBaseHeight-120;
  document.body.classList.toggle("keyboard-open",keyboardOpen);
- /* Keep the workspace at its pre-keyboard height so the keyboard overlays it,
-    rather than shrinking/re-centering the welcome screen. */
  if(!keyboardOpen){
-  mobileBaseHeight=window.innerHeight;
+  mobileBaseHeight=Math.max(visibleHeight,window.innerHeight);
   document.documentElement.style.setProperty("--app-height",mobileBaseHeight+"px");
   document.documentElement.style.setProperty("--viewport-top","0px");
  }
- /* Do not force-scroll or resize the welcome workspace when the keyboard opens. */
+ /* Keep the app canvas at its original height while the keyboard overlays it. */
 }
 syncMobileViewport();
 /* Focusing the composer no longer jumps the conversation. */
