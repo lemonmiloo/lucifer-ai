@@ -68,17 +68,18 @@ document.addEventListener("touchmove",e=>{
  backdrop.style.pointerEvents=progress>0?"auto":"none";
  const now=performance.now(),dt=Math.max(1,now-swipeLastTime);swipeVelocity=(t.clientX-swipeLastX)/dt;swipeLastX=t.clientX;swipeLastTime=now;
 },{passive:false});
+function modeForFinish(mode,progress,velocity){return mode==="opening"?(progress>.25||velocity>.45):(progress<.75||velocity<-.45)}
 function finishDrawerDrag(e){
  if(!swipeMode)return;
  const t=e.changedTouches&&e.changedTouches[0];
  const dx=t?t.clientX-swipeStartX:0;
  const width=drawer.getBoundingClientRect().width;
  const progress=swipeMode==="opening"?Math.max(0,Math.min(1,dx/width)):Math.max(0,Math.min(1,1+dx/width));
- const shouldOpen=progress>.25||swipeVelocity>.45;
+ const finishGesture=modeForFinish(swipeMode,progress,swipeVelocity);
  const mode=swipeMode;
  resetDrawerDrag();
- if(mode==="opening"){if(shouldOpen)openDrawer();else closeDrawer()}
- else {if(shouldOpen)closeDrawer();else openDrawer()}
+ if(mode==="opening"){if(finishGesture)openDrawer();else closeDrawer()}
+ else {if(finishGesture)closeDrawer();else openDrawer()}
 }
 document.addEventListener("touchend",finishDrawerDrag,{passive:true});
 document.addEventListener("touchcancel",()=>{if(swipeMode){const mode=swipeMode;resetDrawerDrag();if(mode==="opening")closeDrawer();else openDrawer()}},{passive:true});
