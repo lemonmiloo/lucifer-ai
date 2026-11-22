@@ -531,7 +531,7 @@ function renderMessages(messages){
  }
  messages.forEach(m=>m.jobId?renderPendingMessage(m):add(m.content,m.role,false));
 }
-function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory()}
+function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory();pollPendingJobs()}
 function newChat(){currentChatId=null;history=[];renderMessages([]);closeDrawer();renderHistory();input.focus()}
 document.getElementById("newChat").addEventListener("click",newChat);
 document.getElementById("newChatTop").addEventListener("click",newChat);
