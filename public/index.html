@@ -202,5 +202,6 @@ form.addEventListener("submit",async e=>{
   updateLastMessage(wait,data.reply);history.push({role:"user",content:message},{role:"assistant",content:data.reply});history=history.slice(-8);
  }catch(err){updateLastMessage(wait,"Error: "+err.message)}finally{send.disabled=false;send.textContent="Kirim";input.focus()}
 });
-input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
+// Enter membuat baris baru; pesan hanya dikirim lewat tombol Kirim.
+input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.stopPropagation()}});
 </script></body></html>
