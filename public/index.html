@@ -6,6 +6,8 @@
 .history-btn{width:40px;height:40px;border:1px solid var(--line);border-radius:12px;background:#141827;color:#eee;font-size:21px;cursor:pointer;display:grid;place-items:center}.drawer-backdrop{position:fixed;inset:0;background:#0009;z-index:10;opacity:0;pointer-events:none;transition:opacity .28s ease}.drawer-backdrop.open{opacity:1;pointer-events:auto}.drawer{position:fixed;z-index:11;inset:0 auto 0 0;width:min(330px,86vw);background:#101421;border-right:1px solid var(--line);padding:18px;transform:translate3d(-105%,0,0);transition:transform .28s cubic-bezier(.22,.8,.25,1);will-change:transform;display:flex;flex-direction:column;gap:14px}.drawer.open{transform:translate3d(0,0,0)}.drawer,.drawer-backdrop{touch-action:pan-y;overscroll-behavior:contain}body.drawer-open{touch-action:pan-y;overscroll-behavior:contain}body.drawer-open .app{touch-action:pan-y}.drawer.dragging{transition:none}.drawer-backdrop.dragging{transition:none}.drawer-head{display:flex;align-items:center;justify-content:space-between;font-weight:750;font-size:17px}.drawer-actions{display:flex;gap:8px}.drawer-btn{border:1px solid var(--line);background:#1a2030;color:#eee;border-radius:10px;padding:10px 12px;cursor:pointer}.history-list{overflow:auto;display:flex;flex-direction:column;gap:7px}.history-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid transparent;background:#171d2b;color:#e8e6f0;border-radius:10px;padding:11px;cursor:pointer}.history-item.active{border-color:var(--accent);background:#242039}.history-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:13px}.history-delete{border:0;background:transparent;color:#929bb0;font-size:17px;cursor:pointer;padding:2px 5px}.history-empty{color:var(--muted);font-size:13px;line-height:1.5;padding:12px 4px}.top{gap:10px}.new-chat-top{margin-left:auto;border:1px solid #494064;border-radius:12px;background:#211b35;color:#f4f0ff;padding:10px 13px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}.new-chat-top:hover{background:#30264b}.new-chat-top:disabled{opacity:.48;cursor:not-allowed;background:#211b35}
 
 .msg{white-space:normal;max-width:88%;padding:15px 17px}.assistant{width:min(100%,760px)}.message-content{overflow-wrap:anywhere;line-height:1.75}.message-content p{margin:0 0 12px}.message-content p:last-child{margin-bottom:0}.message-content h1,.message-content h2,.message-content h3{line-height:1.3;margin:18px 0 9px}.message-content h1{font-size:1.25em}.message-content h2{font-size:1.13em}.message-content h3{font-size:1.04em}.message-content ul,.message-content ol{padding-left:23px;margin:8px 0 14px}.message-content li{margin:5px 0}.message-content blockquote{border-left:3px solid var(--accent);margin:12px 0;padding:4px 12px;color:#c6c1d6}.message-content code.inline-code{background:#080a10;border:1px solid var(--line);border-radius:5px;padding:2px 6px;font: .9em ui-monospace,monospace;color:#d8caff}.code-wrap{margin:13px 0 15px;border:1px solid #343044;border-radius:12px;overflow:hidden;background:#080a10}.code-head{height:38px;padding:0 10px 0 13px;display:flex;align-items:center;justify-content:space-between;background:#171827;border-bottom:1px solid #343044;color:#a9a4b9;font-size:11px}.copy-code{border:1px solid #454057;background:#242236;color:#eee;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer}.copy-code:hover{background:#35304d}.code-wrap pre{margin:0;border:0;border-radius:0;padding:14px;max-height:480px;overflow:auto;white-space:pre;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e2ddf5}.assistant .message-content> :first-child{margin-top:0}.assistant .message-content> :last-child{margin-bottom:0}@media(max-width:600px){.msg{max-width:98%;padding:13px}.assistant{width:100%}.code-wrap pre{font-size:12px}}
+/* Animated thinking indicator */
+.typing-indicator{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:2px 1px}.typing-indicator span{width:7px;height:7px;border-radius:50%;background:#b9a5ff;opacity:.45;animation:lucifer-dot-bounce 1s ease-in-out infinite}.typing-indicator span:nth-child(2){animation-delay:.16s}.typing-indicator span:nth-child(3){animation-delay:.32s}@keyframes lucifer-dot-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-7px);opacity:1}}
 
 .top{height:56px;min-height:56px;padding:0;border:0;gap:0}
 @media(max-width:600px){
@@ -195,15 +197,31 @@ input.addEventListener("input",()=>{
 });
 form.addEventListener("submit",async e=>{
  e.preventDefault();const message=input.value.trim();if(!message)return;input.value="";input.style.height="44px";add(message,"user");send.disabled=true;send.textContent="...";
- const wait=add("Lucifer sedang berpikir...","assistant");try{
+ const wait=add("","assistant",false);
+ const waitContent=wait.querySelector(".message-content");
+ const dots=document.createElement("div");dots.className="typing-indicator";dots.setAttribute("aria-label","Lucifer sedang berpikir");
+ for(let i=0;i<3;i++)dots.appendChild(document.createElement("span"));
+ waitContent.appendChild(dots);
+ try{
   const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,history,visitorId,isFirstMessage:currentChat()?.messages.length===1,chatTitle:currentChat()?.title,conversationId:(currentChat()?.serverId||(currentChat().serverId=crypto.randomUUID()))})});
   const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(raw.trim().startsWith("<")||raw.startsWith("An error")?"Server sedang bermasalah atau timeout. Coba lagi sebentar.":"Respons server tidak valid: "+raw.slice(0,180))}
   if(!r.ok)throw new Error(data.error||"Permintaan gagal");if(typeof data.reply!=="string")throw new Error("Server tidak mengirim jawaban teks.");
-  updateLastMessage(wait,data.reply);
+  dots.remove();
+  const answer=data.reply,parts=answer.match(/\S+\s*/g)||[];let shown="";
+  for(let i=0;i<parts.length;i++){
+   shown+=parts[i];waitContent.textContent=shown;
+   if(i%3===2||i===parts.length-1){
+    if(chat.scrollHeight-chat.scrollTop-chat.clientHeight<180)chat.scrollTo({top:chat.scrollHeight,behavior:"auto"});
+    const tail=parts[i].trim(),pause=/[.!?。！？]$/.test(tail)?95:/[,;:]$/.test(tail)?55:18;
+    await new Promise(resolve=>setTimeout(resolve,pause));
+   }
+  }
+  renderContent(waitContent,answer);
   const active=currentChat();
+  if(active){active.messages.push({role:"assistant",content:answer});active.updatedAt=Date.now();saveChats();renderHistory()}
   if(active&&typeof data.title==="string"&&data.title.trim()){active.title=data.title.trim();saveChats();renderHistory()}
-  history.push({role:"user",content:message},{role:"assistant",content:data.reply});history=history.slice(-8);
- }catch(err){updateLastMessage(wait,"Error: "+err.message)}finally{send.disabled=false;send.textContent="Kirim";input.focus()}
+  history.push({role:"user",content:message},{role:"assistant",content:answer});history=history.slice(-8);
+ }catch(err){wait.remove();add("Error: "+err.message,"assistant")}finally{send.disabled=false;send.textContent="Kirim";input.focus()}
 });
 // Enter membuat baris baru; pesan hanya dikirim lewat tombol Kirim.
 input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.stopPropagation()}});
