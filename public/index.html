@@ -286,10 +286,10 @@ authForm.addEventListener("submit",async e=>{
  try{
   const email=authEmail.value.trim().toLowerCase(),password=authPassword.value;
   if(authMode==="register"){
-   const {data,error}=await authClient.auth.signUp({email,password});
+   const {data,error}=await authClient.auth.signUp({email,password,options:{emailRedirectTo:"https://lucifer-ai-lemonmilo.vercel.app/"}});
    if(error)throw error;
    if(data.session){authMessage.textContent="Akun berhasil dibuat.";authMessage.className="auth-message success";await activateSession(data.session)}
-   else{setAuthMode("login");authMessage.textContent="Akun dibuat. Cek email untuk verifikasi, lalu masuk.";authMessage.className="auth-message success"}
+   else{setAuthMode("login");authMessage.textContent="Akun dibuat. Cek email dan klik link verifikasi DanKudo AI sebelum masuk.";authMessage.className="auth-message success"}
   }else{
    const {data,error}=await authClient.auth.signInWithPassword({email,password});
    if(error)throw error;
