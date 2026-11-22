@@ -50,7 +50,8 @@ document.addEventListener("touchstart",e=>{
  if(e.touches.length!==1)return;
  const t=e.touches[0],isOpen=drawer.classList.contains("open");
  if(isOpen){
-  if(!drawer.contains(e.target))return;
+  // Saat riwayat terbuka, izinkan swipe tutup dari seluruh area layar,
+  // termasuk backdrop dan area di luar panel riwayat.
   touchMode="closing";
  }else{
   if(e.target.closest("button,a,input,textarea,select,pre,.code-wrap"))return;
@@ -94,7 +95,8 @@ document.addEventListener("touchend",e=>{
 document.addEventListener("touchcancel",()=>{
  if(!touchMode)return;
  const mode=touchMode;resetTouchDrag();
- if(mode==="opening")closeDrawer();else openDrawer();
+ // Gesture yang dibatalkan tidak boleh memicu drawer terbuka ulang.
+ if(mode==="opening")closeDrawer();
 },{passive:true});
 
 function renderHistory(){
