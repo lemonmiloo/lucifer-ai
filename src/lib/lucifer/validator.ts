@@ -48,7 +48,7 @@ function hasNilGuard(src: string, variable: string, after: number): boolean {
   const prefix = src.slice(0, after);
   const escaped = variable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const guards = [
-    new RegExp("\\bif\\s+" + escaped + "\\s+then\\b"),
+    new RegExp("\\bif\\s+" + escaped + "(?:\\s+then\\b|\\s+and\\b)"),
     new RegExp("\\bif\\s+" + escaped + "\\s*(?:~=|==)\\s*nil\\b"),
     new RegExp("\\bif\\s+not\\s+" + escaped + "\\s+then\\b")
   ];
@@ -84,7 +84,7 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     const isConstructor = called === "new" && WHITELIST.moduleConstructors.has(receiver);
     const allowed = call.base?.type === "Identifier"
       ? WHITELIST.globalFns.has(called) || WHITELIST.standardGlobals.has(called) || WHITELIST.moduleNames.has(called)
-      : WHITELIST.allMethods.has(called) || WHITELIST.standardMembers.has(called) || isStandardMember || isConstructor;
+      : WHITELIST.allMethods.has(called) || WHITELIST.globalFns.has(called) || WHITELIST.standardMembers.has(called) || isStandardMember || isConstructor;
     if (!allowed) add("WHITELIST", call, "Pemanggilan tidak ditemukan di dokumentasi Lucifer atau Lua standard library: " + called + ".");
   }
 
