@@ -39,7 +39,7 @@ async function saveConversation({visitorId,conversationId,message,answer,usage,m
   const base = url.replace(/\/$/,"") + "/rest/v1/";
   const headers = {
     apikey: secret,
-    Authorization: "Bearer " + secret,
+    ...(secret.startsWith("sb_secret_") ? {} : {Authorization: "Bearer " + secret}),
     "Content-Type": "application/json",
     Prefer: "resolution=merge-duplicates,return=minimal"
   };
