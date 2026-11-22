@@ -40,10 +40,10 @@ body.drawer-open #newChatTop:hover{background:#211b35}
 .auth-brand{text-align:center;font-size:25px;font-weight:750;letter-spacing:-.7px;margin:0 0 7px}
 .auth-caption{text-align:center;color:var(--muted);font-size:13px;margin:0 0 25px}
 .auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;background:#090d18;border-radius:11px;margin-bottom:18px}
-.auth-tab{border:0;border-radius:8px;padding:10px;background:transparent;color:#9ca4b7;cursor:pointer;font:600 13px inherit}
+.auth-tab{border:0;border-radius:8px;padding:10px;background:transparent;color:#9ca4b7;cursor:pointer;font:inherit;font-size:13px;font-weight:600}
 .auth-tab.active{background:#28213f;color:#fff}
 .auth-field{display:block;margin:13px 0;color:#c9c7d5;font-size:12px}
-.auth-field input{display:block;width:100%;margin-top:7px;border:1px solid #30364a;border-radius:10px;background:#090d18;color:#fff;padding:13px;font:14px inherit;outline:none}
+.auth-field input{display:block;width:100%;margin-top:7px;border:1px solid #30364a;border-radius:10px;background:#090d18;color:#fff;padding:13px;font:inherit;font-size:14px;outline:none}
 .auth-field input:focus{border-color:#9b78ff}
 .auth-submit{width:100%;border:0;border-radius:11px;padding:13px;margin-top:10px;background:#9b78ff;color:white;font-weight:700;cursor:pointer}
 .auth-submit:disabled{opacity:.55;cursor:wait}
@@ -262,6 +262,7 @@ document.getElementById("registerTab").addEventListener("click",()=>setAuthMode(
 function showAuthScreen(){document.body.classList.remove("authenticated");document.getElementById("authScreen").style.display="grid"}
 async function activateSession(session){
  if(!session){activeSession=null;showAuthScreen();return}
+ if(activeSession?.user?.id===session.user.id){activeSession=session;return}
  activeSession=session;
  try{
   const response=await fetch("/api/auth/me",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});
