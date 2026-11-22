@@ -37,7 +37,7 @@ document.getElementById("historyToggle").addEventListener("click",openDrawer);
 document.getElementById("closeDrawer").addEventListener("click",closeDrawer);
 backdrop.addEventListener("click",closeDrawer);
 // Swipe drawer memakai Touch Events: horizontal ditangani aplikasi, vertikal tetap bisa scroll.
-let touchStartX=0,touchStartY=0,touchLastX=0,touchLastAt=0,touchVelocity=0,touchMode=null,touchMoved=false;
+let touchStartX=0,touchStartY=0,touchLastX=0,touchLastAt=0,touchStartAt=0,touchVelocity=0,touchMode=null,touchMoved=false;
 function resetTouchDrag(){
  drawer.classList.remove("dragging");
  backdrop.classList.remove("dragging");
@@ -56,7 +56,7 @@ document.addEventListener("touchstart",e=>{
   if(e.target.closest("button,a,input,textarea,select,pre,.code-wrap"))return;
   touchMode="opening";
  }
- touchStartX=touchLastX=t.clientX;touchStartY=t.clientY;touchLastAt=performance.now();touchVelocity=0;touchMoved=false;
+ touchStartX=touchLastX=t.clientX;touchStartY=t.clientY;touchStartAt=touchLastAt=performance.now();touchVelocity=0;touchMoved=false;
 },{passive:true});
 document.addEventListener("touchmove",e=>{
  if(!touchMode||e.touches.length!==1)return;
@@ -77,11 +77,19 @@ document.addEventListener("touchmove",e=>{
 document.addEventListener("touchend",e=>{
  if(!touchMode)return;
  const mode=touchMode,t=e.changedTouches[0],dx=t.clientX-touchStartX,width=drawer.getBoundingClientRect().width;
- const progress=mode==="opening"?Math.max(0,Math.min(1,dx/width)):Math.max(0,Math.min(1,1+dx/width));
- const shouldFinish=touchMoved&&(mode==="opening"?(progress>.18||touchVelocity>.22):(progress<.82||touchVelocity<-.22));
+ const elapsed=Math.max(1,performance.now()-touchStartAt);
+ const totalVelocity=dx/elapsed;
+ const shouldFinish=touchMoved&&(mode==="opening"
+  ?(dx>Math.max(48,width*.16)||totalVelocity>.35)
+  :(dx<-Math.max(48,width*.16)||totalVelocity<-.35));
  resetTouchDrag();
- if(mode==="opening"){if(shouldFinish)openDrawer();else closeDrawer()}
- else{if(shouldFinish)closeDrawer();else openDrawer()}
+ if(mode==="opening"){
+  if(shouldFinish)openDrawer();else closeDrawer();
+ }else if(shouldFinish){
+  closeDrawer();
+ }
+ // Jika swipe tutup terlalu pendek, biarkan drawer tetap terbuka.
+ // Jangan panggil openDrawer() lagi karena itu memulai animasi buka ulang.
 },{passive:true});
 document.addEventListener("touchcancel",()=>{
  if(!touchMode)return;
