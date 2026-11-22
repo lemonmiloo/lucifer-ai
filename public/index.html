@@ -15,7 +15,9 @@
  body{height:var(--app-height,100dvh)}
  .app{position:fixed;top:var(--viewport-top,0px);left:0;right:0;height:var(--app-height,100dvh);min-height:0;overflow:hidden}
  .top{height:68px;min-height:68px}
- .chat{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:38px}
+ .chat{position:relative;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:16px}
+ .chat::before{content:"";position:sticky;top:0;z-index:3;display:block;flex:0 0 0;height:0;margin-bottom:0;pointer-events:none;opacity:0;transition:height .22s ease,margin-bottom .22s ease,opacity .22s ease;backdrop-filter:blur(0);background:linear-gradient(to bottom,rgba(9,11,18,.96),rgba(9,11,18,.62),transparent)}
+ .chat.has-scrolled-top::before{height:34px;margin-bottom:-34px;opacity:1;backdrop-filter:blur(9px)}
  .composer{position:relative;flex-shrink:0;padding-bottom:8px}
 }
 /* Floating top controls stay visible while the conversation scrolls */
@@ -666,9 +668,14 @@ function renderPendingMessage(message){
 function updateLastMessage(el,text){const content=el.querySelector(".message-content");if(content)renderContent(content,text);const c=currentChat();if(c){const last=c.messages[c.messages.length-1];if(last)last.content=String(text??"");c.updatedAt=Date.now();saveChats();renderHistory()}}
 renderMessages([]);
 // Ikuti tinggi visual viewport saat keyboard mobile muncul, tanpa menggeser seluruh halaman.
+function updateChatTopFade(){
+ const active=window.matchMedia("(max-width: 600px)").matches&&chat.scrollTop>8;
+ chat.classList.toggle("has-scrolled-top",active);
+}
+chat.addEventListener("scroll",updateChatTopFade,{passive:true});
 function scrollChatToBottom(behavior="auto"){
  if(!window.matchMedia("(max-width: 600px)").matches)return;
- const move=()=>chat.scrollTo({top:chat.scrollHeight,behavior});
+ const move=()=>{chat.scrollTo({top:chat.scrollHeight,behavior});updateChatTopFade()};
  requestAnimationFrame(()=>{move();requestAnimationFrame(move)});
 }
 function syncMobileViewport(){
