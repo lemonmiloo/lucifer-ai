@@ -670,3 +670,162 @@ if bot.getSignal ~= nil then
     print(s.x, s.y)
 end
 ```
+
+---
+
+# 11. PRACTICAL SCRIPT PATTERNS — USER-SUPPLIED LUCIFER v2.86/v2.87 EXAMPLES
+
+This section distills patterns from seven user-supplied scripts. These are implementation examples, not proof that every line is correct or compatible. The API reference above remains authoritative. Before generating code, verify each method/property against the relevant API section and preserve the target version stated by the user. Do not copy webhook URLs, credentials, private identifiers, or hardcoded personal configuration from examples.
+
+## 11.1 Safe Item Catalog Cache
+
+A script may build a lookup cache once with `getInfos()`, then use `getInfo(id)` as a fallback:
+
+```lua
+local ITEM_CACHE = {}
+
+local ok, infos = pcall(getInfos)
+if ok and type(infos) == "table" then
+    for _, info in pairs(infos) do
+        local id = tonumber(info.id)
+        if id and info.name and info.name ~= "" then
+            ITEM_CACHE[id] = info.name
+        end
+    end
+end
+
+local function getItemName(id)
+    id = tonumber(id)
+    if not id then return "Unknown" end
+    if ITEM_CACHE[id] then return ITEM_CACHE[id] end
+    local okInfo, info = pcall(getInfo, id)
+    if okInfo and info and info.name and info.name ~= "" then
+        ITEM_CACHE[id] = info.name
+        return info.name
+    end
+    return "ID_" .. tostring(id)
+end
+```
+
+Use numeric IDs consistently as cache keys. Catalog data may be unavailable; always provide a readable fallback.
+
+## 11.2 World Scan Data Pipeline
+
+A reusable scanner should separate collection from reporting:
+1. Validate bot and connection state.
+2. Leave the previous world if needed, request warp, and wait with a bounded timeout.
+3. After warp, fetch a fresh world object with `bot:getWorld()`; do not reuse a World snapshot from before warp/reconnect.
+4. Read tile data using `world:getTilesSafe()`; count foreground and background separately when the task requires it.
+5. Read dropped objects using `world:getObjects()`; aggregate by item ID and count.
+6. Return a structured table (world name, tile counts, floating counts, optional tile coordinates, lock metadata).
+7. Keep filtering, sorting, webhook formatting, and output outside the scanner.
+
+A growscan API may be used when documented and available, with safe tile/object enumeration as fallback. Treat an empty result separately from a failed read; do not silently report an API error as a genuinely empty world.
+
+## 11.3 Warp, Door, and Reconnect State
+
+Examples use `bot:warp(world)` or `bot:warp(world, door)`, followed by bounded polling of `bot:isInWorld(world)`. A robust flow:
+- Check `bot.status` against symbolic `BotStatus` values.
+- Use a finite retry count and timeout; never wait forever for a warp.
+- After reconnect or warp, reacquire `bot:getWorld()`, local player/tile, and inventory snapshots as needed.
+- Validate that the bot is actually in the intended world before acting.
+- A door tile check such as foreground ID 6 is an example-specific heuristic, not a universal proof of successful entry.
+- Return an explicit boolean/result object from helper functions and let the caller decide whether to retry, abort, or report failure.
+
+Avoid global cached `world` and `inventory` references across transitions. Prefer small accessors that reacquire current state.
+
+## 11.4 Inventory and Dropped-Object Accounting
+
+Common pattern:
+- `bot:getInventory()` returns an inventory object; use `inventory:getItemCount(itemId)` for counts.
+- `world:getObjects()` returns dropped objects; aggregate `obj.count` by `obj.id`.
+- Object pixel coordinates can be converted to tile coordinates with `math.floor(obj.x / 32)` and `math.floor(obj.y / 32)` when the API's object coordinates are pixels.
+- Before drop/trash/wear/collect actions, validate item ID and positive count.
+- Keep collection toggles and inventory actions explicit; restore settings if a helper temporarily changes them.
+
+Do not assume `getObjects()` is a global function in every context when the documented world method `world:getObjects()` is available.
+
+## 11.5 HTTP Client and Webhook Reporting
+
+The examples demonstrate the following API shape; verify the HTTP section of this reference for exact response fields:
+- `HttpClient.new()`
+- `client.url = url`
+- `client:setMethod(Method.get|Method.post|Method.patch)`
+- `client.headers = { ["Content-Type"] = "application/json" }`
+- `client.content = body`
+- `client.timeout = seconds` where supported
+- `client:request()`
+
+Use `pcall()`, inspect the returned error/status/body fields, and handle non-2xx responses explicitly. Encode JSON with a real JSON encoder if one is documented; if manual encoding is unavoidable, escape backslashes, quotes, and control characters. Respect the destination service's documented rate limits.
+
+Webhook examples also use `Webhook.new(url)`, `hook:send()`, `hook:edit()`, embed title/description/color, and `hook.embed1:addField(...)`. Message editing requires a valid message ID. Persist only the message ID in a local state file; never persist or commit the webhook URL. If the message was deleted (404), clear the stored ID before creating a replacement. Treat 429 as rate limiting and wait according to the service's response guidance. Never assume an edit succeeded solely because `pcall` did not throw; inspect the response when available.
+
+## 11.6 Event Listener and Chat Parsing
+
+The supplied event example uses:
+```lua
+local function on_variantlist(varlist, netid)
+    if not varlist then return end
+    local head = varlist:get(0)
+    if not head or head:getType() ~= VariantType.string then return end
+    local eventName = head:getString()
+    -- Keep callback work short; pass parsed data to the main loop/thread.
+end
+
+addEvent(Event.variantlist, on_variantlist)
+while true do
+    listenEvents(1.0)
+end
+```
+
+Use the documented event names and variant types. Event callbacks should validate every optional element before reading it and remain lightweight; do not perform long loops, repeated warps, or long sleeps inside callbacks. Remove listeners during cleanup with the documented event-removal API. Treat chat text as untrusted input; parse commands with explicit allowlists and verify the sender identity/permissions before acting.
+
+## 11.7 Threads and Multi-World Auto-Transfer
+
+The examples demonstrate:
+- `runThread(worker, ...)` for an independent worker.
+- `bot.auto_transfer.enabled`, `input`, `output`, and `itemid` for configuring the documented auto-transfer module.
+- A list of world targets parsed from `WORLD|DOORID` or `WORLD:DOORID`.
+- Index-based iteration over item IDs and world targets.
+- `bot:getLog():append(message)` for application log output.
+
+Before enabling a worker, validate its inputs and define how it stops. Avoid two threads mutating the same bot settings without coordination. Disable auto-transfer and stop worker loops during cleanup. Do not assume undocumented property names or that changing `input` immediately completes a transfer.
+
+## 11.8 PNB / Reconnect Automation Architecture
+
+The PNB example illustrates a large workflow split into helpers: join/reconnect, position lookup, tile checks, break/place, inventory retrieval, machine retrieval, drop/storage, trash, and main loop. For new code:
+- Keep configuration together and validate world names, door IDs, item IDs, counts, and mode strings at startup.
+- Prefer local variables over shared globals.
+- Factor repeated tile operations into one helper parameterized by coordinates.
+- Check tile/world/inventory objects for nil before indexing.
+- Reacquire the current world after every warp/reconnect.
+- Bound every retry loop and provide a stop condition.
+- Check inventory changes after retrieval instead of assuming packet submission succeeded.
+- Avoid unnecessary raw packets when a typed API method exists in the reference.
+- Keep multi-bot coordination deterministic; sort names only if stable ordering is required, and handle a missing bot explicitly.
+- Ensure cleanup restores auto_collect/auto_transfer and other temporary settings.
+
+The user-supplied PNB listing is a reference for architecture only; its many globals and state assumptions should not be copied as-is.
+
+## 11.9 Pack and Item Dataset Parsing
+
+A pack catalog record may have the shape:
+`Display Name : pack_name : gem_price : item_id,item_id,...`
+
+Parse each record into a structured table with fields `display_name`, `pack_name`, `gem_price`, and `item_ids`. Validate numeric prices and each item ID. Some supplied records contain malformed or placeholder values (for example `nul`), so preserve the raw record and flag invalid tokens instead of silently converting them to zero. Treat this dataset as user-supplied reference data, not an authoritative live game catalog; item IDs and prices may change.
+
+## 11.10 Reliability Checklist for Complete Scripts
+
+Before presenting a full script:
+1. State the target Lucifer API version.
+2. Confirm every nontrivial API/property against this reference.
+3. Declare configuration and validate required values.
+4. Check bot, world, inventory, tile, and object values for nil.
+5. Use bounded waits/retries and symbolic status enums.
+6. Refresh world-dependent objects after transitions.
+7. Keep event callbacks short and coordinate thread state safely.
+8. Handle API/network errors and distinguish empty data from failed reads.
+9. Include a clear stop condition and cleanup path.
+10. Never include real webhook URLs, passwords, tokens, or private credentials.
+11. Label any unverified behavior honestly; do not claim runtime testing unless performed.
+
