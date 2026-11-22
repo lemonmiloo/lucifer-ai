@@ -365,7 +365,8 @@ let deviceId=localStorage.getItem(DEVICE_KEY);if(!deviceId){deviceId=crypto.rand
 function setAuthMode(mode){authMode=mode;document.getElementById("loginTab").classList.toggle("active",mode==="login");document.getElementById("registerTab").classList.toggle("active",mode==="register");authSubmit.textContent=mode==="login"?"Masuk":"Buat akun";authPassword.autocomplete=mode==="login"?"current-password":"new-password";authMessage.textContent="";authMessage.className="auth-message"}
 document.getElementById("loginTab").addEventListener("click",()=>setAuthMode("login"));
 document.getElementById("registerTab").addEventListener("click",()=>setAuthMode("register"));
-function hideBootLoader(){document.getElementById("bootLoader")?.classList.add("hidden")}\nfunction showAuthScreen(){hideBootLoader();document.body.classList.remove("authenticated","session-checking");document.getElementById("authScreen").style.display="grid"}
+function hideBootLoader(){document.getElementById("bootLoader")?.classList.add("hidden")}
+function showAuthScreen(){hideBootLoader();document.body.classList.remove("authenticated","session-checking");document.getElementById("authScreen").style.display="grid"}
 async function activateSession(session){
  if(!session){activeSession=null;verifiedSessionUserId=null;accountRole="user";document.body.classList.remove("is-admin");closeOwnerPanel();showAuthScreen();return}
  if(activeSession?.user?.id===session.user.id&&verifiedSessionUserId===session.user.id){activeSession=session;hideBootLoader();return}
