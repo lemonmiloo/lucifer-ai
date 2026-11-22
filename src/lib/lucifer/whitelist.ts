@@ -14,6 +14,7 @@ function addMatches(target: Set<string>, text: string, re: RegExp) {
   for (const match of text.matchAll(re)) if (match[1]) target.add(match[1]);
 }
 addMatches(globalFns, KNOWLEDGE, /\x60([A-Za-z_][A-Za-z0-9_]*)\([^\x60\n]*\)\x60\s*\|/g);
+addMatches(globalFns, KNOWLEDGE, /\x60([A-Za-z_][A-Za-z0-9_]*)\s*\([^\x60\n]*\)\x60/g);
 addMatches(botMethods, KNOWLEDGE, /\x60bot:([A-Za-z_][A-Za-z0-9_]*)\(/g);
 addMatches(worldMethods, KNOWLEDGE, /\x60(?:world|w):([A-Za-z_][A-Za-z0-9_]*)\(/g);
 addMatches(tileMethods, KNOWLEDGE, /\x60(?:tile|t):([A-Za-z_][A-Za-z0-9_]*)\(/g);
