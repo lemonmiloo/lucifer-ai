@@ -39,7 +39,7 @@ for (const kind of ["good", "bad"] as const) {
   }
 }
 
-const rawScript = "local bot = getBot()\\nbot:sendRaw(packet)";
+const rawScript = ["local bot = getBot()", "bot:sendRaw(packet)"].join(String.fromCharCode(10));
 const rawDenied = validate(rawScript).some(item => item.rule === "K7");
 const rawAllowed = !validate(rawScript, { allowRaw: true }).some(item => item.rule === "K7");
 if (rawDenied) passed += 1; else { failed += 1; console.error("FAIL raw packet must be blocked by default"); }
