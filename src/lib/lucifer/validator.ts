@@ -39,7 +39,9 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
   for (const c of calls) {
     const name = callName(c.base);
     if (!name) continue;
-    if (!WHITELIST.all.has(name) && !name.startsWith("get")) add("WHITELIST",c,`Pemanggilan '${name}' tidak ditemukan di dokumentasi Lucifer.`);
+    const root = c.base?.type === "MemberExpression" ? (c.base.base?.name || c.base.object?.name || "") : "";
+    const luaLibraryCall = ["math","string","table","coroutine","os","io","debug","utf8"].includes(root) && WHITELIST.standardGlobals.has(name);
+    if (!WHITELIST.all.has(name) && !luaLibraryCall) add("WHITELIST",c,"Pemanggilan API tidak ditemukan di dokumentasi Lucifer atau standard library Lua: " + name + ".");
     if ((name === "sendPacket" || name === "sendRaw") && !opts.allowRaw) add("K7",c,"Raw packet hanya boleh saat allowRaw=true dan diminta eksplisit.");
     if (actionNames.has(name)) {
       const p = nodes.find(n => n.type === "IfStatement" && JSON.stringify(n.test).includes(JSON.stringify(c.base)));
