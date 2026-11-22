@@ -1,7 +1,7 @@
 import { verifySupabaseRequest } from "../lib/auth.js";
 
 async function getRows(url,secret,table,query) {
-  const r=await fetch(url.replace(/\\/$/, "")+"/rest/v1/"+table+"?"+query,{
+  const r=await fetch(url.replace(/\/$/, "")+"/rest/v1/"+table+"?"+query,{
     headers:{apikey:secret,...(secret.startsWith("sb_secret_")?{}:{Authorization:"Bearer "+secret})},
     signal:AbortSignal.timeout(10000)
   });
