@@ -387,7 +387,8 @@ async function activateSession(session){
    document.getElementById("authScreen").style.display="none";
    document.body.classList.remove("session-checking");
    document.body.classList.add("authenticated");
-   loadChats();renderHistory();renderMessages([]);\n   hideBootLoader();
+   loadChats();renderHistory();renderMessages([]);
+   hideBootLoader();
   }catch(error){
    if(error.status===401||error.status===403){
     await authClient.auth.signOut();
