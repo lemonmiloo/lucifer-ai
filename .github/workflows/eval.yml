@@ -15,5 +15,9 @@ jobs:
           node-version: 20
       - run: npm install --package-lock-only
       - run: npm ci
+      - name: Summarize dependency audit
+        run: |
+          npm audit --json > /tmp/lucifer-audit.json || true
+          node -e 'const a=require("/tmp/lucifer-audit.json"); for (const [name,v] of Object.entries(a.vulnerabilities||{})) console.log(name+" | "+v.severity+" | fix="+JSON.stringify(v.fixAvailable))'
       - run: npx tsc --noEmit
       - run: npm run eval
