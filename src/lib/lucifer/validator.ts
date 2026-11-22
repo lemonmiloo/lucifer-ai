@@ -103,6 +103,6 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
   const eventBody = src.match(/addEvent\s*\([\s\S]*?function\s*\([^)]*\)[\s\S]*?end/);
   if (eventBody && /\bsleep\s*\(|\bwhile\b|\bfor\s+\w+\s*=/.test(eventBody[0])) out.push({rule:"K3",line:src.slice(0,eventBody.index).split("\n").length,message:"Callback event tidak boleh sleep atau menjalankan loop."});
   const lookupAssign = src.match(/local\s+(\w+)\s*=\s*[^\n]*(?:getWorld|getTile|getPlayer|getInventory|getObject|getNPC)\s*\([^\n]*\)/);
-  if (lookupAssign && new RegExp("\\b"+lookupAssign[1]+"\\s*\.").test(src.slice((lookupAssign.index||0)+lookupAssign[0].length)) && !new RegExp("if\\s+(?:not\\s+)?"+lookupAssign[1]+"\\s+then|if\\s+"+lookupAssign[1]+"\\s*(?:~=|==)\\s*nil").test(src)) out.push({rule:"K6",line:src.slice(0,lookupAssign.index).split("\n").length,message:"Lookup berpotensi nil; guard sebelum akses properti."});
+  if (lookupAssign && new RegExp("\\b"+lookupAssign[1]+"\\s*\\.").test(src.slice((lookupAssign.index||0)+lookupAssign[0].length)) && !new RegExp("if\\s+(?:not\\s+)?"+lookupAssign[1]+"\\b|if\\s+"+lookupAssign[1]+"\\s*(?:~=|==)\\s*nil").test(src)) out.push({rule:"K6",line:src.slice(0,lookupAssign.index).split("\n").length,message:"Lookup berpotensi nil; guard sebelum akses properti."});
   return out.filter((v,i,a)=>a.findIndex(x=>x.rule===v.rule&&x.line===v.line)===i);
 }
