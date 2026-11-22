@@ -481,6 +481,19 @@ body.drawer-open #adminMenuButton:hover{
   background:linear-gradient(135deg,#a78bfa 0%,#7955e8 58%,#6344d7 100%)!important;
  }
 }
+ 
+/* Attachment picker and compact previews */
+.attachment-tray{display:flex;gap:8px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}
+.attachment-tray[hidden]{display:none}
+.attachment-chip{position:relative;display:flex;align-items:center;gap:8px;min-width:0;max-width:220px;padding:8px 30px 8px 9px;border:1px solid #39334f;border-radius:12px;background:#171827;color:#e9e4fa;font-size:11px}
+.attachment-chip img{width:38px;height:38px;object-fit:cover;border-radius:7px}
+.attachment-chip .attachment-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:135px}
+.attachment-remove{position:absolute;right:6px;top:5px;width:20px;height:20px;border:0;border-radius:50%;background:#30283e;color:#fff;cursor:pointer}
+.attach-button{width:44px;min-width:44px;height:44px;align-self:flex-end;border:1px solid #39334f;border-radius:12px;background:#1b1a2b;color:#d8caff;font-size:25px;line-height:1;cursor:pointer;transition:background .18s ease,transform .18s ease}
+.attach-button:active{transform:scale(.94);background:#30264b}
+.message-attachments{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.message-attachment{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid #4a4263;border-radius:9px;background:#171827;color:#d9d1f1;font-size:11px}
+@media(max-width:600px){.composer .form{gap:7px!important}.attach-button{width:42px;min-width:42px;height:44px}.attachment-chip{max-width:190px}}
 </style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
  <div class="dashboard-shell">
   <header class="dashboard-head"><div><p class="dashboard-eyebrow">DANKUDO AI / ADMIN</p><h2>Dashboard</h2><p class="dashboard-subtitle">Monitoring akun dan riwayat percakapan</p></div><button class="dashboard-close" id="dashboardClose" type="button" aria-label="Tutup dashboard">✕</button></header>
@@ -491,7 +504,7 @@ body.drawer-open #adminMenuButton:hover{
   </div>
   <p class="dashboard-notice">Isi percakapan ditampilkan hanya untuk admin yang berwenang. Pengguna diberi tahu bahwa chat dapat ditinjau untuk operasional dan keamanan.</p>
  </div>
-</section><section class="profile-overlay" id="profileOverlay" aria-hidden="true"><div class="profile-panel"><div class="profile-head"><div><h2>Profil akun</h2><p>Kelola username dan password akun kamu.</p></div><button class="profile-close" id="profileClose" type="button">✕</button></div><form id="usernameForm" class="profile-form"><h3>Ganti username</h3><label>Username baru<input id="newUsername" type="text" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username" required></label><label>Password saat ini<input id="usernameCurrentPassword" type="password" autocomplete="current-password" required></label><button class="profile-submit" id="usernameSave" type="submit">Simpan username</button><p class="profile-message" id="usernameMessage" role="status"></p></form><form id="passwordForm" class="profile-form"><h3>Ganti password</h3><label>Password saat ini<input id="passwordCurrentPassword" type="password" autocomplete="current-password" required></label><label>Password baru<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label><label>Ulangi password baru<input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label><button class="profile-submit" id="passwordSave" type="submit">Simpan password</button><p class="profile-message" id="passwordMessage" role="status"></p></form></div></section><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
+</section><section class="profile-overlay" id="profileOverlay" aria-hidden="true"><div class="profile-panel"><div class="profile-head"><div><h2>Profil akun</h2><p>Kelola username dan password akun kamu.</p></div><button class="profile-close" id="profileClose" type="button">✕</button></div><form id="usernameForm" class="profile-form"><h3>Ganti username</h3><label>Username baru<input id="newUsername" type="text" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username" required></label><label>Password saat ini<input id="usernameCurrentPassword" type="password" autocomplete="current-password" required></label><button class="profile-submit" id="usernameSave" type="submit">Simpan username</button><p class="profile-message" id="usernameMessage" role="status"></p></form><form id="passwordForm" class="profile-form"><h3>Ganti password</h3><label>Password saat ini<input id="passwordCurrentPassword" type="password" autocomplete="current-password" required></label><label>Password baru<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label><label>Ulangi password baru<input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label><button class="profile-submit" id="passwordSave" type="submit">Simpan password</button><p class="profile-message" id="passwordMessage" role="status"></p></form></div></section><section class="chat" id="chat"></section><footer class="composer"><div class="attachment-tray" id="attachmentTray" hidden></div><form class="form" id="form"><button class="attach-button" id="attachButton" type="button" aria-label="Tambah lampiran" title="Tambah file atau gambar">＋</button><input id="attachmentInput" type="file" hidden multiple accept="image/jpeg,image/png,image/webp,image/gif,.txt,.md,.csv,.json,.js,.ts,.tsx,.jsx,.py,.lua,.html,.css,.xml,.yaml,.yml,.log"><textarea id="input" placeholder="Tulis pesan..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script>
 const SUPABASE_URL="https://lxktuagmmugdrgthbgxi.supabase.co";
@@ -608,7 +621,7 @@ function renderMessages(messages){
   const description=document.createElement("p");description.textContent="Asisten AI untuk Lua dan Lucifer API. Bantu memahami dokumentasi, menulis script, dan mencari bug. Ketik pesan untuk memulai percakapan.";
   welcome.append(title,description);chat.appendChild(welcome);return;
  }
- messages.forEach(m=>m.jobId?renderPendingMessage(m):add(m.content,m.role,false));
+ messages.forEach(m=>{if(m.jobId)renderPendingMessage(m);else{const el=add(m.content,m.role,false);if(m.attachments?.length)renderAttachmentLabels(el,m.attachments)}});
  scrollChatToBottom("auto");
 }
 function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory();pollPendingJobs()}
@@ -734,6 +747,11 @@ function add(text,role,persist=true){
  if(persist){let c=currentChat();if(!c){c={id:String(Date.now())+Math.random().toString(36).slice(2,7),serverId:crypto.randomUUID(),title:String(text).slice(0,42)||"Chat baru",messages:[],updatedAt:Date.now()};chats.push(c);currentChatId=c.id}c.messages.push({role,content:String(text??"")});c.updatedAt=Date.now();saveChats();renderHistory()}
  return el;
 }
+function renderAttachmentLabels(messageElement,files){
+ const tray=document.createElement("div");tray.className="message-attachments";
+ files.forEach(file=>{const chip=document.createElement("span");chip.className="message-attachment";chip.textContent=(file.mimeType?.startsWith("image/")?"▧ ":"▤ ")+(file.name||"Lampiran");tray.appendChild(chip)});
+ messageElement.appendChild(tray);
+}
 function renderPendingMessage(message){
  const el=document.createElement("div");el.className="msg assistant";
  const content=document.createElement("div");content.className="message-content";
@@ -797,15 +815,55 @@ async function pollPendingJobs(){
   }
  }finally{pollingJobs=false}
 }
+const attachButton=document.getElementById("attachButton"),attachmentInput=document.getElementById("attachmentInput"),attachmentTray=document.getElementById("attachmentTray");
+let selectedAttachments=[];
+const textExtensions=new Set(["txt","md","csv","json","js","ts","tsx","jsx","py","lua","html","css","xml","yaml","yml","log"]);
+function renderAttachmentTray(){
+ attachmentTray.replaceChildren();attachmentTray.hidden=!selectedAttachments.length;
+ selectedAttachments.forEach((file,index)=>{
+  const chip=document.createElement("div");chip.className="attachment-chip";
+  if(file.previewUrl){const img=document.createElement("img");img.src=file.previewUrl;img.alt=file.name;chip.appendChild(img)}
+  const name=document.createElement("span");name.className="attachment-name";name.textContent=file.name;chip.appendChild(name);
+  const remove=document.createElement("button");remove.type="button";remove.className="attachment-remove";remove.textContent="×";remove.setAttribute("aria-label","Hapus "+file.name);
+  remove.addEventListener("click",()=>{if(file.previewUrl)URL.revokeObjectURL(file.previewUrl);selectedAttachments.splice(index,1);renderAttachmentTray()});chip.appendChild(remove);attachmentTray.appendChild(chip);
+ });
+}
+attachButton.addEventListener("click",()=>attachmentInput.click());
+attachmentInput.addEventListener("change",async()=>{
+ const files=Array.from(attachmentInput.files||[]);attachmentInput.value="";
+ for(const file of files){
+  if(selectedAttachments.length>=5){alert("Maksimal 5 lampiran per pesan.");break}
+  const ext=(file.name.split(".").pop()||"").toLowerCase(),isImage=["image/jpeg","image/png","image/webp","image/gif"].includes(file.type);
+  if(!isImage&&!textExtensions.has(ext)){alert("Format belum didukung: "+file.name);continue}
+  if(isImage&&file.size>3*1024*1024){alert("Ukuran gambar maksimal 3 MB: "+file.name);continue}
+  if(!isImage&&file.size>1024*1024){alert("Ukuran file teks maksimal 1 MB: "+file.name);continue}
+  const item={name:file.name,mimeType:isImage?file.type:"text/plain",size:file.size,path:"",textContent:"",previewUrl:isImage?URL.createObjectURL(file):""};
+  try{
+   if(isImage){
+    const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(new Error("File tidak dapat dibaca."));reader.readAsDataURL(file)});
+    const conversationId=currentChat()?.serverId||crypto.randomUUID();
+    if(!currentChat()){const fresh={id:String(Date.now())+Math.random().toString(36).slice(2,7),serverId:conversationId,title:"Chat baru",messages:[],updatedAt:Date.now()};chats.push(fresh);currentChatId=fresh.id;saveChats();renderHistory()}
+    item.conversationId=conversationId;
+    const response=await fetch("/api/chat-upload",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+activeSession.access_token},body:JSON.stringify({conversationId,fileName:file.name,mimeType:file.type,data:dataUrl})});
+    const result=await response.json();if(!response.ok)throw new Error(result.error||"Upload gagal");item.path=result.path;item.size=result.size;
+   }else{item.textContent=await file.text()}
+   selectedAttachments.push(item);renderAttachmentTray();
+  }catch(error){if(item.previewUrl)URL.revokeObjectURL(item.previewUrl);alert(error.message||"Gagal menambahkan file.")}
+ }
+});
 form.addEventListener("submit",async e=>{
  e.preventDefault();
- const message=input.value.trim();if(!message)return;if(!activeSession){showAuthScreen();return;}
+ const message=input.value.trim();if(!message&&!selectedAttachments.length)return;if(!activeSession){showAuthScreen();return;}
+ const attachmentsToSend=selectedAttachments.map(({previewUrl,...file})=>file);
+ const attachmentCaption=attachmentsToSend.map(file=>file.name).join(", ");
  const previousChat=currentChat();
  const requestHistory=(previousChat?.messages||[]).filter(m=>m.content&&["user","assistant"].includes(m.role)).slice(-6).map(m=>({role:m.role,content:m.content}));
  const isFirstMessage=!previousChat||previousChat.messages.length===0;
  input.value="";input.style.height="44px";
- add(message,"user");
+ add(message||("Lampiran: "+attachmentCaption),"user");
  const active=currentChat();
+ active.messages[active.messages.length-1].attachments=attachmentsToSend.map(file=>({name:file.name,mimeType:file.mimeType,size:file.size}));
+ selectedAttachments.forEach(file=>{if(file.previewUrl)URL.revokeObjectURL(file.previewUrl)});selectedAttachments=[];renderAttachmentTray();
  if(!active.serverId)active.serverId=crypto.randomUUID();
  const jobId=crypto.randomUUID();
  const pending={role:"assistant",content:"",jobId,status:"queued"};
@@ -814,7 +872,7 @@ form.addEventListener("submit",async e=>{
  send.disabled=true;send.textContent="Mengirim...";
  try{
   const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+activeSession.access_token},body:JSON.stringify({
-   message,history:requestHistory,visitorId,isFirstMessage,chatTitle:active.title,conversationId:active.serverId,jobId
+   message,attachments:attachmentsToSend,history:requestHistory,visitorId,isFirstMessage,chatTitle:active.title,conversationId:active.serverId,jobId
   })});
   const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(raw.trim().startsWith("<")||raw.startsWith("An error")?"Server sedang bermasalah. Coba lagi sebentar.":"Respons server tidak valid: "+raw.slice(0,180))}
   if(!r.ok)throw new Error(data.error||"Permintaan gagal");
