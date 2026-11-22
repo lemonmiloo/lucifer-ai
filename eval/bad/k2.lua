@@ -1,0 +1,5 @@
+local bot = getBot()
+local world = bot:getWorld()
+bot:warp("OTHER")
+local tile = world:getTile(1, 1)
+print(tile.fg)
