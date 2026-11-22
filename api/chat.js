@@ -132,7 +132,7 @@ export default async function handler(req, res) {
       Prefer:"return=minimal"
     };
     try {
-      const saved = await fetch(supabaseUrl.replace(/\\/$/,"") + "/rest/v1/dankudo_ai_jobs", {
+      const saved = await fetch((supabaseUrl.endsWith("/") ? supabaseUrl.slice(0,-1) : supabaseUrl) + "/rest/v1/dankudo_ai_jobs", {
         method:"POST", headers:dbHeaders, body:JSON.stringify(job), signal:AbortSignal.timeout(7000)
       });
       if (!saved.ok) throw new Error("Gagal menyimpan pekerjaan: " + saved.status);
@@ -141,7 +141,7 @@ export default async function handler(req, res) {
       await queueSdk.send("dankudo-ai-chat", {jobId}, {idempotencyKey:jobId, retentionSeconds:604800});
       return res.status(202).json({jobId,status:"queued"});
     } catch (error) {
-      await fetch(supabaseUrl.replace(/\\/$/,"") + "/rest/v1/dankudo_ai_jobs?id=eq." + jobId, {
+      await fetch((supabaseUrl.endsWith("/") ? supabaseUrl.slice(0,-1) : supabaseUrl) + "/rest/v1/dankudo_ai_jobs?id=eq." + jobId, {
         method:"PATCH", headers:{...dbHeaders,Prefer:"return=minimal"}, body:JSON.stringify({status:"failed",error:"Tidak dapat memasukkan pekerjaan ke antrean.",updated_at:new Date().toISOString()})
       }).catch(()=>{});
       console.error("Background enqueue error:",error?.message || error);
