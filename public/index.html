@@ -624,8 +624,9 @@ function renderMessages(messages){
  messages.forEach(m=>{if(m.jobId)renderPendingMessage(m);else{const el=add(m.content,m.role,false);if(m.attachments?.length)renderAttachmentLabels(el,m.attachments)}});
  scrollChatToBottom("auto");
 }
-function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory();pollPendingJobs()}
-function newChat(){currentChatId=null;history=[];renderMessages([]);closeDrawer();renderHistory();input.focus()}
+function clearPendingAttachments(){selectedAttachments.forEach(file=>{if(file.previewUrl)URL.revokeObjectURL(file.previewUrl)});selectedAttachments=[];if(typeof renderAttachmentTray==="function")renderAttachmentTray()}
+function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;clearPendingAttachments();currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory();pollPendingJobs()}
+function newChat(){clearPendingAttachments();currentChatId=null;history=[];renderMessages([]);closeDrawer();renderHistory();input.focus()}
 document.getElementById("newChat").addEventListener("click",newChat);
 document.getElementById("newChatTop").addEventListener("click",newChat);
 const profileOverlay=document.getElementById("profileOverlay");
