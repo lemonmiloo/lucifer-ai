@@ -88,14 +88,28 @@ document.addEventListener("touchend",e=>{
  const shouldFinish=touchMoved&&(mode==="opening"
   ?(dx>Math.max(48,width*.16)||totalVelocity>.35)
   :(dx<-Math.max(48,width*.16)||totalVelocity<-.35));
- resetTouchDrag();
- if(mode==="opening"){
-  if(shouldFinish)openDrawer();else closeDrawer();
- }else if(shouldFinish){
-  closeDrawer();
+
+ if(mode==="closing"){
+  if(shouldFinish){
+   // Pertahankan posisi hasil drag sampai status drawer diubah.
+   // Baru setelah class open dilepas, kosongkan transform agar animasi
+   // berlanjut ke kiri (tertutup), bukan kembali ke posisi terbuka.
+   drawer.classList.remove("dragging");
+   backdrop.classList.remove("dragging");
+   closeDrawer();
+   drawer.style.transform="";
+   backdrop.style.opacity="";
+   backdrop.style.pointerEvents="";
+   touchMode=null;touchMoved=false;
+  }else{
+   // Swipe terlalu pendek: kembalikan panel ke posisi terbuka.
+   resetTouchDrag();
+  }
+  return;
  }
- // Jika swipe tutup terlalu pendek, biarkan drawer tetap terbuka.
- // Jangan panggil openDrawer() lagi karena itu memulai animasi buka ulang.
+
+ resetTouchDrag();
+ if(shouldFinish)openDrawer();else closeDrawer();
 },{passive:true});
 document.addEventListener("touchcancel",()=>{
  if(!touchMode)return;
