@@ -66,7 +66,6 @@ export default async function handler(req, res) {
   if (!key) return res.status(500).json({error:"API key belum diatur di Vercel Environment Variables."});
   const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
   if (!message) return res.status(400).json({error:"Pesan tidak boleh kosong."});
-  if (message.length > 6000) return res.status(413).json({error:"Pesan terlalu panjang (maksimal 6.000 karakter)."});
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-6).filter(x => ["user","assistant"].includes(x?.role) && typeof x?.content === "string").map(x => ({role:x.role,content:x.content.slice(0,1500)})) : [];
   try {
     // Fast-path for standalone greetings: avoid a model round-trip for trivial social messages.
