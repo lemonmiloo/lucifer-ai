@@ -32,7 +32,36 @@ function redactSecrets(value) {
     .replace(/\b(?:sk-[A-Za-z0-9_-]{16,}|sk-or-v1-[A-Za-z0-9_-]{16,}|sb_secret_[A-Za-z0-9_-]{10,})\b/g, "[REDACTED]")
     .replace(/((?:api[_-]?key|access[_-]?token|password|secret)\s*[:=]\s*["']?)[^\s"',;]{8,}/gi, "$1[REDACTED]");
 }
-async function saveConversation({visitorId,conversationId,message,answer,usage,model}) {
+function fallbackTitle(message) {
+  const text = String(message || "").replace(/```[\s\S]*?```/g, " kode ").replace(/\s+/g, " ").trim();
+  if (/^(hi|hai|halo|hello|hey|yo|p)[.!?,… ]*$/i.test(text)) return "Sapaan";
+  const first = text.split(/[.!?\n]/)[0].trim();
+  const cleaned = first.replace(/^(tolong|bisa|coba|please|can you|could you)\s+/i, "");
+  return (cleaned || text).slice(0, 42).trim() || "Chat baru";
+}
+async function generateTitle(message, base, key, model) {
+  try {
+    const response = await fetch(base + "/chat/completions", {
+      method:"POST",
+      headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},
+      signal:AbortSignal.timeout(9000),
+      body:JSON.stringify({
+        model,
+        max_tokens:32,
+        thinking:{type:"disabled"},
+        messages:[
+          {role:"system",content:"Buat judul percakapan dalam bahasa Indonesia berdasarkan PESAN PERTAMA pengguna. Judul harus merangkum inti maksud, bukan menyalin kalimat panjang. Maksimal 2-5 kata, singkat dan spesifik. Jika hanya sapaan, gunakan 'Sapaan'. Jika pengguna meminta analisis script/kode, gunakan 'Analisis Script' atau judul spesifik sesuai konteks. Jangan pakai tanda kutip, markdown, atau penjelasan. Output hanya judul."},
+          {role:"user",content:String(message).slice(0,5000)}
+        ]
+      })
+    });
+    if (!response.ok) return fallbackTitle(message);
+    const data = await response.json();
+    const title = data?.choices?.[0]?.message?.content?.trim().replace(/^["'`]+|["'`]+$/g,"").replace(/[\r\n]+/g," ").slice(0,60);
+    return title || fallbackTitle(message);
+  } catch { return fallbackTitle(message); }
+}
+async function saveConversation({visitorId,conversationId,message,answer,usage,model,title}) {
   const url = process.env.SUPABASE_URL;
   const secret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !secret || !uuidPattern.test(visitorId) || !uuidPattern.test(conversationId)) return;
@@ -49,7 +78,7 @@ async function saveConversation({visitorId,conversationId,message,answer,usage,m
   }
   const now = new Date().toISOString();
   await write("lucifer_visitors?on_conflict=visitor_id", [{visitor_id:visitorId,last_seen:now}]);
-  await write("lucifer_conversations?on_conflict=id", [{id:conversationId,visitor_id:visitorId,title:redactSecrets(message).slice(0,100),updated_at:now}]);
+  await write("lucifer_conversations?on_conflict=id", [{id:conversationId,visitor_id:visitorId,title:redactSecrets(title || message).slice(0,100),updated_at:now}]);
   const promptTokens = Number.isInteger(usage?.prompt_tokens) ? usage.prompt_tokens : null;
   const completionTokens = Number.isInteger(usage?.completion_tokens) ? usage.completion_tokens : null;
   await write("lucifer_messages", [
@@ -87,7 +116,7 @@ export default async function handler(req, res) {
       const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
       const model = process.env.VIKEY_MODEL || "deepseek/deepseek-v4-pro";
       if (visitorId && conversationId) {
-        saveConversation({visitorId,conversationId,message,answer:reply,usage:null,model})
+        saveConversation({visitorId,conversationId,message,answer:reply,usage:null,model,title:"Sapaan"})
           .catch(logError => console.error("Dashboard logging error:",logError));
       }
       return res.status(200).json({reply});
@@ -123,16 +152,17 @@ export default async function handler(req, res) {
       const reason = data?.choices?.[0]?.finish_reason;
       return res.status(502).json({error:reason === "length" ? "Jawaban terpotong karena batas token. Coba pertanyaan lebih singkat." : "Model tidak mengembalikan jawaban teks. Coba kirim ulang."});
     }
+    const title = await generateTitle(message, base, key, model);
     const visitorId = typeof req.body?.visitorId === "string" ? req.body.visitorId : "";
     const conversationId = typeof req.body?.conversationId === "string" ? req.body.conversationId : "";
     if (visitorId && conversationId) {
       try {
-        await saveConversation({visitorId,conversationId,message,answer,usage:data?.usage,model});
+        await saveConversation({visitorId,conversationId,message,answer,usage:data?.usage,model,title});
       } catch (logError) {
         console.error("Dashboard logging error:",logError);
       }
     }
-    return res.status(200).json({reply:answer});
+    return res.status(200).json({reply:answer,title});
   } catch (err) {
     console.error("Lucifer API error:",err);
     if (err?.name === "TimeoutError" || err?.name === "AbortError") return res.status(504).json({error:"Model terlalu lama merespons. Coba lagi atau kirim pertanyaan yang lebih singkat."});
