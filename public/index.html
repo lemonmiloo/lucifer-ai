@@ -82,7 +82,7 @@ body.is-admin #ownerMenuButton{display:block}
 .owner-detail{font-size:12px;color:#cbd1df;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;max-height:48vh;overflow:auto}
 .owner-muted{font-size:12px;color:#9fa8bb}
 @media(max-width:650px){.owner-overlay{padding:12px}.owner-panel{margin:32px auto 16px;padding:14px}.owner-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.owner-content{grid-template-columns:1fr}.owner-list{max-height:30vh}.owner-detail{max-height:34vh}}
-</style></head><body><section class="auth-screen" id="authScreen"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Email<input id="authEmail" type="email" autocomplete="email" placeholder="email@contoh.com" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button id="ownerMenuButton" type="button">♛ Owner</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="owner-overlay" id="ownerOverlay" aria-hidden="true"><div class="owner-panel"><div class="owner-head"><h2>DanKudo AI · Owner</h2><div class="owner-actions"><button class="owner-action" id="ownerRefresh" type="button">Refresh</button><button class="owner-action" id="ownerClose" type="button">Tutup</button></div></div><div class="owner-stats" id="ownerStats"><div class="owner-stat"><span>Status</span><strong>Memuat...</strong></div></div><div class="owner-content"><section class="owner-section"><h3>Percakapan terbaru</h3><div class="owner-list" id="ownerConversationList"><p class="owner-muted">Memuat data...</p></div></section><section class="owner-section"><h3>Detail percakapan</h3><div class="owner-detail" id="ownerConversationDetail">Pilih percakapan untuk melihat detail pesan.</div></section></div></div></section><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
+</style></head><body><section class="auth-screen" id="authScreen"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button id="ownerMenuButton" type="button">♛ Owner</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="owner-overlay" id="ownerOverlay" aria-hidden="true"><div class="owner-panel"><div class="owner-head"><h2>DanKudo AI · Owner</h2><div class="owner-actions"><button class="owner-action" id="ownerRefresh" type="button">Refresh</button><button class="owner-action" id="ownerClose" type="button">Tutup</button></div></div><div class="owner-stats" id="ownerStats"><div class="owner-stat"><span>Status</span><strong>Memuat...</strong></div></div><div class="owner-content"><section class="owner-section"><h3>Percakapan terbaru</h3><div class="owner-list" id="ownerConversationList"><p class="owner-muted">Memuat data...</p></div></section><section class="owner-section"><h3>Detail percakapan</h3><div class="owner-detail" id="ownerConversationDetail">Pilih percakapan untuk melihat detail pesan.</div></section></div><section class="owner-section" style="margin-top:12px"><h3>Aktivitas login terbaru</h3><div class="owner-list" id="ownerLoginList"><p class="owner-muted">Memuat data...</p></div></section></div></section><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script>
 const SUPABASE_URL="https://lxktuagmmugdrgthbgxi.supabase.co";
@@ -216,7 +216,18 @@ function ownerElement(tag,className,text){const el=document.createElement(tag);i
 function showOwnerStats(data){
  const stats=document.getElementById("ownerStats");stats.replaceChildren();
  const totalTokens=(data.messages||[]).reduce((sum,m)=>sum+(Number(m.prompt_tokens)||0)+(Number(m.completion_tokens)||0),0);
- [["Pengunjung",(data.visitors||[]).length],["Percakapan",(data.conversations||[]).length],["Pesan",(data.messages||[]).length],["Total token",totalTokens.toLocaleString("id-ID")]].forEach(([label,value])=>{const card=ownerElement("div","owner-stat");card.append(ownerElement("span","",label),ownerElement("strong","",String(value)));stats.appendChild(card)});
+ [["Pengunjung",(data.visitors||[]).length],["Akun",(data.accounts||[]).length],["Login tercatat",(data.loginEvents||[]).length],["Percakapan",(data.conversations||[]).length],["Pesan",(data.messages||[]).length],["Total token",totalTokens.toLocaleString("id-ID")]].forEach(([label,value])=>{const card=ownerElement("div","owner-stat");card.append(ownerElement("span","",label),ownerElement("strong","",String(value)));stats.appendChild(card)});
+}
+function showOwnerLogins(){
+ const list=document.getElementById("ownerLoginList");if(!list)return;list.replaceChildren();
+ const events=ownerData?.loginEvents||[];
+ if(!events.length){list.appendChild(ownerElement("p","owner-muted","Belum ada aktivitas login."));return}
+ events.forEach(event=>{
+  const row=ownerElement("div","owner-row","");
+  row.style.cursor="default";
+  row.append(ownerElement("strong","",event.username||"user"),ownerElement("small","",new Date(event.logged_at).toLocaleString("id-ID")+" · perangkat "+String(event.device_id||"").slice(0,8)));
+  list.appendChild(row);
+ });
 }
 function showOwnerConversations(){
  const list=document.getElementById("ownerConversationList");list.replaceChildren();
@@ -242,7 +253,7 @@ async function loadOwnerData(){
  try{
   const response=await fetch("/api/admin-data",{headers:{Authorization:"Bearer "+activeSession.access_token},cache:"no-store"});
   const result=await response.json();if(!response.ok)throw new Error(result.error||"Gagal memuat data owner.");
-  ownerData=result;showOwnerStats(result);showOwnerConversations();
+  ownerData=result;showOwnerStats(result);showOwnerConversations();showOwnerLogins();
   const selected=(result.conversations||[]).find(c=>c.id===ownerSelectedConversation);
   if(selected)showOwnerDetail(selected);else document.getElementById("ownerConversationDetail").textContent="Pilih percakapan untuk melihat detail pesan.";
  }catch(error){document.getElementById("ownerStats").textContent=error.message;document.getElementById("ownerConversationList").replaceChildren(ownerElement("p","owner-muted",error.message))}
@@ -327,7 +338,9 @@ form.addEventListener("submit",async e=>{
  }catch(err){wait.remove();add("Error: "+err.message,"assistant")}finally{send.disabled=false;send.textContent="Kirim";input.focus()}
 });
 
-const authForm=document.getElementById("authForm"),authEmail=document.getElementById("authEmail"),authPassword=document.getElementById("authPassword"),authSubmit=document.getElementById("authSubmit"),authMessage=document.getElementById("authMessage");
+const authForm=document.getElementById("authForm"),authUsername=document.getElementById("authUsername"),authPassword=document.getElementById("authPassword"),authSubmit=document.getElementById("authSubmit"),authMessage=document.getElementById("authMessage");
+const DEVICE_KEY="dankudo-device-id-v1";
+let deviceId=localStorage.getItem(DEVICE_KEY);if(!deviceId){deviceId=crypto.randomUUID();localStorage.setItem(DEVICE_KEY,deviceId)}
 function setAuthMode(mode){authMode=mode;document.getElementById("loginTab").classList.toggle("active",mode==="login");document.getElementById("registerTab").classList.toggle("active",mode==="register");authSubmit.textContent=mode==="login"?"Masuk":"Buat akun";authPassword.autocomplete=mode==="login"?"current-password":"new-password";authMessage.textContent="";authMessage.className="auth-message"}
 document.getElementById("loginTab").addEventListener("click",()=>setAuthMode("login"));
 document.getElementById("registerTab").addEventListener("click",()=>setAuthMode("register"));
@@ -346,7 +359,7 @@ async function activateSession(session){
   verifiedSessionUserId=session.user.id;
   accountRole=result.role==="admin"?"admin":"user";
   document.body.classList.toggle("is-admin",accountRole==="admin");
-  document.getElementById("accountEmail").textContent=result.email||session.user.email||"Akun";
+  document.getElementById("accountEmail").textContent=result.username||"Akun";
   document.getElementById("accountRole").textContent=accountRole.toUpperCase();
   document.getElementById("authScreen").style.display="none";
   document.body.classList.add("authenticated");
@@ -360,17 +373,14 @@ async function activateSession(session){
 authForm.addEventListener("submit",async e=>{
  e.preventDefault();authSubmit.disabled=true;authSubmit.textContent="Memproses...";authMessage.textContent="";authMessage.className="auth-message";
  try{
-  const email=authEmail.value.trim().toLowerCase(),password=authPassword.value;
-  if(authMode==="register"){
-   const {data,error}=await authClient.auth.signUp({email,password,options:{emailRedirectTo:"https://lucifer-ai-lemonmilo.vercel.app/"}});
-   if(error)throw error;
-   if(data.session){authMessage.textContent="Akun berhasil dibuat.";authMessage.className="auth-message success";await activateSession(data.session)}
-   else{setAuthMode("login");authMessage.textContent="Akun dibuat. Cek email dan klik link verifikasi DanKudo AI sebelum masuk.";authMessage.className="auth-message success"}
-  }else{
-   const {data,error}=await authClient.auth.signInWithPassword({email,password});
-   if(error)throw error;
-   await activateSession(data.session);
-  }
+  const username=authUsername.value.trim().toLowerCase(),password=authPassword.value;
+  const endpoint=authMode==="register"?"/api/auth/register":"/api/auth/login";
+  const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password,deviceId})});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||"Autentikasi gagal.");
+  const {data,error}=await authClient.auth.setSession({access_token:result.session.access_token,refresh_token:result.session.refresh_token});
+  if(error)throw error;
+  await activateSession(data.session);
  }catch(error){authMessage.textContent=error.message||"Autentikasi gagal."}
  finally{authSubmit.disabled=false;authSubmit.textContent=authMode==="login"?"Masuk":"Buat akun"}
 });
