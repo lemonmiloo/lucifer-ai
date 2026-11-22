@@ -90,6 +90,26 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
   const calls = nodes.filter(node => node.type === "CallExpression");
   const sourceLines = src.split(/\r?\n/);
 
+  const typeByGetter: Record<string, string> = {
+    getBot: "bot", getWorld: "world", getTile: "tile", getInventory: "inventory",
+    getPlayer: "player", getLocal: "player", getObject: "netobject", getNPC: "npc",
+    getItem: "inventoryitem", getExtra: "tileextra", getSignal: "signal"
+  };
+  const typedVariables = new Map<string, string>();
+  for (const statement of nodes) {
+    if (statement.type !== "LocalStatement" && statement.type !== "AssignmentStatement") continue;
+    (statement.init || []).forEach((value: any, index: number) => {
+      const variable = statement.variables?.[index]?.name;
+      if (!variable) return;
+      if (value?.type === "CallExpression") {
+        const type = typeByGetter[nameOf(value.base)];
+        if (type) typedVariables.set(variable, type);
+      } else if (value?.type === "MemberExpression" && nameOf(value) === "growscan") {
+        typedVariables.set(variable, "growscan");
+      }
+    });
+  }
+
   // K8: calls must resolve to documented API names or Lua 5.1 standard library.
   for (const call of calls) {
     const called = nameOf(call.base);
@@ -111,6 +131,20 @@ export function validate(src: string, opts: { allowRaw?: boolean } = {}): Violat
     if (WHITELIST.enums.has(namespace) && !WHITELIST.enumValues.has(member)) {
       add("WHITELIST", node, `Enum ${namespace}.${member} tidak ditemukan di dokumentasi.`);
     }
+  }
+
+
+  // K8: reject undocumented properties on variables whose Lucifer object type is known.
+  for (const node of nodes) {
+    if (node.type !== "MemberExpression") continue;
+    const receiver = node.base?.name || node.object?.name || "";
+    const type = typedVariables.get(receiver);
+    if (!type) continue;
+    const property = nameOf(node);
+    const allowed = WHITELIST.propertiesByType[type as keyof typeof WHITELIST.propertiesByType]?.has(property) ||
+      WHITELIST.allMethods.has(property) || WHITELIST.standardMembers.has(property) ||
+      WHITELIST.moduleNames.has(property) || WHITELIST.documentedProperties?.has(property);
+    if (!allowed) add("WHITELIST", node, \`Properti/API '\${property}' tidak terdokumentasi untuk objek \${type}.\`);
   }
 
   // K1: fire-and-forget results cannot be used as booleans or success indicators.
