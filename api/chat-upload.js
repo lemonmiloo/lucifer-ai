@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import { verifySupabaseRequest } from "../lib/auth.js";
 
+export const config = { api: { bodyParser: { sizeLimit: "5mb" } } };
+
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const allowed = new Map([
   ["image/jpeg","jpg"],["image/png","png"],["image/webp","webp"],["image/gif","gif"]
@@ -16,10 +18,17 @@ export default async function handler(req,res){
   if(!allowed.has(mimeType)||typeof data!=="string"||data.length>4_200_000)return res.status(400).json({error:"Format atau ukuran file tidak didukung. Maksimal 3 MB per gambar."});
   const buffer=Buffer.from(data,"base64");
   if(!buffer.length||buffer.length>3*1024*1024)return res.status(413).json({error:"Ukuran gambar maksimal 3 MB."});
+  const signatures={
+    "image/jpeg":buffer[0]===0xff&&buffer[1]===0xd8&&buffer[2]===0xff,
+    "image/png":buffer.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),
+    "image/gif":buffer.subarray(0,3).toString()==="GIF",
+    "image/webp":buffer.subarray(0,4).toString()==="RIFF"&&buffer.subarray(8,12).toString()==="WEBP"
+  };
+  if(!signatures[mimeType])return res.status(400).json({error:"Isi file tidak sesuai dengan format gambar."});
   const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabase=process.env.SUPABASE_URL;
   if(!secret||!supabase)return res.status(503).json({error:"Penyimpanan file belum dikonfigurasi."});
-  const safeName=String(fileName||"gambar").replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,80)||"gambar";
+  const safeName=(String(fileName||"gambar").replace(/[^a-zA-Z0-9._-]/g,"_").replace(/\.[^.]+$/,"").slice(0,70)||"gambar");
   const path=auth.user.id+"/"+conversationId+"/"+crypto.randomUUID()+"-"+safeName+"."+allowed.get(mimeType);
   const headers={apikey:secret,...(secret.startsWith("sb_secret_")?{}:{Authorization:"Bearer "+secret}),"Content-Type":mimeType,"x-upsert":"false"};
   try{
