@@ -842,8 +842,8 @@ attachmentInput.addEventListener("change",async()=>{
   try{
    if(isImage){
     const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(new Error("File tidak dapat dibaca."));reader.readAsDataURL(file)});
-    const conversationId=currentChat()?.serverId||crypto.randomUUID();
-    if(!currentChat()){const fresh={id:String(Date.now())+Math.random().toString(36).slice(2,7),serverId:conversationId,title:"Chat baru",messages:[],updatedAt:Date.now()};chats.push(fresh);currentChatId=fresh.id;saveChats();renderHistory()}
+    let conversationId=currentChat()?.serverId||"";
+    if(!conversationId){conversationId=crypto.randomUUID();if(currentChat())currentChat().serverId=conversationId;else{const fresh={id:String(Date.now())+Math.random().toString(36).slice(2,7),serverId:conversationId,title:"Chat baru",messages:[],updatedAt:Date.now()};chats.push(fresh);currentChatId=fresh.id;saveChats();renderHistory()}}
     item.conversationId=conversationId;
     const response=await fetch("/api/chat-upload",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+activeSession.access_token},body:JSON.stringify({conversationId,fileName:file.name,mimeType:file.type,data:dataUrl})});
     const result=await response.json();if(!response.ok)throw new Error(result.error||"Upload gagal");item.path=result.path;item.size=result.size;
