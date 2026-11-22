@@ -1,7 +1,6 @@
 import { QueueClient } from "@vercel/queue";
 
 const queue = new QueueClient();
-const { handleNodeCallback } = queue;
 
 function dbConfig() {
   const url = process.env.SUPABASE_URL;
@@ -33,7 +32,7 @@ async function updateJob(jobId, patch) {
   });
   if(!r.ok)throw new Error("Unable to update chat job: "+r.status);
 }
-export default handleNodeCallback(async (message, metadata) => {
+export default queue.handleNodeCallback(async (message, metadata) => {
   const jobId=message?.jobId;
   if(typeof jobId!=="string")return;
   const job=await getJob(jobId);
