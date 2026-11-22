@@ -36,51 +36,58 @@ function closeDrawer(){document.body.classList.remove("drawer-open");document.ge
 document.getElementById("historyToggle").addEventListener("click",openDrawer);
 document.getElementById("closeDrawer").addEventListener("click",closeDrawer);
 backdrop.addEventListener("click",closeDrawer);
-// Gesture drag memakai Pointer Events agar swipe kiri konsisten di Android.
-let dragStartX=0,dragStartY=0,dragLastX=0,dragLastTime=0,dragVelocity=0,dragMode=null,dragPointerId=null;
-function resetDrawerDrag(){
+// Swipe drawer memakai Touch Events: horizontal ditangani aplikasi, vertikal tetap bisa scroll.
+let touchStartX=0,touchStartY=0,touchLastX=0,touchLastAt=0,touchVelocity=0,touchMode=null,touchMoved=false;
+function resetTouchDrag(){
  drawer.classList.remove("dragging");
  backdrop.classList.remove("dragging");
  drawer.style.transform="";
  backdrop.style.opacity="";
  backdrop.style.pointerEvents="";
- dragMode=null;dragPointerId=null;
+ touchMode=null;touchMoved=false;
 }
-document.addEventListener("pointerdown",e=>{
- if(e.pointerType!=="touch"&&e.pointerType!=="pen")return;
- const isOpen=drawer.classList.contains("open");
+document.addEventListener("touchstart",e=>{
+ if(e.touches.length!==1)return;
+ const t=e.touches[0],isOpen=drawer.classList.contains("open");
  if(isOpen){
   if(!drawer.contains(e.target))return;
-  dragMode="closing";
+  touchMode="closing";
  }else{
   if(e.target.closest("button,a,input,textarea,select,pre,.code-wrap"))return;
-  dragMode="opening";
+  touchMode="opening";
  }
- dragPointerId=e.pointerId;dragStartX=dragLastX=e.clientX;dragStartY=e.clientY;dragLastTime=performance.now();dragVelocity=0;
+ touchStartX=touchLastX=t.clientX;touchStartY=t.clientY;touchLastAt=performance.now();touchVelocity=0;touchMoved=false;
 },{passive:true});
-document.addEventListener("pointermove",e=>{
- if(!dragMode||e.pointerId!==dragPointerId)return;
- const dx=e.clientX-dragStartX,dy=e.clientY-dragStartY;
- if(Math.abs(dx)<7||Math.abs(dx)<Math.abs(dy)*1.1)return;
+document.addEventListener("touchmove",e=>{
+ if(!touchMode||e.touches.length!==1)return;
+ const t=e.touches[0],dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;
+ if(!touchMoved){
+  if(Math.abs(dx)<8)return;
+  if(Math.abs(dx)<Math.abs(dy)*1.15){touchMode=null;return}
+  touchMoved=true;
+ }
  if(e.cancelable)e.preventDefault();
  drawer.classList.add("dragging");backdrop.classList.add("dragging");
  const width=drawer.getBoundingClientRect().width;
- const progress=dragMode==="opening"?Math.max(0,Math.min(1,dx/width)):Math.max(0,Math.min(1,1+dx/width));
- drawer.style.transform=dragMode==="opening"?`translate3d(${-width+progress*width}px,0,0)`:`translate3d(${-progress*width}px,0,0)`;
+ const progress=touchMode==="opening"?Math.max(0,Math.min(1,dx/width)):Math.max(0,Math.min(1,1+dx/width));
+ drawer.style.transform=touchMode==="opening"?`translate3d(${-width+progress*width}px,0,0)`:`translate3d(${-progress*width}px,0,0)`;
  backdrop.style.opacity=String(progress);backdrop.style.pointerEvents=progress>0?"auto":"none";
- const now=performance.now(),dt=Math.max(1,now-dragLastTime);dragVelocity=(e.clientX-dragLastX)/dt;dragLastX=e.clientX;dragLastTime=now;
+ const now=performance.now(),dt=Math.max(1,now-touchLastAt);touchVelocity=(t.clientX-touchLastX)/dt;touchLastX=t.clientX;touchLastAt=now;
 },{passive:false});
-function finishPointerDrag(e){
- if(!dragMode||e.pointerId!==dragPointerId)return;
- const mode=dragMode,dx=e.clientX-dragStartX,width=drawer.getBoundingClientRect().width;
+document.addEventListener("touchend",e=>{
+ if(!touchMode)return;
+ const mode=touchMode,t=e.changedTouches[0],dx=t.clientX-touchStartX,width=drawer.getBoundingClientRect().width;
  const progress=mode==="opening"?Math.max(0,Math.min(1,dx/width)):Math.max(0,Math.min(1,1+dx/width));
- const shouldFinish=mode==="opening"?(progress>.2||dragVelocity>.25):(progress<.82||dragVelocity<-.2);
- resetDrawerDrag();
+ const shouldFinish=touchMoved&&(mode==="opening"?(progress>.18||touchVelocity>.22):(progress<.82||touchVelocity<-.22));
+ resetTouchDrag();
  if(mode==="opening"){if(shouldFinish)openDrawer();else closeDrawer()}
  else{if(shouldFinish)closeDrawer();else openDrawer()}
-}
-document.addEventListener("pointerup",finishPointerDrag,{passive:true});
-document.addEventListener("pointercancel",e=>{if(dragMode&&e.pointerId===dragPointerId){const mode=dragMode;resetDrawerDrag();if(mode==="opening")closeDrawer();else openDrawer()}},{passive:true});
+},{passive:true});
+document.addEventListener("touchcancel",()=>{
+ if(!touchMode)return;
+ const mode=touchMode;resetTouchDrag();
+ if(mode==="opening")closeDrawer();else openDrawer();
+},{passive:true});
 
 function renderHistory(){
  historyList.replaceChildren();
