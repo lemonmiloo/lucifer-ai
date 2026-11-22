@@ -114,7 +114,7 @@ export default async function handler(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseSecret = workerSecret;
     if (!supabaseUrl || !supabaseSecret) return res.status(503).json({error:"Penyimpanan pekerjaan belum dikonfigurasi."});
-    const jobId = crypto.randomUUID();
+    const jobId = uuidPattern.test(req.body?.jobId || "") ? req.body.jobId : crypto.randomUUID();
     const job = {
       id: jobId,
       user_id: auth.user.id,
