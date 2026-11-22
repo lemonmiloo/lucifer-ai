@@ -7,7 +7,7 @@
 
 .msg{white-space:normal;max-width:88%;padding:15px 17px}.assistant{width:min(100%,760px)}.message-content{overflow-wrap:anywhere;line-height:1.75}.message-content p{margin:0 0 12px}.message-content p:last-child{margin-bottom:0}.message-content h1,.message-content h2,.message-content h3{line-height:1.3;margin:18px 0 9px}.message-content h1{font-size:1.25em}.message-content h2{font-size:1.13em}.message-content h3{font-size:1.04em}.message-content ul,.message-content ol{padding-left:23px;margin:8px 0 14px}.message-content li{margin:5px 0}.message-content blockquote{border-left:3px solid var(--accent);margin:12px 0;padding:4px 12px;color:#c6c1d6}.message-content code.inline-code{background:#080a10;border:1px solid var(--line);border-radius:5px;padding:2px 6px;font: .9em ui-monospace,monospace;color:#d8caff}.code-wrap{margin:13px 0 15px;border:1px solid #343044;border-radius:12px;overflow:hidden;background:#080a10}.code-head{height:38px;padding:0 10px 0 13px;display:flex;align-items:center;justify-content:space-between;background:#171827;border-bottom:1px solid #343044;color:#a9a4b9;font-size:11px}.copy-code{border:1px solid #454057;background:#242236;color:#eee;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer}.copy-code:hover{background:#35304d}.code-wrap pre{margin:0;border:0;border-radius:0;padding:14px;max-height:480px;overflow:auto;white-space:pre;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e2ddf5}.assistant .message-content> :first-child{margin-top:0}.assistant .message-content> :last-child{margin-bottom:0}@media(max-width:600px){.msg{max-width:98%;padding:13px}.assistant{width:100%}.code-wrap pre{font-size:12px}}
 /* Animated thinking indicator */
-.typing-indicator{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:2px 1px}.typing-indicator span{width:7px;height:7px;border-radius:50%;background:#b9a5ff;opacity:.45;animation:lucifer-dot-bounce 1s ease-in-out infinite}.typing-indicator span:nth-child(2){animation-delay:.16s}.typing-indicator span:nth-child(3){animation-delay:.32s}@keyframes lucifer-dot-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-7px);opacity:1}}
+.pending-job-label{font-size:11px;color:#9ba2ba;margin-bottom:8px}.typing-indicator{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:2px 1px}.typing-indicator span{width:7px;height:7px;border-radius:50%;background:#b9a5ff;opacity:.45;animation:lucifer-dot-bounce 1s ease-in-out infinite}.typing-indicator span:nth-child(2){animation-delay:.16s}.typing-indicator span:nth-child(3){animation-delay:.32s}@keyframes lucifer-dot-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-7px);opacity:1}}
 
 .top{height:56px;min-height:56px;padding:0;border:0;gap:0}
 @media(max-width:600px){
@@ -529,7 +529,7 @@ function renderMessages(messages){
   const description=document.createElement("p");description.textContent="Asisten AI untuk Lua dan Lucifer API. Bantu memahami dokumentasi, menulis script, dan mencari bug. Ketik pesan untuk memulai percakapan.";
   welcome.append(title,description);chat.appendChild(welcome);return;
  }
- messages.forEach(m=>add(m.content,m.role,false));
+ messages.forEach(m=>m.jobId?renderPendingMessage(m):add(m.content,m.role,false));
 }
 function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory()}
 function newChat(){currentChatId=null;history=[];renderMessages([]);closeDrawer();renderHistory();input.focus()}
@@ -654,6 +654,14 @@ function add(text,role,persist=true){
  if(persist){let c=currentChat();if(!c){c={id:String(Date.now())+Math.random().toString(36).slice(2,7),serverId:crypto.randomUUID(),title:String(text).slice(0,42)||"Chat baru",messages:[],updatedAt:Date.now()};chats.push(c);currentChatId=c.id}c.messages.push({role,content:String(text??"")});c.updatedAt=Date.now();saveChats();renderHistory()}
  return el;
 }
+function renderPendingMessage(message){
+ const el=document.createElement("div");el.className="msg assistant";
+ const content=document.createElement("div");content.className="message-content";
+ const label=document.createElement("div");label.className="pending-job-label";label.textContent="DanKudo AI sedang memproses di latar belakang";
+ const dots=document.createElement("div");dots.className="typing-indicator";dots.setAttribute("aria-label","DanKudo AI sedang berpikir");
+ for(let i=0;i<3;i++)dots.appendChild(document.createElement("span"));
+ content.append(label,dots);el.appendChild(content);chat.appendChild(el);return el;
+}
 function updateLastMessage(el,text){const content=el.querySelector(".message-content");if(content)renderContent(content,text);const c=currentChat();if(c){const last=c.messages[c.messages.length-1];if(last)last.content=String(text??"");c.updatedAt=Date.now();saveChats();renderHistory()}}
 renderMessages([]);
 // Ikuti tinggi visual viewport saat keyboard mobile muncul, tanpa menggeser seluruh halaman.
@@ -675,34 +683,65 @@ input.addEventListener("input",()=>{
  input.style.height="auto";
  input.style.height=Math.min(input.scrollHeight,160)+"px";
 });
-form.addEventListener("submit",async e=>{
- e.preventDefault();const message=input.value.trim();if(!message)return;if(!activeSession){showAuthScreen();return;}input.value="";input.style.height="44px";add(message,"user");send.disabled=true;send.textContent="...";
- const wait=add("","assistant",false);
- const waitContent=wait.querySelector(".message-content");
- const dots=document.createElement("div");dots.className="typing-indicator";dots.setAttribute("aria-label","Lucifer sedang berpikir");
- for(let i=0;i<3;i++)dots.appendChild(document.createElement("span"));
- waitContent.appendChild(dots);
+let pollingJobs=false;
+async function pollPendingJobs(){
+ if(!activeSession||pollingJobs)return;
+ const pending=[];
+ for(const c of chats)for(const m of c.messages||[])if(m.jobId)pending.push({chat:c,message:m});
+ if(!pending.length)return;
+ pollingJobs=true;
  try{
-  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+activeSession.access_token},body:JSON.stringify({message,history,visitorId,isFirstMessage:currentChat()?.messages.length===1,chatTitle:currentChat()?.title,conversationId:(currentChat()?.serverId||(currentChat().serverId=crypto.randomUUID()))})});
-  const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(raw.trim().startsWith("<")||raw.startsWith("An error")?"Server sedang bermasalah atau timeout. Coba lagi sebentar.":"Respons server tidak valid: "+raw.slice(0,180))}
-  if(!r.ok)throw new Error(data.error||"Permintaan gagal");if(typeof data.reply!=="string")throw new Error("Server tidak mengirim jawaban teks.");
-  dots.remove();
-  const answer=data.reply,parts=answer.match(/\S+\s*/g)||[];let shown="";
-  for(let i=0;i<parts.length;i++){
-   shown+=parts[i];waitContent.textContent=shown;
-   if(i%3===2||i===parts.length-1){
-    if(chat.scrollHeight-chat.scrollTop-chat.clientHeight<180)chat.scrollTo({top:chat.scrollHeight,behavior:"auto"});
-    const tail=parts[i].trim(),pause=/[.!?。！？]$/.test(tail)?95:/[,;:]$/.test(tail)?55:18;
-    await new Promise(resolve=>setTimeout(resolve,pause));
-   }
+  for(const item of pending){
+   try{
+    const r=await fetch("/api/chat-status?jobId="+encodeURIComponent(item.message.jobId),{headers:{Authorization:"Bearer "+activeSession.access_token},cache:"no-store"});
+    if(!r.ok)continue;
+    const data=await r.json();
+    if(data.status==="completed"&&typeof data.answer==="string"){
+     item.message.content=data.answer;delete item.message.jobId;delete item.message.status;
+     if(typeof data.title==="string"&&data.title.trim())item.chat.title=data.title.trim();
+     item.chat.updatedAt=Date.now();saveChats();renderHistory();
+     if(currentChatId===item.chat.id){renderMessages(item.chat.messages);history=item.chat.messages.filter(m=>m.content&&["user","assistant"].includes(m.role)).map(m=>({role:m.role,content:m.content}));}
+    }else if(data.status==="failed"){
+     item.message.content="Error: "+(data.error||"Pekerjaan AI gagal. Silakan kirim ulang.");
+     delete item.message.jobId;delete item.message.status;item.chat.updatedAt=Date.now();saveChats();
+     if(currentChatId===item.chat.id)renderMessages(item.chat.messages);
+    }else item.message.status=data.status;
+   }catch(error){console.warn("Background job status check:",error?.message||error)}
   }
-  renderContent(waitContent,answer);
-  const active=currentChat();
-  if(active){active.messages.push({role:"assistant",content:answer});active.updatedAt=Date.now();saveChats();renderHistory()}
-  if(active&&typeof data.title==="string"&&data.title.trim()){active.title=data.title.trim();saveChats();renderHistory()}
-  history.push({role:"user",content:message},{role:"assistant",content:answer});history=history.slice(-8);
- }catch(err){wait.remove();add("Error: "+err.message,"assistant")}finally{send.disabled=false;send.textContent="Kirim";input.focus()}
+ }finally{pollingJobs=false}
+}
+form.addEventListener("submit",async e=>{
+ e.preventDefault();
+ const message=input.value.trim();if(!message)return;if(!activeSession){showAuthScreen();return;}
+ const previousChat=currentChat();
+ const requestHistory=(previousChat?.messages||[]).filter(m=>m.content&&["user","assistant"].includes(m.role)).slice(-6).map(m=>({role:m.role,content:m.content}));
+ const isFirstMessage=!previousChat||previousChat.messages.length===0;
+ input.value="";input.style.height="44px";
+ add(message,"user");
+ const active=currentChat();
+ if(!active.serverId)active.serverId=crypto.randomUUID();
+ const jobId=crypto.randomUUID();
+ const pending={role:"assistant",content:"",jobId,status:"queued"};
+ active.messages.push(pending);active.updatedAt=Date.now();saveChats();renderHistory();
+ renderMessages(active.messages);
+ send.disabled=true;send.textContent="Mengirim...";
+ try{
+  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+activeSession.access_token},body:JSON.stringify({
+   message,history:requestHistory,visitorId,isFirstMessage,chatTitle:active.title,conversationId:active.serverId,jobId
+  })});
+  const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(raw.trim().startsWith("<")||raw.startsWith("An error")?"Server sedang bermasalah. Coba lagi sebentar.":"Respons server tidak valid: "+raw.slice(0,180))}
+  if(!r.ok)throw new Error(data.error||"Permintaan gagal");
+  if(data.jobId!==jobId)throw new Error("ID pekerjaan tidak cocok.");
+  pending.status=data.status||"queued";saveChats();
+  send.disabled=false;send.textContent="Kirim";input.focus();
+  pollPendingJobs();
+ }catch(err){
+  active.messages=active.messages.filter(m=>m!==pending);
+  add("Error: "+err.message,"assistant");
+  saveChats();send.disabled=false;send.textContent="Kirim";input.focus();
+ }
 });
+setInterval(()=>{if(activeSession)pollPendingJobs()},1800);
 
 const authForm=document.getElementById("authForm"),authUsername=document.getElementById("authUsername"),authPassword=document.getElementById("authPassword"),authSubmit=document.getElementById("authSubmit"),authMessage=document.getElementById("authMessage");
 const DEVICE_KEY="dankudo-device-id-v1";
