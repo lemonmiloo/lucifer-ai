@@ -32,7 +32,7 @@ body.drawer-open #newChatTop:hover{background:#211b35}
  #historyToggle{top:12px;left:12px}
  #newChatTop{top:12px;right:12px;padding:10px 11px}
  .top{padding-left:48px;padding-right:104px}
-}\n</style></head><body><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="history-list" id="historyList"></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="chat" id="chat"><div class="welcome" id="welcome"><h1>Build with DanKudo AI</h1><p>Asisten Lua untuk memahami dokumentasi, membuat contoh kode, dan membantu debugging.</p><div class="chips"><button class="chip" data-prompt="Jelaskan struktur dasar script Lua.">Jelaskan dasar Lua</button><button class="chip" data-prompt="Jelaskan fungsi getBot() berdasarkan dokumentasi Lucifer.">Pelajari Lucifer API</button><button class="chip" data-prompt="Bantu saya memahami error pada kode Lua ini: ">Bantu debugging</button></div></div></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
+}\n</style></head><body><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="history-list" id="historyList"></div></aside><header class="top"><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="chat" id="chat"></section><footer class="composer"><form class="form" id="form"><textarea id="input" placeholder="Tulis pertanyaan Lua kamu..." rows="1"></textarea><button class="send" id="send">Kirim</button></form></footer></main>
 <script>
 const chat=document.getElementById("chat"),input=document.getElementById("input"),form=document.getElementById("form"),send=document.getElementById("send");
 const drawer=document.getElementById("historyDrawer"),backdrop=document.getElementById("drawerBackdrop"),historyList=document.getElementById("historyList");
@@ -136,10 +136,6 @@ function renderHistory(){
 }
 function renderMessages(messages){
  chat.replaceChildren();
- const welcome=document.createElement("div");welcome.className="welcome";welcome.id="welcome";
- welcome.innerHTML='<h1>Build with DanKudo AI</h1><p>Asisten Lua untuk memahami dokumentasi, membuat contoh kode, dan membantu debugging.</p><div class="chips"><button class="chip" data-prompt="Jelaskan struktur dasar script Lua.">Jelaskan dasar Lua</button><button class="chip" data-prompt="Jelaskan fungsi getBot() berdasarkan dokumentasi Lucifer.">Pelajari Lucifer API</button><button class="chip" data-prompt="Bantu saya memahami error pada kode Lua ini: ">Bantu debugging</button></div>';
- chat.appendChild(welcome);
- welcome.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{input.value=b.dataset.prompt;input.focus()}));
  messages.forEach(m=>add(m.content,m.role,false));
 }
 function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory()}
