@@ -33,10 +33,7 @@ for (const match of KNOWLEDGE.matchAll(/\|\s*`[A-Z][A-Za-z0-9_]*`\s*\|\s*([^\n]+
 for (const section of KNOWLEDGE.matchAll(/\*\*(?:Normal|Failure|Info):\*\*([^\n]+)/g)) {
   for (const value of section[1].matchAll(/\b([a-z][a-z0-9_]*)\b/g)) enumValues.add(value[1]);
 }
-const documentedGlobals = new Set([
-  ...globalFns,
-  ...collect(/\b(getBot|getBots|addBot|addTokenBot|addUbiBot|addSteamBot|removeBot|getUsername|getBanRate|sleep|read|write|append|removeColor|clearConsole|runThread|getInfo|getInfos|getProxyManager|getWorldManager|getSwitchManager|addProxy|removeProxy|addPack|removePack|getTrashList|setTrashList|getTile|getTiles|getTilesSafe|getObject|getObjects|getPlayer|getPlayers|getNPC|getNPCs|getLocal|hasAccess|getWorld|getInventory|getConsole|getLog|getLogin|getDialog|addEvent|listenEvents|unlistenEvents|removeEvent|removeEvents)\b/g, KNOWLEDGE)
-]);
+const documentedGlobals = new Set(globalFns);
 const allMethods = new Set([...botMethods,...worldMethods,...tileMethods,...invMethods,...otherMethods]);
 const moduleConstructors = new Set(["variant","variantlist","HttpClient","Webhook","RTVAR"].filter(name => new RegExp("\\b" + name + "\\s*\\.new\\s*\\(").test(KNOWLEDGE)));
 const documentedProperties = collect(/`([A-Za-z_][A-Za-z0-9_]*)`/g, KNOWLEDGE);
