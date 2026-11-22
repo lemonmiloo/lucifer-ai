@@ -18,12 +18,14 @@ export default async function handler(req,res) {
     const url=process.env.SUPABASE_URL;
     const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
     if(!url||!secret) return res.status(503).json({error:"Konfigurasi Supabase belum lengkap di Vercel."});
-    const [visitors,conversations,messages]=await Promise.all([
+    const [visitors,conversations,messages,accounts,loginEvents]=await Promise.all([
       getRows(url,secret,"lucifer_visitors","select=visitor_id,first_seen,last_seen&order=last_seen.desc&limit=500"),
       getRows(url,secret,"lucifer_conversations","select=id,visitor_id,title,created_at,updated_at&order=updated_at.desc&limit=200"),
-      getRows(url,secret,"lucifer_messages","select=id,conversation_id,role,content,model,prompt_tokens,completion_tokens,created_at&order=created_at.desc&limit=1000")
+      getRows(url,secret,"lucifer_messages","select=id,conversation_id,role,content,model,prompt_tokens,completion_tokens,created_at&order=created_at.desc&limit=1000"),
+      getRows(url,secret,"dankudo_accounts","select=user_id,username,created_at&order=created_at.desc&limit=500"),
+      getRows(url,secret,"dankudo_login_events","select=id,user_id,username,device_id,logged_at,user_agent&order=logged_at.desc&limit=200")
     ]);
-    return res.status(200).json({visitors,conversations,messages});
+    return res.status(200).json({visitors,conversations,messages,accounts,loginEvents});
   } catch(err) {
     console.error("Admin dashboard error:",err);
     return res.status(502).json({error:"Gagal mengambil data dashboard dari Supabase."});
