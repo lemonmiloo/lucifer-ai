@@ -1122,6 +1122,45 @@ body.authenticated .composer .form textarea{min-width:0!important}
  body.keyboard-open .chat.chat-content-long{justify-content:flex-end!important}
  body.keyboard-open .composer{z-index:8!important}
 }
+
+/* Conversation refinement — calm, editorial assistant messages */
+.msg{position:relative;isolation:isolate;border-radius:19px;transition:border-color .22s ease,background .22s ease,box-shadow .22s ease}
+.msg.assistant{padding:16px 18px 13px;background:linear-gradient(145deg,rgba(25,28,48,.94),rgba(14,17,30,.97));border:1px solid rgba(171,157,238,.16);border-top-color:rgba(190,177,255,.24);box-shadow:0 12px 34px rgba(0,0,0,.19),inset 0 1px 0 rgba(255,255,255,.025);border-bottom-left-radius:7px}
+.msg.user{max-width:min(78%,620px);padding:13px 16px;background:linear-gradient(135deg,#514080,#332b57);border:1px solid rgba(190,171,255,.23);border-bottom-right-radius:7px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.assistant-identity{display:flex;align-items:center;gap:8px;margin:0 0 12px;min-height:22px}
+.assistant-mark{width:23px;height:23px;display:grid;place-items:center;border-radius:8px;background:linear-gradient(145deg,#a78bfa,#6651c7);box-shadow:0 3px 12px rgba(139,112,245,.28)}
+.assistant-mark svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:1.45;stroke-linecap:round;stroke-linejoin:round}
+.assistant-name{font-size:12px;font-weight:750;letter-spacing:.12px;color:#eee9ff}
+.assistant-tag{font-size:9px;font-weight:750;letter-spacing:.7px;color:#b6a7ed;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.18);border-radius:5px;padding:3px 5px}
+.assistant .message-content{color:#e8e7f2;font-size:14px;line-height:1.78}
+.assistant .message-content p{margin-bottom:13px}
+.assistant .message-content h1,.assistant .message-content h2,.assistant .message-content h3{color:#f5f1ff;letter-spacing:-.25px}
+.assistant .message-content ul,.assistant .message-content ol{padding-left:22px}
+.assistant .message-content li::marker{color:#ad97fa}
+.assistant .message-content blockquote{background:rgba(167,139,250,.055);border-left-color:#9b83ed;border-radius:0 9px 9px 0;padding:9px 12px}
+.assistant .code-wrap{border-color:rgba(164,148,230,.2);box-shadow:0 8px 22px rgba(0,0,0,.17)}
+.assistant-actions{border-top-color:rgba(165,148,235,.1);margin-top:15px;padding-top:9px}
+.thinking-state{display:flex;align-items:center;gap:12px;padding:3px 0 8px}
+.thinking-orb{position:relative;flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 34% 28%,#eee8ff 0,#b9a4ff 17%,#8166dc 48%,#35275f 76%);box-shadow:0 0 0 5px rgba(151,124,242,.08),0 0 24px rgba(151,124,242,.35);animation:thinking-orb-pulse 2s ease-in-out infinite}
+.thinking-orb::before,.thinking-orb::after{content:"";position:absolute;inset:-5px;border:1px solid rgba(183,163,255,.34);border-radius:50%;animation:thinking-orbit 2.8s linear infinite}
+.thinking-orb::after{inset:-9px;border-color:rgba(108,190,222,.2);animation-duration:4.2s;animation-direction:reverse}
+.thinking-copy{display:flex;flex-direction:column;gap:3px}
+.thinking-copy strong{font-size:12px;font-weight:700;color:#eee9ff;letter-spacing:.1px}
+.thinking-copy span{font-size:11px;color:#929bb2}
+.thinking-shimmer{display:block;width:min(100%,230px);height:3px;margin:7px 0 2px 42px;border-radius:9px;overflow:hidden;background:rgba(167,139,250,.1);position:relative}
+.thinking-shimmer::after{content:"";position:absolute;inset:0;width:42%;border-radius:9px;background:linear-gradient(90deg,transparent,#b7a4ff,rgba(111,202,224,.85),transparent);animation:thinking-sweep 1.65s ease-in-out infinite}
+@keyframes thinking-orb-pulse{0%,100%{transform:scale(.94);filter:saturate(.9)}50%{transform:scale(1.06);filter:saturate(1.25)}}
+@keyframes thinking-orbit{to{transform:rotate(360deg)}}
+@keyframes thinking-sweep{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+@media(max-width:600px){
+ .msg.assistant{padding:14px 15px 12px;border-radius:17px 17px 17px 6px}
+ .msg.user{max-width:88%;padding:12px 14px}
+ .assistant-identity{margin-bottom:10px}
+ .assistant .message-content{font-size:13.5px;line-height:1.76}
+ .thinking-state{padding:2px 0 7px}
+}
+@media(prefers-reduced-motion:reduce){.thinking-orb,.thinking-orb::before,.thinking-orb::after,.thinking-shimmer::after{animation:none!important}}
+
 </style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><div class="app-brand-lockup" aria-label="DanKudo AI"><span class="app-brand-mark">D</span><span class="app-brand-copy"><strong>DanKudo</strong><small>AI WORKSPACE</small></span><span class="app-brand-live"></span></div><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
  <div class="dashboard-shell">
   <header class="dashboard-head"><div><p class="dashboard-eyebrow">DANKUDO AI / ADMIN</p><h2>Dashboard</h2><p class="dashboard-subtitle">Monitoring akun dan riwayat percakapan</p></div><button class="dashboard-close" id="dashboardClose" type="button" aria-label="Tutup dashboard">✕</button></header>
@@ -1413,7 +1452,7 @@ function renderContent(container,text){
  }
 }
 function add(text,role,persist=true){
- const w=document.getElementById("welcome");if(w)w.remove();const el=document.createElement("div");el.className="msg "+role;const content=document.createElement("div");content.className="message-content";renderContent(content,text);el.appendChild(content);chat.appendChild(el);chat.scrollTo({top:chat.scrollHeight,behavior:"smooth"});
+ const w=document.getElementById("welcome");if(w)w.remove();const el=document.createElement("div");el.className="msg "+role;if(role==="assistant")el.appendChild(createAssistantIdentity());const content=document.createElement("div");content.className="message-content";renderContent(content,text);el.appendChild(content);chat.appendChild(el);chat.scrollTo({top:chat.scrollHeight,behavior:"smooth"});
  if(persist){let c=currentChat();if(!c){c={id:String(Date.now())+Math.random().toString(36).slice(2,7),serverId:crypto.randomUUID(),title:String(text).slice(0,42)||"Chat baru",messages:[],updatedAt:Date.now()};chats.push(c);currentChatId=c.id}c.messages.push({role,content:String(text??"")});c.updatedAt=Date.now();saveChats();renderHistory()}
  return el;
 }
@@ -1422,12 +1461,22 @@ function renderAttachmentLabels(messageElement,files){
  files.forEach(file=>{const chip=document.createElement("span");chip.className="message-attachment";chip.textContent=(file.mimeType?.startsWith("image/")?"▧ ":"▤ ")+(file.name||"Lampiran");tray.appendChild(chip)});
  messageElement.appendChild(tray);
 }
+function createAssistantIdentity(){
+ const identity=document.createElement("div");identity.className="assistant-identity";
+ const mark=document.createElement("span");mark.className="assistant-mark";mark.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 14.4 9.6 21.2 12l-6.8 2.4L12 21.2l-2.4-6.8L2.8 12l6.8-2.4L12 2.8Z"/><path d="m19 2 .8 2.2L22 5l-2.2.8L19 8l-.8-2.2L16 5l2.2-.8L19 2Z"/></svg>';
+ const name=document.createElement("span");name.className="assistant-name";name.textContent="DanKudo";
+ const tag=document.createElement("span");tag.className="assistant-tag";tag.textContent="AI";identity.append(mark,name,tag);return identity;
+}
 function renderPendingMessage(message){
- const el=document.createElement("div");el.className="msg assistant";
+ const el=document.createElement("div");el.className="msg assistant pending-message";el.appendChild(createAssistantIdentity());
  const content=document.createElement("div");content.className="message-content";
- const dots=document.createElement("div");dots.className="typing-indicator";dots.setAttribute("aria-label","Sedang memproses");
- for(let i=0;i<3;i++)dots.appendChild(document.createElement("span"));
- content.appendChild(dots);el.appendChild(content);chat.appendChild(el);return el;
+ const thinking=document.createElement("div");thinking.className="thinking-state";
+ const orb=document.createElement("span");orb.className="thinking-orb";orb.setAttribute("aria-hidden","true");
+ const copy=document.createElement("div");copy.className="thinking-copy";
+ const title=document.createElement("strong");title.textContent="Sedang berpikir";
+ const subtitle=document.createElement("span");subtitle.textContent="Menyusun jawaban terbaik untukmu";
+ const shimmer=document.createElement("span");shimmer.className="thinking-shimmer";
+ copy.append(title,subtitle);thinking.append(orb,copy);content.append(thinking,shimmer);el.appendChild(content);chat.appendChild(el);return el;
 }
 function updateLastMessage(el,text){const content=el.querySelector(".message-content");if(content)renderContent(content,text);const c=currentChat();if(c){const last=c.messages[c.messages.length-1];if(last)last.content=String(text??"");c.updatedAt=Date.now();saveChats();renderHistory()}}
 renderMessages([]);
