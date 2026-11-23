@@ -13,7 +13,7 @@ function getDocs() {
 }
 function relevantDocs(question, source) {
   const normalize = value => String(value || "").toLowerCase()
-    .replace(/suto|sutoe/g,"auto")
+    .replace(/sutoe?/g,"auto")
     .replace(/blok/g,"block")
     .replace(/hancurin|hancurkan/g,"break")
     .replace(/bersihin|bersihkan/g,"clear")
