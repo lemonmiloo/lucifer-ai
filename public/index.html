@@ -1070,7 +1070,7 @@ body.authenticated .attachment-tray{max-width:100%;padding:0 4px 8px!important}
  body.authenticated .composer .form{width:100%!important;box-sizing:border-box!important}
 }
 
-/* Let the composer track the native keyboard viewport without an extra easing layer. */
+/* Track the keyboard's own viewport animation in both directions. */
 @media(max-width:600px){
  body.keyboard-open .composer{
   transform:translate3d(0,calc(-1 * var(--keyboard-shift,0px)),0)!important;
@@ -1079,13 +1079,10 @@ body.authenticated .attachment-tray{max-width:100%;padding:0 4px 8px!important}
  }
  body:not(.keyboard-open) .composer{
   transform:translate3d(0,0,0)!important;
-  /* Ease only the return after the keyboard closes; opening stays viewport-synced. */
-  transition:transform 140ms cubic-bezier(.22,.61,.36,1)!important;
+  transition:none!important;
  }
- body.keyboard-open .chat{transition:none!important}
- body:not(.keyboard-open) .chat{
-  transition:margin-bottom 140ms cubic-bezier(.22,.61,.36,1)!important;
- }
+ body.keyboard-open .chat,
+ body:not(.keyboard-open) .chat{transition:none!important}
 }
 /* Center the composer itself and prevent flex children from pushing it sideways */
 body.authenticated .composer{
@@ -1413,11 +1410,15 @@ function syncMobileViewport(){
  const visibleHeight=Math.round(vv?.height||window.innerHeight);
  /* Compare against the last keyboard-closed height. Android may shrink
     window.innerHeight and visualViewport.height together when typing. */
- const keyboardOpen=!!vv&&visibleHeight<mobileBaseHeight-120;
  const wasKeyboardOpen=document.body.classList.contains("keyboard-open");
+ /* Use a wide threshold to detect opening, but keep tracking the viewport
+    almost all the way to its original height when the keyboard closes. */
+ const keyboardOpen=!!vv&&(wasKeyboardOpen
+  ? visibleHeight<mobileBaseHeight-8
+  : visibleHeight<mobileBaseHeight-120);
  document.body.classList.toggle("keyboard-open",keyboardOpen);
  if(keyboardOpen){
-  /* Move only the composer by the keyboard's height; never resize the workspace. */
+  /* Move only the composer by the keyboard's live height; no easing layer. */
   const keyboardShift=Math.max(0,mobileBaseHeight-visibleHeight-(vv?.offsetTop||0));
   document.documentElement.style.setProperty("--keyboard-shift",keyboardShift+"px");
   /* The composer is absolutely positioned, so reserve both its own height
