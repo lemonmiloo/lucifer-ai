@@ -376,7 +376,16 @@ Fungsi shortcut yang bisa diakses langsung tanpa prefix bot:
 
 *Extra metadata umum:* `type`, `label`, `owner`, `locked`, `growth`, `item1`, `item2`, `item_count`, `item_price`, `fruit_count`, `flags`.
 
-### 4.3 Player (Read-Only)
+#### 4.2.1 Breakability / Block Bisa Dihancurkan atau Tidak
+Status verifikasi berdasarkan API yang tercantum dalam referensi ini:
+- Tidak ada method/property terdokumentasi bernama `isBreakable()`, `canBreak()`, atau pemeriksa breakability tile yang setara.
+- Data tile yang terdokumentasi adalah `tile.fg`, `tile.bg`, `tile.flags`, `tile:hasExtra()`, `tile:getExtra()`, `tile:canHarvest()`, dan `tile:hasFlag(flag)`. `tile:canHarvest()` khusus untuk kesiapan panen tanaman, bukan pemeriksa apakah block dapat dihancurkan.
+- Metadata item dari `getInfo(id)` / `ItemDescription` mencakup `collision_type`, `type`, `flags`, `action_type`, dan deskripsi item. Referensi ini tidak mendefinisikan pemetaan nilai-nilai tersebut menjadi status breakable/unbreakable.
+- Karena itu, jangan menyimpulkan sebuah block tidak bisa dihancurkan hanya dari ID, `collision_type`, atau `flags` tanpa data/mapping valid dari pengguna atau dokumentasi versi yang sesuai.
+- Jangan mengarang ID block unbreakable. Untuk mengidentifikasi tile aktual, baca ID foreground/background dari data world (mis. `world:getTile(x, y)` lalu `tile.fg` / `tile.bg`) dan tampilkan nama item melalui `getInfo(id)` jika tersedia. Penentuan breakability tetap memerlukan sumber data yang valid.
+- Jika pengguna meminta script skip block yang tidak bisa dihancurkan, jelaskan batasan API di atas dan minta mapping/list ID yang sudah diverifikasi. Jangan memasukkan ID placeholder atau fungsi fiktif ke kode.
+
+## 4.3 Player (Read-Only)
 | Properti | Definisi Eksplisit |
 |---|---|
 | `name`, `altName`, `country` | Identitas tampilan pemain. |
