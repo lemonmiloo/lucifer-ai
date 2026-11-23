@@ -55,6 +55,7 @@ export default queue.handleNodeCallback(async (message, metadata) => {
   const job=await getJob(jobId);
   if(!job || job.status==="completed" || job.status==="failed")return;
   await updateJob(jobId,{status:"processing",error:null});
+  const processingStartedAt=Date.now();
   try {
     const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
     const deployment=process.env.VERCEL_URL||"lucifer-ai-lemonmilo.vercel.app";
@@ -80,14 +81,13 @@ export default queue.handleNodeCallback(async (message, metadata) => {
       const detail=data.error||"Model gagal memproses pesan.";
       throw new Error(detail);
     }
-    const startedAt=Date.parse(job.created_at||job.updated_at||new Date().toISOString());
     await updateJob(jobId,{
       status:"completed",
       answer:data.reply,
       result_title:typeof data.title==="string"?data.title:null,
       sources:Array.isArray(data.sources)?data.sources.slice(0,8):[],
       search_steps:Array.isArray(data.searchSteps)?data.searchSteps.slice(0,8):[],
-      duration_ms:Math.max(0,Date.now()-startedAt),
+      duration_ms:Math.max(0,Date.now()-processingStartedAt),
       error:null,
       completed_at:new Date().toISOString()
     });
