@@ -111,8 +111,7 @@ async function searchGrowtopiaItems(question) {
 }
 async function searchGrowtopiaWeb(question) {
   const technicalIntent = /(script|scripting|lua|api|bot|auto.?clear|suto|clear world|hancur|break|farm|pathfinding|mekanik|mechanic|event|acara|bulan ini|minggu ini|hari ini|sekarang|terbaru|latest|update|patch|maintenance|harga|price|wiki|forum|item|block|blok|seed|world lock|announcement|pengumuman)/i.test(question);
-  const growtopiaContext = /\bgrowtopia\b|\bgt\b|lucifer/i.test(question);
-  if (!technicalIntent || !growtopiaContext) return {context:"",sources:[],steps:[]};
+  if (!technicalIntent) return {context:"",sources:[],steps:[]};
   const normalizedQuestion = String(question).replace(/sutoe?/gi,"auto").replace(/blok/gi,"block");
   const now = new Date();
   const monthYear = new Intl.DateTimeFormat("en-US", {month:"long",year:"numeric",timeZone:"Asia/Jakarta"}).format(now);
