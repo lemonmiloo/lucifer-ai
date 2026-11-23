@@ -19,6 +19,40 @@ function relevantDocs(question, source) {
     return { chunk, score: terms.reduce((n, term) => n + (lower.includes(term) ? 1 : 0), 0) };
   }).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0,4).map(x => x.chunk).join("\n\n---\n\n").slice(0,12000);
 }
+let growtopiaItemCache = { fetchedAt: 0, text: "" };
+async function searchGrowtopiaItems(question) {
+  const stopWords = new Set(["berapa","apa","id","item","block","blok","di","dalam","growtopia","gt","the","is","for","of","nama","itemnya","nya","dong","tolong","cari"]);
+  const normalize = value => String(value || "").toLowerCase().normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\\s+/g, " ").trim();
+  const queryTokens = [...new Set(normalize(question).split(" ").filter(token => token.length > 1 && !stopWords.has(token)))];
+  if (!queryTokens.length || !/\\b(id|item|block|blok|pepper|tree|seed)\\b/i.test(question)) return "";
+  try {
+    if (!growtopiaItemCache.text || Date.now() - growtopiaItemCache.fetchedAt > 30 * 60 * 1000) {
+      const response = await fetch("https://raw.githubusercontent.com/zephilion/growtopia-item-id/main/click-here", { signal: AbortSignal.timeout(9000) });
+      if (!response.ok) throw new Error("Item database HTTP " + response.status);
+      growtopiaItemCache = { fetchedAt: Date.now(), text: await response.text() };
+    }
+    const entries = [];
+    for (const line of growtopiaItemCache.text.split(/\\r?\\n/)) {
+      const match = line.match(/^\\s*(\\d+)\\s*:\\s*(.+?)\\s*$/);
+      if (match) entries.push({ id: Number(match[1]), name: match[2].trim() });
+    }
+    const scored = entries.map(item => {
+      const nameTokens = normalize(item.name).split(" ");
+      const matched = queryTokens.filter(token => nameTokens.includes(token));
+      return { ...item, matched, score: matched.length / queryTokens.length };
+    }).filter(item => item.matched > 0).sort((a,b) => b.score - a.score || b.matched - a.matched);
+    if (!scored.length) return "";
+    const bestScore = scored[0].score;
+    const matches = scored.filter(item => item.score === bestScore).slice(0, bestScore === 1 ? 5 : 8);
+    return "HASIL PENCARIAN DATABASE ITEM GROWTOPIA (sumber komunitas, bukan database resmi Ubisoft):\\n" +
+      matches.map(item => "- " + item.name + " — ID " + item.id + (item.score < 1 ? " (kecocokan sebagian; belum pasti)" : "")).join("\\n") +
+      "\\nSumber: https://github.com/zephilion/growtopia-item-id/blob/main/click-here\\n" +
+      "Gunakan hasil ini untuk menjawab pertanyaan ID. Jika ada beberapa kecocokan parsial, jelaskan perbedaannya atau minta klarifikasi. Jangan mengatakan tidak punya database jika hasil di atas tersedia. Database komunitas dapat tertinggal dari update game.";
+  } catch (error) {
+    console.warn("Growtopia item lookup unavailable:", error?.message || error);
+    return "";
+  }
+}
 function rateLimit(ip) {
   const now = Date.now();
   const old = hits.get(ip);
@@ -190,11 +224,12 @@ export default async function handler(req, res) {
     }
     const source = getDocs();
     const context = relevantDocs(message, source);
+    const itemLookupContext = await searchGrowtopiaItems(message);
     const base = (process.env.VIKEY_BASE_URL || "https://api.vikey.ai/v1").replace(/\/$/,"");
     const model = process.env.VIKEY_MODEL || "deepseek/deepseek-v4-pro";
     const systemPrompt = "Kamu adalah DanKudo AI, asisten scripting Growtopia berbasis Lua untuk framework Lucifer, dibuat oleh DanKudo.\n\nGAYA:\n- Gunakan bahasa Indonesia santai, natural, tenang, presisi, dan langsung ke inti.\n- Sapaan singkat dibalas singkat. Jangan memaksakan jawaban teknis pada obrolan umum.\n- Untuk permintaan coding, berikan kode lengkap yang sesuai dokumentasi Lucifer. Jangan mengaku sudah menguji jika belum.\n- Jangan tampilkan chain-of-thought privat. Berikan kesimpulan, langkah verifikasi, dan alasan ringkas.\n\nAKURASI API DAN GROWtopia:\n- Dokumentasi Lucifer yang disertakan adalah acuan utama untuk API runtime. Jangan mencampur API framework lain.\n- Jangan mengarang ID item/block, fungsi, event, property, parameter, enum, atau return value. Bedakan fakta dokumentasi, hasil web, inferensi, dan hal yang belum diketahui.\n- Dokumentasi saat ini mencantumkan bot:say(text) dan sleep(ms). Untuk API lain, periksa dokumentasi sebelum digunakan.\n- isBreakable()/canBreak() tidak terdokumentasi sebagai API Lucifer. tile:canHarvest() adalah untuk panen, bukan status block dapat dihancurkan. Jangan menyamakan keduanya.\n- Jangan mengarang daftar ID block unbreakable. Jika data belum tersedia, katakan dengan jelas dan minta data yang diperlukan.\n- Jika pengguna mengoreksi jawaban, evaluasi ulang dan tarik klaim yang tidak berdasar. Jangan defensif atau mengganti tebakan dengan tebakan lain.\n\nWEB SEARCH DAN ANALISIS:\n- Untuk pertanyaan ID item/block Growtopia, nama item, mekanik game, status block, update, API yang belum terdokumentasi, atau fakta teknis yang tidak pasti, gunakan web search otomatis jika tersedia.\n- Prioritaskan sumber resmi/primer, lalu database/wiki Growtopia dan komunitas yang kredibel. Baca sumber, bandingkan bila perlu, dan cek tanggal/versi.\n- Pisahkan fakta game Growtopia dari API runtime Lucifer. Informasi dari framework lain bukan bukti bahwa fungsi tersedia di Lucifer.\n- Jika pencarian tidak menemukan bukti kuat, nyatakan belum terverifikasi. Jangan menebak.\n- Jika menggunakan web, sertakan link sumber yang benar-benar diberikan tool. Jangan membuat URL atau mengklaim telah membuka sumber yang tidak tersedia.\n- Untuk hal sederhana dan stabil, jawab langsung tanpa pencarian yang tidak perlu.\n\nBATAS KEAMANAN:\n- Bantu otomasi game yang wajar jika API terdokumentasi. Jangan membantu pencurian akun/token, malware, eksploitasi terhadap target nyata, bypass keamanan/anti-cheat/rate-limit, atau spam massal yang mengganggu. Jika ada bagian yang tidak dapat dibantu, tawarkan alternatif aman yang konkret.";
     const chatMessages = [
-      {role:"system",content:systemPrompt+"\n\nDOKUMENTASI RELEVAN:\n"+(context || "Tidak ada bagian dokumentasi yang cocok. Jawab pertanyaan Lua umum dan nyatakan bila detail Lucifer tidak ditemukan.")},
+      {role:"system",content:systemPrompt+"\n\nDOKUMENTASI RELEVAN:\n"+(context || "Tidak ada bagian dokumentasi yang cocok. Jawab pertanyaan Lua umum dan nyatakan bila detail Lucifer tidak ditemukan.")+(itemLookupContext ? "\n\n"+itemLookupContext : "")},
       ...history,
       {role:"user",content:attachments.length ? [
         {type:"text",text:message || "Tolong analisis lampiran berikut."},
