@@ -10,7 +10,7 @@ export default async function handler(req,res){
   const url=process.env.SUPABASE_URL;
   const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!url||!secret)return res.status(503).json({error:"Database tidak tersedia."});
-  const r=await fetch(url.replace(/\/$/,"")+"/rest/v1/dankudo_ai_jobs?id=eq."+encodeURIComponent(jobId)+"&user_id=eq."+encodeURIComponent(auth.user.id)+"&select=status,answer,result_title,error,updated_at,completed_at",{
+  const r=await fetch(url.replace(/\/$/,"")+"/rest/v1/dankudo_ai_jobs?id=eq."+encodeURIComponent(jobId)+"&user_id=eq."+encodeURIComponent(auth.user.id)+"&select=status,answer,result_title,sources,search_steps,duration_ms,error,updated_at,completed_at",{
     headers:{apikey:secret,...(secret.startsWith("sb_secret_")?{}:{Authorization:"Bearer "+secret})},
     signal:AbortSignal.timeout(7000)
   });
@@ -18,5 +18,5 @@ export default async function handler(req,res){
   const rows=await r.json();
   if(!rows.length)return res.status(404).json({error:"Pekerjaan tidak ditemukan."});
   const job=rows[0];
-  return res.status(200).json({status:job.status,answer:job.answer,title:job.result_title,error:job.error,updatedAt:job.updated_at,completedAt:job.completed_at});
+  return res.status(200).json({status:job.status,answer:job.answer,title:job.result_title,sources:Array.isArray(job.sources)?job.sources:[],searchSteps:Array.isArray(job.search_steps)?job.search_steps:[],durationMs:job.duration_ms,error:job.error,updatedAt:job.updated_at,completedAt:job.completed_at});
 }
