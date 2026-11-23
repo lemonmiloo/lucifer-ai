@@ -1393,7 +1393,7 @@ function renderMessages(messages){
   [["⌘","Bantu debug kode","Cari dan perbaiki bug di script gw"],["✳","Buat script Lua","Bantu gw bikin script Lua"],["⌁","Jelaskan API","Jelaskan cara menggunakan Lucifer API"]].forEach(([symbol,label,prompt])=>{const card=document.createElement("button");card.type="button";card.className="welcome-suggestion";const icon=document.createElement("span");icon.className="welcome-suggestion-icon";icon.textContent=symbol;const copy=document.createElement("span");copy.className="welcome-suggestion-copy";const strong=document.createElement("strong");strong.textContent=label;const small=document.createElement("small");small.textContent=prompt;copy.append(strong,small);const arrow=document.createElement("span");arrow.className="welcome-suggestion-arrow";arrow.textContent="↗";card.append(icon,copy,arrow);card.addEventListener("click",()=>{input.value=prompt;input.focus();input.dispatchEvent(new Event("input",{bubbles:true}));});suggestions.appendChild(card)});
   welcome.append(kicker,title,description,suggestions);chat.appendChild(welcome);return;
  }
- messages.forEach((m,index)=>{if(m.jobId)renderPendingMessage(m);else{const el=add(m.content,m.role,false);if(m.attachments?.length)renderAttachmentLabels(el,m.attachments);if(m.role==="assistant"){renderSearchMeta(el,m);renderAssistantActions(el,m.content,index)}}});
+ messages.forEach((m,index)=>{if(m.jobId)renderPendingMessage(m);else{const el=add(m.streaming?m.displayContent:m.content,m.role,false);el.dataset.messageIndex=String(index);if(m.attachments?.length)renderAttachmentLabels(el,m.attachments);if(m.role==="assistant"&&!m.streaming){renderSearchMeta(el,m);renderAssistantActions(el,m.content,index)}}});
  scrollChatToBottom("auto");
 }
 function renderSearchMeta(messageElement,message){
@@ -1693,6 +1693,35 @@ input.addEventListener("input",()=>{
  input.style.height=Math.min(input.scrollHeight,160)+"px";
 });
 let pollingJobs=false;
+async function revealCompletedAnswer(chatItem,message){
+ const chunks=String(message.content||"").match(/\S+\s*/g)||[];
+ message.streaming=true;
+ message.displayContent="";
+ if(currentChatId===chatItem.id)renderMessages(chatItem.messages);
+ for(let i=0;i<chunks.length;i++){
+  message.displayContent+=chunks[i];
+  if(currentChatId===chatItem.id){
+   const index=chatItem.messages.indexOf(message);
+   const el=chat.querySelector('.msg[data-message-index="'+index+'"]');
+   const content=el?.querySelector(".message-content");
+   if(content)renderContent(content,message.displayContent);
+   const nearBottom=chat.scrollHeight-chat.scrollTop-chat.clientHeight<140;
+   if(nearBottom)chat.scrollTop=chat.scrollHeight;
+  }
+  await new Promise(resolve=>setTimeout(resolve,28));
+ }
+ message.streaming=false;
+ delete message.displayContent;
+ chatItem.updatedAt=Date.now();
+ saveChats();
+ if(currentChatId===chatItem.id){
+  const index=chatItem.messages.indexOf(message);
+  const el=chat.querySelector('.msg[data-message-index="'+index+'"]');
+  if(el){renderContent(el.querySelector(".message-content"),message.content);renderSearchMeta(el,message);renderAssistantActions(el,message.content,index)}
+  history=chatItem.messages.filter(m=>m.content&&["user","assistant"].includes(m.role)).map(m=>({role:m.role,content:m.content}));
+  scrollChatToBottom("auto");
+ }else saveChats();
+}
 async function pollPendingJobs(){
  if(!activeSession||pollingJobs)return;
  const pending=[];
@@ -1706,10 +1735,15 @@ async function pollPendingJobs(){
     if(!r.ok)continue;
     const data=await r.json();
     if(data.status==="completed"&&typeof data.answer==="string"){
-     item.message.content=data.answer;item.message.sources=Array.isArray(data.sources)?data.sources:[];item.message.searchSteps=Array.isArray(data.searchSteps)?data.searchSteps:[];item.message.durationMs=Number(data.durationMs)||0;delete item.message.jobId;delete item.message.status;
+     item.message.content=data.answer;
+     item.message.sources=Array.isArray(data.sources)?data.sources:[];
+     item.message.searchSteps=Array.isArray(data.searchSteps)?data.searchSteps:[];
+     item.message.durationMs=Number(data.durationMs)||0;
+     delete item.message.jobId;delete item.message.status;
      if(typeof data.title==="string"&&data.title.trim())item.chat.title=data.title.trim();
      item.chat.updatedAt=Date.now();saveChats();renderHistory();
-     if(currentChatId===item.chat.id){renderMessages(item.chat.messages);history=item.chat.messages.filter(m=>m.content&&["user","assistant"].includes(m.role)).map(m=>({role:m.role,content:m.content}));}
+     history=item.chat.messages.filter(m=>m.content&&["user","assistant"].includes(m.role)).map(m=>({role:m.role,content:m.content}));
+     await revealCompletedAnswer(item.chat,item.message);
     }else if(data.status==="failed"){
      item.message.content="Error: "+(data.error||"Pekerjaan AI gagal. Silakan kirim ulang.");
      delete item.message.jobId;delete item.message.status;item.chat.updatedAt=Date.now();saveChats();
