@@ -1467,6 +1467,7 @@ async function regenerateAssistantAnswer(messageIndex,button){
  const priorHistory=c.messages.slice(0,userIndex).filter(m=>m.content&&["user","assistant"].includes(m.role)).slice(-6).map(m=>({role:m.role,content:m.content}));
  const oldContent=assistantMessage.content,jobId=crypto.randomUUID();
  assistantMessage.content="";assistantMessage.jobId=jobId;assistantMessage.status="queued";
+ activeGeneration={running:true,jobId,chat:c,message:assistantMessage};updateSendControl();
  c.updatedAt=Date.now();saveChats();renderHistory();
  if(currentChatId===c.id)renderMessages(c.messages);
  try{
@@ -1480,6 +1481,7 @@ async function regenerateAssistantAnswer(messageIndex,button){
  }catch(error){
   delete assistantMessage.jobId;delete assistantMessage.status;assistantMessage.content=oldContent;saveChats();
   if(currentChatId===c.id)renderMessages(c.messages);
+  finishGeneration(activeGeneration);
   button.title=error.message||"Gagal meminta jawaban baru";
  }
 }
