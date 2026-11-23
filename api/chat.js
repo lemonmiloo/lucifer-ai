@@ -330,7 +330,11 @@ export default async function handler(req, res) {
     const source = getDocs();
     const context = relevantDocs(message, source);
     const itemLookupContext = await searchGrowtopiaItems(message);
-    const webSearchResult = await searchGrowtopiaWeb(message);
+    const isAutoClearRequest = /auto.?clear|sutoe?\s*clear|clear\s+world|hancur(?:kan)?\s+(?:seluruh\s+)?block/i.test(message);
+    // AutoClear is already documented locally; avoid a slow, redundant public-web crawl.
+    const webSearchResult = isAutoClearRequest
+      ? {context:"",sources:[],steps:[]}
+      : await searchGrowtopiaWeb(message);
     const webSearchContext = webSearchResult.context;
     const base = (process.env.VIKEY_BASE_URL || "https://api.vikey.ai/v1").replace(/\/$/,"");
     const model = process.env.VIKEY_MODEL || "deepseek/deepseek-v4-pro";
@@ -363,8 +367,8 @@ export default async function handler(req, res) {
         model,
         instructions:chatMessages[0].content,
         input:responsesInput,
-        reasoning:{effort:"high"},
-        max_output_tokens:5000,
+        reasoning:{effort:isAutoClearRequest?"medium":"high"},
+        max_output_tokens:isAutoClearRequest?2200:5000,
         store:false
       })
     });
