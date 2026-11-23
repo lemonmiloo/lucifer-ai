@@ -329,6 +329,41 @@ Fungsi shortcut yang bisa diakses langsung tanpa prefix bot:
 | **AutoCombine** | `enabled`, `output_id`, `world`, `ingredient_storage`, `output_world`. **Method:** `setIngredient(idx, id, count)`. |
 | **Rotation** | `enabled`, `status`, rest/fill/fossil/exchange options, storage suppression, break position, item IDs, custom tiles. |
 
+
+### 3.1 AutoClear — Module Otomatisasi Pembersihan World
+AutoClear tercantum sebagai automation module Lucifer. Modul automation diakses melalui properti `bot.auto_<nama>`, sehingga modul ini diakses dengan `bot.auto_clear`.
+
+Properti yang tercantum:
+- `bot.auto_clear.enabled`: mengaktifkan/menonaktifkan modul.
+- `bot.auto_clear.name_length`
+- `bot.auto_clear.keep_jammer`
+- `bot.auto_clear.keep_lock`
+- `bot.auto_clear.no_number`
+- `bot.auto_clear.output_path`
+- `bot.auto_clear.item_storage`
+- `bot.auto_clear.seed_storage`
+
+Contoh aktivasi minimal berdasarkan pola module dan properti yang didokumentasikan:
+
+```lua
+local bot = getBot()
+if not bot then
+    print("Bot tidak ditemukan.")
+    return
+end
+
+if not bot:isInWorld() then
+    print("Bot belum berada di dalam world.")
+    return
+end
+
+-- Jalankan hanya pada world milik sendiri atau world
+-- yang memang pengguna punya izin untuk kelola.
+bot.auto_clear.enabled = true
+```
+
+Batas dokumentasi: referensi yang tersedia hanya mencantumkan properti di atas. Referensi ini tidak menjelaskan algoritma internal AutoClear, urutan aksi, format output_path, atau arti detail setiap opsi. Jangan mengarang method `:start()`, `:stop()`, parameter, atau menjanjikan hasil tertentu tanpa dokumentasi versi Lucifer yang lebih lengkap. Jika modul tidak aktif di versi pengguna, minta versi Lucifer dan log/hasil console untuk diagnosis.
+
 ---
 
 ## 4. STRUCTURES (Data Objects)
