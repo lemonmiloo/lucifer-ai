@@ -329,8 +329,9 @@ export default async function handler(req, res) {
     }
     const source = getDocs();
     const context = relevantDocs(message, source);
-    const itemLookupContext = await searchGrowtopiaItems(message);
     const isAutoClearRequest = /auto.?clear|sutoe?\s*clear|clear\s+world|hancur(?:kan)?\s+(?:seluruh\s+)?block/i.test(message);
+    // Skip unrelated item-database download for AutoClear requests.
+    const itemLookupContext = isAutoClearRequest ? "" : await searchGrowtopiaItems(message);
     // AutoClear is already documented locally; avoid a slow, redundant public-web crawl.
     const webSearchResult = isAutoClearRequest
       ? {context:"",sources:[],steps:[]}
@@ -367,8 +368,8 @@ export default async function handler(req, res) {
         model,
         instructions:chatMessages[0].content,
         input:responsesInput,
-        reasoning:{effort:isAutoClearRequest?"medium":"high"},
-        max_output_tokens:isAutoClearRequest?2200:5000,
+        reasoning:{effort:isAutoClearRequest?"low":"medium"},
+        max_output_tokens:isAutoClearRequest?1200:4000,
         store:false
       })
     });
