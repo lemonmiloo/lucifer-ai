@@ -248,13 +248,13 @@ DOKUMENTASI RELEVAN:\n"+(context || "Tidak ada bagian dokumentasi yang cocok. Ja
       for (const call of (Array.isArray(step?.calls) ? step.calls : [])) {
         for (const source of (Array.isArray(call?.sources) ? call.sources : [])) {
           const url = typeof source?.url === "string" ? source.url : "";
-          if (!/^https?:\\/\\//i.test(url)) continue;
+          if (!(url.startsWith("https://") || url.startsWith("http://"))) continue;
           if (!webSources.some(item => item.url === url)) webSources.push({title:String(source?.title || source?.site_name || "Referensi web").slice(0,180),url});
         }
       }
     }
-    if (typeof answer === "string" && webSources.length && !/https?:\\/\\//i.test(answer)) {
-      answer += "\\n\\n**Sumber web**\\n" + webSources.slice(0,6).map(source => "- [" + source.title.replace(/[\\[\\]]/g,"") + "](" + source.url + ")").join("\\n");
+    if (typeof answer === "string" && webSources.length && !answer.includes("http://") && !answer.includes("https://")) {
+      answer += "\n\n**Sumber web**\n" + webSources.slice(0,6).map(source => "- [" + source.title.replaceAll("[","").replaceAll("]","") + "](" + source.url + ")").join("\n");
     }
     if (typeof answer !== "string" || !answer.trim()) {
       const reason = data?.choices?.[0]?.finish_reason;
