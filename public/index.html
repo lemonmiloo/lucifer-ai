@@ -1079,9 +1079,13 @@ body.authenticated .attachment-tray{max-width:100%;padding:0 4px 8px!important}
  }
  body:not(.keyboard-open) .composer{
   transform:translate3d(0,0,0)!important;
-  transition:none!important;
+  /* Ease only the return after the keyboard closes; opening stays viewport-synced. */
+  transition:transform 140ms cubic-bezier(.22,.61,.36,1)!important;
  }
  body.keyboard-open .chat{transition:none!important}
+ body:not(.keyboard-open) .chat{
+  transition:margin-bottom 140ms cubic-bezier(.22,.61,.36,1)!important;
+ }
 }
 /* Center the composer itself and prevent flex children from pushing it sideways */
 body.authenticated .composer{
