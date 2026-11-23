@@ -1187,6 +1187,48 @@ body.authenticated .composer .form textarea{min-width:0!important}
 }
 @media(prefers-reduced-motion:reduce){.msg{animation:none!important;transition:none!important}.thinking-dots i{animation:none!important;opacity:.55}}
 
+
+/* Refined conversation bubbles */
+.msg{
+ border:1px solid rgba(164,151,210,.13)!important;
+ box-shadow:0 5px 18px rgba(0,0,0,.13)!important;
+ transition:background .2s ease,border-color .2s ease;
+}
+.msg.user{
+ max-width:min(82%,560px)!important;
+ padding:13px 17px!important;
+ color:#f5f1ff!important;
+ background:linear-gradient(145deg,rgba(103,78,157,.48),rgba(55,43,88,.72))!important;
+ border:1px solid rgba(178,151,255,.23)!important;
+ border-radius:20px 20px 6px 20px!important;
+ box-shadow:0 7px 22px rgba(22,13,43,.2),inset 0 1px 0 rgba(255,255,255,.045)!important;
+ line-height:1.65!important;
+}
+.msg.assistant{
+ width:min(100%,760px)!important;
+ max-width:100%!important;
+ padding:17px 19px!important;
+ color:#e8e6f2!important;
+ background:linear-gradient(145deg,rgba(20,22,37,.88),rgba(15,17,29,.94))!important;
+ border:1px solid rgba(154,143,195,.15)!important;
+ border-radius:19px 19px 19px 7px!important;
+ box-shadow:0 8px 26px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.025)!important;
+ line-height:1.72!important;
+}
+.msg.assistant.pending-message{
+ padding:17px 19px!important;
+ min-height:72px;
+ display:flex;
+ align-items:center;
+}
+.pending-message .message-content{width:100%}
+.pending-message .thinking-state{padding:0!important;min-height:24px}
+@media(max-width:600px){
+ .msg.user{max-width:88%!important;padding:12px 15px!important;border-radius:18px 18px 5px 18px!important}
+ .msg.assistant{padding:15px 16px!important;border-radius:18px 18px 18px 6px!important}
+ .msg.assistant.pending-message{min-height:66px;padding:15px 16px!important}
+}
+
 </style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><div class="app-brand-lockup" aria-label="DanKudo AI"><span class="app-brand-mark">D</span><span class="app-brand-copy"><strong>DanKudo</strong><small>AI WORKSPACE</small></span><span class="app-brand-live"></span></div><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
  <div class="dashboard-shell">
   <header class="dashboard-head"><div><p class="dashboard-eyebrow">DANKUDO AI / ADMIN</p><h2>Dashboard</h2><p class="dashboard-subtitle">Monitoring akun dan riwayat percakapan</p></div><button class="dashboard-close" id="dashboardClose" type="button" aria-label="Tutup dashboard">✕</button></header>
@@ -1494,7 +1536,7 @@ function createAssistantIdentity(){
  const tag=document.createElement("span");tag.className="assistant-tag";tag.textContent="AI";identity.append(mark,name,tag);return identity;
 }
 function renderPendingMessage(message){
- const el=document.createElement("div");el.className="msg assistant pending-message";el.appendChild(createAssistantIdentity());
+ const el=document.createElement("div");el.className="msg assistant pending-message";
  const content=document.createElement("div");content.className="message-content";
  const thinking=document.createElement("div");thinking.className="thinking-state";thinking.setAttribute("aria-label","Thinking");
  const title=document.createElement("span");title.className="thinking-label";title.textContent="Thinking";
