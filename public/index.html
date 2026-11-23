@@ -1477,6 +1477,7 @@ async function regenerateAssistantAnswer(messageIndex,button){
   const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw new Error("Respons server tidak valid")}
   if(!response.ok)throw new Error(data.error||"Permintaan gagal");
   if(data.jobId!==jobId)throw new Error("ID pekerjaan tidak cocok");
+  if(activeGeneration?.jobId!==jobId){requestJobCancellation(jobId);return}
   assistantMessage.status=data.status||"queued";saveChats();pollPendingJobs();
  }catch(error){
   delete assistantMessage.jobId;delete assistantMessage.status;assistantMessage.content=oldContent;saveChats();
@@ -1707,6 +1708,10 @@ function finishGeneration(state){
  if(state&&activeGeneration!==state)return;
  activeGeneration=null;updateSendControl();
 }
+function requestJobCancellation(jobId){
+ if(!jobId||!activeSession?.access_token)return;
+ fetch("/api/chat-cancel",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+activeSession.access_token},body:JSON.stringify({jobId}),cache:"no-store"}).catch(error=>console.warn("Cancel job:",error?.message||error));
+}
 async function stopActiveGeneration(){
  const state=activeGeneration;if(!state?.running)return;
  state.running=false;
@@ -1719,9 +1724,7 @@ async function stopActiveGeneration(){
   if(currentChatId===chatItem.id)renderMessages(chatItem.messages);
  }
  finishGeneration(state);
- if(state.jobId&&activeSession?.access_token){
-  fetch("/api/chat-cancel",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+activeSession.access_token},body:JSON.stringify({jobId:state.jobId}),cache:"no-store"}).catch(error=>console.warn("Cancel job:",error?.message||error));
- }
+ requestJobCancellation(state.jobId);
 }
 send.addEventListener("click",event=>{
  if(activeGeneration?.running){event.preventDefault();event.stopPropagation();stopActiveGeneration()}
@@ -1861,11 +1864,7 @@ form.addEventListener("submit",async e=>{
  if(!active.serverId)active.serverId=crypto.randomUUID();
  const jobId=crypto.randomUUID();
  const pending={role:"assistant",content:"",jobId,status:"queued"};
- active.messages.push(pending);active.messages[active.messages.length-2].attachments=attachmentsToSend.map(file=>({name:file.name,mimeType:file.mimeType,size:file.size}));
- active.messages[active.messages.length-2].attachments=attachmentsToSend.map(file=>({name:file.name,mimeType:file.mimeType,size:file.size}));
- active.messages[active.messages.length-1].attachments=active.messages[active.messages.length-1].attachments||undefined;
- active.messages[active.messages.length-1].jobId=jobId;
- active.messages[active.messages.length-1].status="queued";
+ active.messages.push(pending);
  active.updatedAt=Date.now();saveChats();renderHistory();
  activeGeneration={running:true,jobId,chat:active,message:pending};updateSendControl();
  renderMessages(active.messages);
@@ -1876,6 +1875,7 @@ form.addEventListener("submit",async e=>{
   const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(raw.trim().startsWith("<")||raw.startsWith("An error")?"Server sedang bermasalah. Coba lagi sebentar.":"Respons server tidak valid: "+raw.slice(0,180))}
   if(!r.ok)throw new Error(data.error||"Permintaan gagal");
   if(data.jobId!==jobId)throw new Error("ID pekerjaan tidak cocok.");
+  if(activeGeneration?.jobId!==jobId){requestJobCancellation(jobId);return}
   pending.status=data.status||"queued";saveChats();
   updateSendControl();pollPendingJobs();
  }catch(err){
