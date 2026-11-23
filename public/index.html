@@ -1589,17 +1589,17 @@ function appendInline(parent,text){
  if(last<text.length)parent.appendChild(document.createTextNode(text.slice(last)));
 }
 function renderContent(container,text){
- container.replaceChildren();const lines=String(text??"").replace(/\r/g,"").split("\n");let i=0;
+ container.replaceChildren();const lines=String(text??"").replace(/\r/g,"").split("\n");let i=0,orderedListNext=1;
  while(i<lines.length){const line=lines[i];
-  if(/^\s*```/.test(line)){const lang=line.replace(/^\s*```/,"").trim()||"Code";const code=[];i++;while(i<lines.length&&!/^\s*```/.test(lines[i]))code.push(lines[i++]);if(i<lines.length)i++;
+  if(/^\s*```/.test(line)){orderedListNext=1;const lang=line.replace(/^\s*```/,"").trim()||"Code";const code=[];i++;while(i<lines.length&&!/^\s*```/.test(lines[i]))code.push(lines[i++]);if(i<lines.length)i++;
    const wrap=document.createElement("div");wrap.className="code-wrap";const head=document.createElement("div");head.className="code-head";const label=document.createElement("span");label.textContent=lang;const copy=document.createElement("button");copy.className="copy-code";copy.textContent="Copy";copy.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(code.join("\n"));copy.textContent="Tersalin ✓"}catch{copy.textContent="Gagal menyalin"}setTimeout(()=>copy.textContent="Copy",1600)});head.append(label,copy);const pre=document.createElement("pre");const codeEl=document.createElement("code");codeEl.textContent=code.join("\n");pre.appendChild(codeEl);wrap.append(head,pre);container.appendChild(wrap);continue;
   }
   if(!line.trim()){i++;continue}
-  const heading=line.match(/^(#{1,3})\s+(.+)$/);if(heading){const h=document.createElement("h"+heading[1].length);appendInline(h,heading[2]);container.appendChild(h);i++;continue}
+  const heading=line.match(/^(#{1,3})\s+(.+)$/);if(heading){orderedListNext=1;const h=document.createElement("h"+heading[1].length);appendInline(h,heading[2]);container.appendChild(h);i++;continue}
   if(/^\s*[-*+]\s+/.test(line)){const list=document.createElement("ul");while(i<lines.length&&/^\s*[-*+]\s+/.test(lines[i])){const li=document.createElement("li");appendInline(li,lines[i++].replace(/^\s*[-*+]\s+/,""));list.appendChild(li)}container.appendChild(list);continue}
-  if(/^\s*\d+[.)]\s+/.test(line)){const list=document.createElement("ol");while(i<lines.length&&/^\s*\d+[.)]\s+/.test(lines[i])){const li=document.createElement("li");appendInline(li,lines[i++].replace(/^\s*\d+[.)]\s+/,""));list.appendChild(li)}container.appendChild(list);continue}
+  if(/^\s*\d+[.)]\s+/.test(line)){const list=document.createElement("ol");const first=line.match(/^\s*(\d+)[.)]\s+/);const supplied=Number(first?.[1]||1);const start=supplied===1&&orderedListNext>1?orderedListNext:supplied;list.start=start;while(i<lines.length&&/^\s*\d+[.)]\s+/.test(lines[i])){const raw=lines[i].match(/^\s*(\d+)[.)]\s+/);const suppliedNumber=Number(raw?.[1]||1);const number=suppliedNumber===1&&orderedListNext>1?orderedListNext:suppliedNumber;const li=document.createElement("li");li.value=number;appendInline(li,lines[i++].replace(/^\s*\d+[.)]\s+/,""));list.appendChild(li);orderedListNext=number+1}container.appendChild(list);continue}
   if(/^>\s?/.test(line)){const quote=document.createElement("blockquote");while(i<lines.length&&/^>\s?/.test(lines[i])){const p=document.createElement("p");appendInline(p,lines[i++].replace(/^>\s?/,""));quote.appendChild(p)}container.appendChild(quote);continue}
-  const p=document.createElement("p");while(i<lines.length&&lines[i].trim()&&!/^\s*```/.test(lines[i])&&!/^#{1,3}\s+/.test(lines[i])&&!/^\s*[-*+]\s+/.test(lines[i])&&!/^\s*\d+[.)]\s+/.test(lines[i])&&!/^>\s?/.test(lines[i])){if(p.childNodes.length)p.appendChild(document.createElement("br"));appendInline(p,lines[i++])}container.appendChild(p);
+  orderedListNext=1;const p=document.createElement("p");while(i<lines.length&&lines[i].trim()&&!/^\s*```/.test(lines[i])&&!/^#{1,3}\s+/.test(lines[i])&&!/^\s*[-*+]\s+/.test(lines[i])&&!/^\s*\d+[.)]\s+/.test(lines[i])&&!/^>\s?/.test(lines[i])){if(p.childNodes.length)p.appendChild(document.createElement("br"));appendInline(p,lines[i++])}container.appendChild(p);
  }
 }
 function add(text,role,persist=true){
