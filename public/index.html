@@ -15,8 +15,9 @@
  body{height:var(--app-height,100dvh)}
  .app{position:fixed;top:var(--viewport-top,0px);left:0;right:0;height:var(--app-height,100dvh);min-height:0;overflow:hidden}
  .top{height:68px;min-height:68px}
- .chat{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:38px;padding-bottom:calc(26px + var(--keyboard-shift,0px))}
+ .chat{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:38px}
  .composer{position:relative;flex-shrink:0;padding-bottom:8px}
+ body.keyboard-open .chat{margin-bottom:var(--keyboard-shift,0px)}
 }
 /* Floating top controls stay visible while the conversation scrolls */
 /* Keep the history toggle behind the drawer/backdrop when the drawer is open */
@@ -1388,7 +1389,7 @@ function syncMobileViewport(){
   /* Move only the composer by the keyboard's height; never resize the workspace. */
   const keyboardShift=Math.max(0,mobileBaseHeight-visibleHeight-(vv?.offsetTop||0));
   document.documentElement.style.setProperty("--keyboard-shift",keyboardShift+"px");
-  /* Reserve the space taken by the lifted composer, then reveal the latest message. */
+  /* Shrink the chat viewport to the lifted composer, then reveal the latest message. */
   if(!wasKeyboardOpen&&chat.querySelector(".msg"))scrollChatToBottom("auto");
  }else{
   mobileBaseHeight=Math.max(visibleHeight,window.innerHeight);
