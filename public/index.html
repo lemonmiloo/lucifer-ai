@@ -1498,7 +1498,9 @@ function renderPendingMessage(message){
  const content=document.createElement("div");content.className="message-content";
  const thinking=document.createElement("div");thinking.className="thinking-state";thinking.setAttribute("aria-label","Thinking");
  const title=document.createElement("span");title.className="thinking-label";title.textContent="Thinking";
- thinking.appendChild(title);content.appendChild(thinking);el.appendChild(content);chat.appendChild(el);return el;
+ const dots=document.createElement("span");dots.className="thinking-dots";dots.setAttribute("aria-hidden","true");
+ for(let i=0;i<3;i++)dots.appendChild(document.createElement("i"));
+ thinking.append(title,dots);content.appendChild(thinking);el.appendChild(content);chat.appendChild(el);return el;
 }
 function updateLastMessage(el,text){const content=el.querySelector(".message-content");if(content)renderContent(content,text);const c=currentChat();if(c){const last=c.messages[c.messages.length-1];if(last)last.content=String(text??"");c.updatedAt=Date.now();saveChats();renderHistory()}}
 renderMessages([]);
