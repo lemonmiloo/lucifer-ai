@@ -1710,7 +1710,7 @@ function finishGeneration(state){
 }
 function requestJobCancellation(jobId){
  if(!jobId||!activeSession?.access_token)return;
- fetch("/api/chat-cancel",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+activeSession.access_token},body:JSON.stringify({jobId}),cache:"no-store"}).catch(error=>console.warn("Cancel job:",error?.message||error));
+ fetch("/api/chat-status",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+activeSession.access_token},body:JSON.stringify({jobId}),cache:"no-store"}).catch(error=>console.warn("Cancel job:",error?.message||error));
 }
 async function stopActiveGeneration(){
  const state=activeGeneration;if(!state?.running)return;
