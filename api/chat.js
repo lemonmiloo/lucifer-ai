@@ -19,38 +19,58 @@ function relevantDocs(question, source) {
     return { chunk, score: terms.reduce((n, term) => n + (lower.includes(term) ? 1 : 0), 0) };
   }).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0,4).map(x => x.chunk).join("\n\n---\n\n").slice(0,12000);
 }
-let growtopiaItemCache = { fetchedAt: 0, text: "" };
+let growtopiaItemCache = { fetchedAt: 0, entries: [] };
 async function searchGrowtopiaItems(question) {
-  const stopWords = new Set(["berapa","apa","id","item","block","blok","di","dalam","growtopia","gt","the","is","for","of","nama","itemnya","nya","dong","tolong","cari"]);
-  const normalize = value => String(value || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  const stopWords = new Set(["berapa","apa","id","item","items","block","blok","di","dalam","growtopia","gt","the","is","for","of","nama","itemnya","nya","dong","tolong","cari","berapa"]);
+  const normalize = value => String(value || "").toLowerCase().normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\\s+/g, " ").trim();
   const queryTokens = [...new Set(normalize(question).split(" ").filter(token => token.length > 1 && !stopWords.has(token)))];
-  if (!queryTokens.length || !/\b(id|item|block|blok|pepper|tree|seed)\b/i.test(question)) return "";
+  if (!queryTokens.length || !/\\b(id|item|block|blok|pepper|tree|seed)\\b/i.test(question)) return "";
   try {
-    if (!growtopiaItemCache.text || Date.now() - growtopiaItemCache.fetchedAt > 30 * 60 * 1000) {
-      const response = await fetch("https://raw.githubusercontent.com/zephilion/growtopia-item-id/main/click-here", { signal: AbortSignal.timeout(9000) });
-      if (!response.ok) throw new Error("Item database HTTP " + response.status);
-      growtopiaItemCache = { fetchedAt: Date.now(), text: await response.text() };
+    if (!growtopiaItemCache.entries.length || Date.now() - growtopiaItemCache.fetchedAt > 30 * 60 * 1000) {
+      const sources = [
+        "https://raw.githubusercontent.com/zephilion/growtopia-item-id/main/click-here",
+        "https://cdn.jsdelivr.net/gh/zephilion/growtopia-item-id@main/click-here"
+      ];
+      let body = "";
+      let lastError;
+      for (const url of sources) {
+        try {
+          const response = await fetch(url, { signal: AbortSignal.timeout(12000), headers: { "User-Agent": "DanKudoAI/1.0" } });
+          if (!response.ok) throw new Error("HTTP " + response.status);
+          body = await response.text();
+          if (!body.includes(":")) throw new Error("Unexpected item database format");
+          break;
+        } catch (error) { lastError = error; }
+      }
+      if (!body) throw lastError || new Error("All item database sources failed");
+      const entries = [];
+      for (const line of body.split(/\\r?\\n/)) {
+        const match = line.match(/^\\s*(\\d+)\\s*:\\s*(.+?)\\s*$/);
+        if (match) entries.push({ id: Number(match[1]), name: match[2].trim() });
+      }
+      if (!entries.length) throw new Error("No item records parsed");
+      growtopiaItemCache = { fetchedAt: Date.now(), entries };
+      console.info("Growtopia item database loaded:", entries.length, "records");
     }
-    const entries = [];
-    for (const line of growtopiaItemCache.text.split(/\r?\n/)) {
-      const match = line.match(/^\s*(\d+)\s*:\s*(.+?)\s*$/);
-      if (match) entries.push({ id: Number(match[1]), name: match[2].trim() });
-    }
-    const scored = entries.map(item => {
-      const nameTokens = normalize(item.name).split(" ");
+    const scored = growtopiaItemCache.entries.map(item => {
+      const name = normalize(item.name);
+      const nameTokens = name.split(" ");
       const matched = queryTokens.filter(token => nameTokens.includes(token));
-      return { ...item, matched, score: matched.length / queryTokens.length };
-    }).filter(item => item.matched > 0).sort((a,b) => b.score - a.score || b.matched - a.matched);
+      const allTokens = queryTokens.every(token => nameTokens.includes(token));
+      const phraseMatch = queryTokens.join(" ") === name || name.includes(queryTokens.join(" "));
+      return { ...item, matched: matched.length, score: matched.length / queryTokens.length, allTokens, phraseMatch };
+    }).filter(item => item.matched > 0).sort((a,b) => Number(b.allTokens)-Number(a.allTokens) || Number(b.phraseMatch)-Number(a.phraseMatch) || b.score-a.score || b.matched-a.matched);
     if (!scored.length) return "";
-    const bestScore = scored[0].score;
-    const matches = scored.filter(item => item.score === bestScore).slice(0, bestScore === 1 ? 5 : 8);
-    return "HASIL PENCARIAN DATABASE ITEM GROWTOPIA (sumber komunitas, bukan database resmi Ubisoft):\n" +
-      matches.map(item => "- " + item.name + " — ID " + item.id + (item.score < 1 ? " (kecocokan sebagian; belum pasti)" : "")).join("\n") +
-      "\nSumber: https://github.com/zephilion/growtopia-item-id/blob/main/click-here\n" +
-      "Gunakan hasil ini untuk menjawab pertanyaan ID. Jika ada beberapa kecocokan parsial, jelaskan perbedaannya atau minta klarifikasi. Jangan mengatakan tidak punya database jika hasil di atas tersedia. Database komunitas dapat tertinggal dari update game.";
+    const best = scored[0];
+    const matches = scored.filter(item => item.score === best.score && item.allTokens === best.allTokens).slice(0, 6);
+    console.info("Growtopia item lookup:", question, "=>", matches.map(x => x.name + ":" + x.id).join(", "));
+    return "HASIL LOOKUP DATABASE ITEM GROWTOPIA (sumber komunitas):\\n" +
+      matches.map(item => "- " + item.name + " — ID " + item.id).join("\\n") +
+      "\\nSumber: https://github.com/zephilion/growtopia-item-id/blob/main/click-here\\n" +
+      "INSTRUKSI WAJIB: Ini adalah hasil pencarian data yang sudah berhasil diambil backend, bukan ingatan model. Jawab langsung memakai ID yang cocok. Jika nama yang ditanyakan menyebut 'Block' tetapi database mencatat nama item tanpa kata 'Block' (misalnya Pepper Tree), jelaskan nama database persisnya. Jangan mengatakan tidak punya akses web atau database ketika hasil ini tersedia. Jangan mengubah ID.";
   } catch (error) {
-    console.warn("Growtopia item lookup unavailable:", error?.message || error);
-    return "";
+    console.warn("Growtopia item lookup failed:", error?.message || error);
+    return "Pencarian database item Growtopia sedang gagal di sisi server. Jangan mengaku sudah melakukan web search; jelaskan bahwa lookup sedang tidak tersedia.";
   }
 }
 function rateLimit(ip) {
