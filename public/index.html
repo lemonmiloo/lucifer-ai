@@ -1412,8 +1412,9 @@ function syncMobileViewport(){
   /* Move only the composer by the keyboard's height; never resize the workspace. */
   const keyboardShift=Math.max(0,mobileBaseHeight-visibleHeight-(vv?.offsetTop||0));
   document.documentElement.style.setProperty("--keyboard-shift",keyboardShift+"px");
-  /* Shrink the chat viewport to the lifted composer, then reveal the latest message. */
-  if(!wasKeyboardOpen&&chat.querySelector(".msg"))scrollChatToBottom("auto");
+  /* Keep the newest message visible throughout the keyboard's resize
+     animation, not only on the first frame when it opens. */
+  if(chat.querySelector(".msg"))scrollChatToBottom("auto");
  }else{
   mobileBaseHeight=Math.max(visibleHeight,window.innerHeight);
   document.documentElement.style.setProperty("--app-height",mobileBaseHeight+"px");
