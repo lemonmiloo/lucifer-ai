@@ -6,6 +6,12 @@
 .history-btn{width:40px;height:40px;border:1px solid var(--line);border-radius:12px;background:#141827;color:#eee;font-size:21px;cursor:pointer;display:grid;place-items:center}.drawer-backdrop{position:fixed;inset:0;background:#0009;z-index:10;opacity:0;pointer-events:none;transition:opacity .28s ease}.drawer-backdrop.open{opacity:1;pointer-events:auto}.drawer{position:fixed;z-index:11;inset:0 auto 0 0;width:min(330px,86vw);background:#101421;border-right:1px solid var(--line);padding:18px;transform:translate3d(-105%,0,0);transition:transform .28s cubic-bezier(.22,.8,.25,1);will-change:transform;display:flex;flex-direction:column;gap:14px}.drawer.open{transform:translate3d(0,0,0)}.drawer,.drawer-backdrop{touch-action:pan-y;overscroll-behavior:contain}body.drawer-open{touch-action:pan-y;overscroll-behavior:contain}body.drawer-open .app{touch-action:pan-y}.drawer.dragging{transition:none}.drawer-backdrop.dragging{transition:none}.drawer-head{display:flex;align-items:center;justify-content:space-between;font-weight:750;font-size:17px}.drawer-actions{display:flex;gap:8px}.drawer-btn{border:1px solid var(--line);background:#1a2030;color:#eee;border-radius:10px;padding:10px 12px;cursor:pointer}.history-list{overflow:auto;display:flex;flex-direction:column;gap:7px}.history-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid transparent;background:#171d2b;color:#e8e6f0;border-radius:10px;padding:11px;cursor:pointer}.history-item.active{border-color:var(--accent);background:#242039}.history-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:13px}.history-delete{border:0;background:transparent;color:#929bb0;font-size:17px;cursor:pointer;padding:2px 5px}.history-empty{color:var(--muted);font-size:13px;line-height:1.5;padding:12px 4px}.top{gap:10px}.admin-menu-btn{display:none;align-items:center;justify-content:center;height:42px;box-sizing:border-box;margin-left:auto;border:1px solid #494064;border-radius:12px;background:#211b35;color:#f4f0ff;padding:0 13px;font:600 13px/1 Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}.admin-menu-btn:hover{background:#30264b}.admin-menu-btn:active{transform:scale(.97)}body.is-admin .admin-menu-btn{display:flex}.new-chat-top{display:flex;align-items:center;justify-content:center;height:42px;box-sizing:border-box;margin-left:0;border:1px solid #494064;border-radius:12px;background:#211b35;color:#f4f0ff;padding:0 13px;font:600 13px/1 Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}.new-chat-top:hover{background:#30264b}.new-chat-top:disabled{opacity:.48;cursor:not-allowed;background:#211b35}
 
 .msg{white-space:normal;max-width:88%;padding:15px 17px}.assistant{width:min(100%,760px)}.message-content{overflow-wrap:anywhere;line-height:1.75}.message-content p{margin:0 0 12px}.message-content p:last-child{margin-bottom:0}.message-content h1,.message-content h2,.message-content h3{line-height:1.3;margin:18px 0 9px}.message-content h1{font-size:1.25em}.message-content h2{font-size:1.13em}.message-content h3{font-size:1.04em}.message-content ul,.message-content ol{padding-left:23px;margin:8px 0 14px}.message-content li{margin:5px 0}.message-content blockquote{border-left:3px solid var(--accent);margin:12px 0;padding:4px 12px;color:#c6c1d6}.message-content code.inline-code{background:#080a10;border:1px solid var(--line);border-radius:5px;padding:2px 6px;font: .9em ui-monospace,monospace;color:#d8caff}.code-wrap{margin:13px 0 15px;border:1px solid #343044;border-radius:12px;overflow:hidden;background:#080a10}.code-head{height:38px;padding:0 10px 0 13px;display:flex;align-items:center;justify-content:space-between;background:#171827;border-bottom:1px solid #343044;color:#a9a4b9;font-size:11px}.copy-code{border:1px solid #454057;background:#242236;color:#eee;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer}.copy-code:hover{background:#35304d}.code-wrap pre{margin:0;border:0;border-radius:0;padding:14px;max-height:480px;overflow:auto;white-space:pre;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e2ddf5}.assistant .message-content> :first-child{margin-top:0}.assistant .message-content> :last-child{margin-bottom:0}@media(max-width:600px){.msg{max-width:98%;padding:13px}.assistant{width:100%}.code-wrap pre{font-size:12px}}
+.assistant-actions{display:flex;align-items:center;gap:7px;margin-top:13px;padding-top:10px;border-top:1px solid rgba(165,148,235,.11)}
+.assistant-action{width:32px;height:30px;display:grid;place-items:center;border:1px solid transparent;border-radius:9px;background:transparent;color:#929bb0;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease}
+.assistant-action svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.assistant-action:hover{background:#28233b;border-color:#494064;color:#e7ddff}
+.assistant-action:active{transform:scale(.92)}
+.assistant-action.copied{color:#8ee3b1;background:#172b27}
 /* Animated thinking indicator */
 .pending-job-label{font-size:11px;color:#9ba2ba;margin-bottom:8px}.typing-indicator{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:2px 1px}.typing-indicator span{width:7px;height:7px;border-radius:50%;background:#b9a5ff;opacity:.45;animation:lucifer-dot-bounce 1s ease-in-out infinite}.typing-indicator span:nth-child(2){animation-delay:.16s}.typing-indicator span:nth-child(3){animation-delay:.32s}@keyframes lucifer-dot-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-7px);opacity:1}}
 
@@ -1248,8 +1254,44 @@ function renderMessages(messages){
   [["⌘","Bantu debug kode","Cari dan perbaiki bug di script gw"],["✳","Buat script Lua","Bantu gw bikin script Lua"],["⌁","Jelaskan API","Jelaskan cara menggunakan Lucifer API"]].forEach(([symbol,label,prompt])=>{const card=document.createElement("button");card.type="button";card.className="welcome-suggestion";const icon=document.createElement("span");icon.className="welcome-suggestion-icon";icon.textContent=symbol;const copy=document.createElement("span");copy.className="welcome-suggestion-copy";const strong=document.createElement("strong");strong.textContent=label;const small=document.createElement("small");small.textContent=prompt;copy.append(strong,small);const arrow=document.createElement("span");arrow.className="welcome-suggestion-arrow";arrow.textContent="↗";card.append(icon,copy,arrow);card.addEventListener("click",()=>{input.value=prompt;input.focus();input.dispatchEvent(new Event("input",{bubbles:true}));});suggestions.appendChild(card)});
   welcome.append(kicker,title,description,suggestions);chat.appendChild(welcome);return;
  }
- messages.forEach(m=>{if(m.jobId)renderPendingMessage(m);else{const el=add(m.content,m.role,false);if(m.attachments?.length)renderAttachmentLabels(el,m.attachments)}});
+ messages.forEach((m,index)=>{if(m.jobId)renderPendingMessage(m);else{const el=add(m.content,m.role,false);if(m.attachments?.length)renderAttachmentLabels(el,m.attachments);if(m.role==="assistant")renderAssistantActions(el,m.content,index)}});
  scrollChatToBottom("auto");
+}
+function renderAssistantActions(messageElement,messageText,messageIndex){
+ const actions=document.createElement("div");actions.className="assistant-actions";
+ const copy=document.createElement("button");copy.type="button";copy.className="assistant-action";copy.setAttribute("aria-label","Salin seluruh jawaban");copy.title="Salin jawaban";
+ copy.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"></path></svg>';
+ copy.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(String(messageText??""));copy.classList.add("copied");copy.title="Tersalin";copy.setAttribute("aria-label","Jawaban tersalin");setTimeout(()=>{copy.classList.remove("copied");copy.title="Salin jawaban";copy.setAttribute("aria-label","Salin seluruh jawaban")},1500)}catch{copy.title="Gagal menyalin"}});
+ const retry=document.createElement("button");retry.type="button";retry.className="assistant-action";retry.setAttribute("aria-label","Buat jawaban lain");retry.title="Buat jawaban lain";
+ retry.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"></path><path d="M19 12a7.5 7.5 0 1 1-2.1-5.2L20 12"></path></svg>';
+ retry.addEventListener("click",()=>regenerateAssistantAnswer(messageIndex,retry));
+ actions.append(copy,retry);messageElement.appendChild(actions);
+}
+async function regenerateAssistantAnswer(messageIndex,button){
+ const c=currentChat();if(!c||!activeSession)return;
+ const assistantMessage=c.messages[messageIndex];if(!assistantMessage||assistantMessage.role!=="assistant"||assistantMessage.jobId)return;
+ let userIndex=messageIndex-1;while(userIndex>=0&&c.messages[userIndex].role!=="user")userIndex--;
+ if(userIndex<0)return;
+ const userMessage=c.messages[userIndex],prompt=String(userMessage.content||"").replace(/\\n\\nLampiran:.*$/s,"").trim();
+ if(!prompt){button.title="Pesan awal tidak tersedia";return}
+ const priorHistory=c.messages.slice(0,userIndex).filter(m=>m.content&&["user","assistant"].includes(m.role)).slice(-6).map(m=>({role:m.role,content:m.content}));
+ const oldContent=assistantMessage.content,jobId=crypto.randomUUID();
+ assistantMessage.content="";assistantMessage.jobId=jobId;assistantMessage.status="queued";
+ c.updatedAt=Date.now();saveChats();renderHistory();
+ if(currentChatId===c.id)renderMessages(c.messages);
+ try{
+  const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+activeSession.access_token},body:JSON.stringify({
+   message:prompt,attachments:[],history:priorHistory,visitorId,isFirstMessage:userIndex===0,chatTitle:c.title,conversationId:c.serverId||(c.serverId=crypto.randomUUID()),jobId
+  })});
+  const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw new Error("Respons server tidak valid")}
+  if(!response.ok)throw new Error(data.error||"Permintaan gagal");
+  if(data.jobId!==jobId)throw new Error("ID pekerjaan tidak cocok");
+  assistantMessage.status=data.status||"queued";saveChats();pollPendingJobs();
+ }catch(error){
+  delete assistantMessage.jobId;delete assistantMessage.status;assistantMessage.content=oldContent;saveChats();
+  if(currentChatId===c.id)renderMessages(c.messages);
+  button.title=error.message||"Gagal meminta jawaban baru";
+ }
 }
 function clearPendingAttachments(){selectedAttachments.forEach(file=>{if(file.previewUrl)URL.revokeObjectURL(file.previewUrl)});selectedAttachments=[];if(typeof renderAttachmentTray==="function")renderAttachmentTray()}
 function openChat(id){const c=chats.find(x=>x.id===id);if(!c)return;clearPendingAttachments();currentChatId=id;history=c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));renderMessages(c.messages);closeDrawer();renderHistory();pollPendingJobs()}
