@@ -1069,16 +1069,7 @@ body.authenticated .attachment-tray{max-width:100%;padding:0 4px 8px!important}
  body.authenticated .composer .form{width:100%!important;box-sizing:border-box!important}
 }
 
-/* Keyboard overlays the welcome workspace; only the composer follows the visible viewport */
-@media(max-width:600px){
- body.keyboard-open .composer{
-  position:fixed!important;left:14px!important;right:14px!important;bottom:0!important;
-  z-index:20!important;width:auto!important;max-width:860px!important;
-  margin:0 auto!important;padding:8px 0 max(8px,env(safe-area-inset-bottom))!important;
-  background:linear-gradient(180deg,transparent,rgba(8,9,18,.94) 24%)!important;
- }
-}
-
+/* Keep the composer anchored to the original app canvas while the keyboard overlays it. */
 /* Center the composer itself and prevent flex children from pushing it sideways */
 body.authenticated .composer{
  width:100%!important;max-width:860px!important;min-width:0!important;
