@@ -12,12 +12,49 @@ function getDocs() {
   return docsCache;
 }
 function relevantDocs(question, source) {
-  const terms = [...new Set((question.toLowerCase().match(/[a-z_][a-z0-9_]{2,}/g) || []))];
-  const chunks = source.split(/\n(?=#{1,4} )/).filter(Boolean);
-  return chunks.map((chunk) => {
-    const lower = chunk.toLowerCase();
-    return { chunk, score: terms.reduce((n, term) => n + (lower.includes(term) ? 1 : 0), 0) };
-  }).filter(x => x.score > 0).sort((a,b) => b.score-a.score).slice(0,4).map(x => x.chunk).join("\n\n---\n\n").slice(0,12000);
+  const normalize = value => String(value || "").toLowerCase()
+    .replace(/suto|sutoe/g,"auto")
+    .replace(/blok/g,"block")
+    .replace(/hancurin|hancurkan/g,"break")
+    .replace(/bersihin|bersihkan/g,"clear")
+    .replace(/[^a-z0-9_:\s.-]/g," ")
+    .replace(/\s+/g," ").trim();
+  const query = normalize(question);
+  const tokens = [...new Set(query.match(/[a-z_][a-z0-9_]{2,}/g) || [])];
+  const expanded = new Set(tokens);
+  const add = (...values) => values.forEach(value => expanded.add(value));
+  if (/(auto.?clear|clear world|break|hancur|bersih)/.test(query)) {
+    add("autoclear","auto_clear","auto clear","auto_clear.enabled","keep_jammer","keep_lock","name_length","item_storage","seed_storage","bot:hit","getBot()");
+  }
+  if (/(script|scripting|lua|kode|code|bot|api)/.test(query)) {
+    add("getBot()","bot","sleep(ms)","runThread","getWorld()");
+  }
+  if (/(move|jalan|gerak|path|warp)/.test(query)) add("moveTo","moveTile","findPath","getPath","warp");
+  if (/(item|block|blok|seed|id)/.test(query)) add("getInfo","getInfos","foreground","tile.fg","tile.bg");
+  const lines = source.split(/\r?\n/);
+  const windows = [];
+  const seen = new Set();
+  for (let i=0;i<lines.length;i++) {
+    const line = lines[i].toLowerCase();
+    const score = [...expanded].reduce((n,term)=>n+(line.includes(term)?1:0),0);
+    if (!score) continue;
+    const from=Math.max(0,i-3),to=Math.min(lines.length,i+5);
+    const key=from+":"+to;
+    if(seen.has(key))continue;
+    seen.add(key);
+    windows.push({text:lines.slice(from,to).join("\n"),score});
+  }
+  windows.sort((a,b)=>b.score-a.score);
+  let selected=windows.slice(0,14).map(x=>x.text).join("\n...\n").slice(0,18000);
+  const autoClearIntent=/(auto.?clear|clear world|break|hancur|bersih)/.test(query);
+  if(autoClearIntent){
+    const moduleLine=lines.findIndex(line=>/\*\*AutoClear\*\*/i.test(line));
+    if(moduleLine>=0){
+      selected+="\n\n[RUJUKAN KHUSUS AUTO CLEAR]\n"+lines.slice(Math.max(0,moduleLine-2),Math.min(lines.length,moduleLine+4)).join("\n");
+    }
+    selected+="\n\n[INTERPRETASI API TERDOKUMENTASI]\nAutoClear tercantum sebagai automation module. Modul diakses melalui bot.auto_clear dan properti yang tercantum: enabled, name_length, keep_jammer, keep_lock, no_number, output_path, item_storage, seed_storage. Dokumentasi ini tidak merinci algoritma internal atau method start/stop khusus AutoClear. Jangan menyatakan AutoClear tidak ada. Jangan mengarang method tambahan. Berikan contoh aktivasi minimal memakai getBot(), validasi bot, validasi world, lalu bot.auto_clear.enabled = true; jelaskan bahwa pengaturan opsional mengikuti kebutuhan dan detail perilaku modul perlu dikonfirmasi pada versi Lucifer yang dipakai.";
+  }
+  return selected;
 }
 let growtopiaItemCache = { fetchedAt: 0, entries: [] };
 async function searchGrowtopiaItems(question) {
