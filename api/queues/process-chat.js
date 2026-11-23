@@ -80,10 +80,14 @@ export default queue.handleNodeCallback(async (message, metadata) => {
       const detail=data.error||"Model gagal memproses pesan.";
       throw new Error(detail);
     }
+    const startedAt=Date.parse(job.created_at||job.updated_at||new Date().toISOString());
     await updateJob(jobId,{
       status:"completed",
       answer:data.reply,
       result_title:typeof data.title==="string"?data.title:null,
+      sources:Array.isArray(data.sources)?data.sources.slice(0,8):[],
+      search_steps:Array.isArray(data.searchSteps)?data.searchSteps.slice(0,8):[],
+      duration_ms:Math.max(0,Date.now()-startedAt),
       error:null,
       completed_at:new Date().toISOString()
     });
