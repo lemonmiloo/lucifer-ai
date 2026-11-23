@@ -22,9 +22,9 @@ function relevantDocs(question, source) {
 let growtopiaItemCache = { fetchedAt: 0, text: "" };
 async function searchGrowtopiaItems(question) {
   const stopWords = new Set(["berapa","apa","id","item","block","blok","di","dalam","growtopia","gt","the","is","for","of","nama","itemnya","nya","dong","tolong","cari"]);
-  const normalize = value => String(value || "").toLowerCase().normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\\s+/g, " ").trim();
+  const normalize = value => String(value || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
   const queryTokens = [...new Set(normalize(question).split(" ").filter(token => token.length > 1 && !stopWords.has(token)))];
-  if (!queryTokens.length || !/\\b(id|item|block|blok|pepper|tree|seed)\\b/i.test(question)) return "";
+  if (!queryTokens.length || !/\b(id|item|block|blok|pepper|tree|seed)\b/i.test(question)) return "";
   try {
     if (!growtopiaItemCache.text || Date.now() - growtopiaItemCache.fetchedAt > 30 * 60 * 1000) {
       const response = await fetch("https://raw.githubusercontent.com/zephilion/growtopia-item-id/main/click-here", { signal: AbortSignal.timeout(9000) });
@@ -32,8 +32,8 @@ async function searchGrowtopiaItems(question) {
       growtopiaItemCache = { fetchedAt: Date.now(), text: await response.text() };
     }
     const entries = [];
-    for (const line of growtopiaItemCache.text.split(/\\r?\\n/)) {
-      const match = line.match(/^\\s*(\\d+)\\s*:\\s*(.+?)\\s*$/);
+    for (const line of growtopiaItemCache.text.split(/\r?\n/)) {
+      const match = line.match(/^\s*(\d+)\s*:\s*(.+?)\s*$/);
       if (match) entries.push({ id: Number(match[1]), name: match[2].trim() });
     }
     const scored = entries.map(item => {
@@ -44,9 +44,9 @@ async function searchGrowtopiaItems(question) {
     if (!scored.length) return "";
     const bestScore = scored[0].score;
     const matches = scored.filter(item => item.score === bestScore).slice(0, bestScore === 1 ? 5 : 8);
-    return "HASIL PENCARIAN DATABASE ITEM GROWTOPIA (sumber komunitas, bukan database resmi Ubisoft):\\n" +
-      matches.map(item => "- " + item.name + " — ID " + item.id + (item.score < 1 ? " (kecocokan sebagian; belum pasti)" : "")).join("\\n") +
-      "\\nSumber: https://github.com/zephilion/growtopia-item-id/blob/main/click-here\\n" +
+    return "HASIL PENCARIAN DATABASE ITEM GROWTOPIA (sumber komunitas, bukan database resmi Ubisoft):\n" +
+      matches.map(item => "- " + item.name + " — ID " + item.id + (item.score < 1 ? " (kecocokan sebagian; belum pasti)" : "")).join("\n") +
+      "\nSumber: https://github.com/zephilion/growtopia-item-id/blob/main/click-here\n" +
       "Gunakan hasil ini untuk menjawab pertanyaan ID. Jika ada beberapa kecocokan parsial, jelaskan perbedaannya atau minta klarifikasi. Jangan mengatakan tidak punya database jika hasil di atas tersedia. Database komunitas dapat tertinggal dari update game.";
   } catch (error) {
     console.warn("Growtopia item lookup unavailable:", error?.message || error);
