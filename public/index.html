@@ -1075,9 +1075,21 @@ body.authenticated .attachment-tray{max-width:100%;padding:0 4px 8px!important}
 @media(max-width:600px){
  body.keyboard-open .composer{
   transform:translate3d(0,calc(-1 * var(--keyboard-shift,0px)),0)!important;
+  transition:transform 160ms cubic-bezier(.2,.8,.2,1)!important;
   will-change:transform;
  }
- body:not(.keyboard-open) .composer{transform:translate3d(0,0,0)!important}
+ body:not(.keyboard-open) .composer{
+  transform:translate3d(0,0,0)!important;
+  transition:transform 160ms cubic-bezier(.2,.8,.2,1)!important;
+ }
+ body.keyboard-open .chat{
+  transition:margin-bottom 160ms cubic-bezier(.2,.8,.2,1)!important;
+ }
+ @media(prefers-reduced-motion:reduce){
+  body.keyboard-open .composer,body:not(.keyboard-open) .composer,body.keyboard-open .chat{
+   transition:none!important;
+  }
+ }
 }
 /* Center the composer itself and prevent flex children from pushing it sideways */
 body.authenticated .composer{
