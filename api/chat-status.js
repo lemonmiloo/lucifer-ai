@@ -2,7 +2,7 @@ import { verifySupabaseRequest } from "../lib/auth.js";
 
 export default async function handler(req,res){
   res.setHeader("Cache-Control","no-store");
-  if(req.method!=="GET")return res.status(405).json({error:"Method not allowed"});
+  if(req.method!=="GET"&&req.method!=="POST")return res.status(405).json({error:"Method not allowed"});
   const auth=await verifySupabaseRequest(req).catch(()=>({user:null,status:503}));
   if(!auth.user)return res.status(auth.status||401).json({error:"Sesi login tidak valid."});
   const jobId=typeof req.query?.jobId==="string"?req.query.jobId:"";
@@ -10,6 +10,16 @@ export default async function handler(req,res){
   const url=process.env.SUPABASE_URL;
   const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!url||!secret)return res.status(503).json({error:"Database tidak tersedia."});
+  if(req.method==="POST"){
+    const cancel=await fetch(url.replace(/\/$/,"")+"/rest/v1/dankudo_ai_jobs?id=eq."+encodeURIComponent(jobId)+"&user_id=eq."+encodeURIComponent(auth.user.id)+"&status=in.(queued,processing)",{
+      method:"PATCH",
+      headers:{apikey:secret,...(secret.startsWith("sb_secret_")?{}:{Authorization:"Bearer "+secret}),"Content-Type":"application/json",Prefer:"return=minimal"},
+      body:JSON.stringify({status:"cancelled",error:"Dihentikan oleh pengguna.",updated_at:new Date().toISOString()}),
+      signal:AbortSignal.timeout(7000)
+    });
+    if(!cancel.ok)return res.status(502).json({error:"Gagal menghentikan pekerjaan."});
+    return res.status(200).json({ok:true});
+  }
   const r=await fetch(url.replace(/\/$/,"")+"/rest/v1/dankudo_ai_jobs?id=eq."+encodeURIComponent(jobId)+"&user_id=eq."+encodeURIComponent(auth.user.id)+"&select=status,answer,result_title,sources,search_steps,duration_ms,error,updated_at,completed_at",{
     headers:{apikey:secret,...(secret.startsWith("sb_secret_")?{}:{Authorization:"Bearer "+secret})},
     signal:AbortSignal.timeout(7000)
