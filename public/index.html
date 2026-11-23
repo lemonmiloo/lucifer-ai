@@ -1387,8 +1387,16 @@ renderMessages([]);
 // Ikuti tinggi visual viewport saat keyboard mobile muncul, tanpa menggeser seluruh halaman.
 function scrollChatToBottom(behavior="auto"){
  if(!window.matchMedia("(max-width: 600px)").matches)return;
- const move=()=>{chat.scrollTo({top:chat.scrollHeight,behavior})};
- requestAnimationFrame(()=>{move();requestAnimationFrame(move)});
+ /* Wait for the visual-viewport resize and flex reflow before measuring the
+    scroll height; Android's keyboard animation can take several frames. */
+ const move=()=>{
+  chat.scrollTop=chat.scrollHeight;
+  chat.scrollTo({top:chat.scrollHeight,behavior});
+ };
+ requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  move();
+  requestAnimationFrame(move);
+ })));
 }
 let mobileBaseHeight=Math.max(window.innerHeight,window.visualViewport?.height||0);
 function syncMobileViewport(){
