@@ -73,59 +73,51 @@ async function searchGrowtopiaItems(question) {
   }
 }
 async function searchGrowtopiaWeb(question) {
-  if (!/\bgrowtopia\b|\bgt\b/i.test(question) || !/(event|acara|bulan ini|minggu ini|hari ini|sekarang|terbaru|latest|update|patch|maintenance|harga|price|wiki|forum|script|api|mekanik|mechanic|item|block|blok|seed|world lock|announcement|pengumuman)/i.test(question)) return "";
+  if (!/\bgrowtopia\b|\bgt\b/i.test(question) || !/(event|acara|bulan ini|minggu ini|hari ini|sekarang|terbaru|latest|update|patch|maintenance|harga|price|wiki|forum|script|api|mekanik|mechanic|item|block|blok|seed|world lock|announcement|pengumuman)/i.test(question)) return {context:"",sources:[],steps:[]};
   const now = new Date();
   const monthYear = new Intl.DateTimeFormat("en-US", {month:"long",year:"numeric",timeZone:"Asia/Jakarta"}).format(now);
   const query = "Growtopia " + question + " " + monthYear;
-  const decode = value => String(value || "")
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'")
-    .replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(Number(n)))
-    .replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
-  const results = [];
+  const decode = value => String(value || "").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(Number(n))).replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+  const results = [], steps = [{label:"Menyiapkan pencarian web",detail:query}];
   try {
-    const rss = await fetch("https://www.bing.com/search?format=rss&q=" + encodeURIComponent(query), {
-      headers:{"User-Agent":"Mozilla/5.0 DanKudoAI/1.0"},
-      signal:AbortSignal.timeout(10000)
-    });
-    if (!rss.ok) throw new Error("Bing RSS HTTP " + rss.status);
-    const xml = await rss.text();
-    for (const item of xml.match(/<item>[\s\S]*?<\/item>/gi) || []) {
-      const title = decode(item.match(/<title>([\s\S]*?)<\/title>/i)?.[1]);
-      const url = decode(item.match(/<link>([\s\S]*?)<\/link>/i)?.[1]);
-      const snippet = decode(item.match(/<description>([\s\S]*?)<\/description>/i)?.[1]);
-      if (title && /^https?:\/\//i.test(url) && !results.some(x=>x.url===url)) results.push({title,url,snippet});
-      if (results.length >= 7) break;
+    const rss=await fetch("https://www.bing.com/search?format=rss&q="+encodeURIComponent(query),{headers:{"User-Agent":"Mozilla/5.0 DanKudoAI/1.0"},signal:AbortSignal.timeout(10000)});
+    if(!rss.ok)throw new Error("Bing RSS HTTP "+rss.status);
+    const xml=await rss.text();
+    for(const item of xml.match(/<item>[\s\S]*?<\/item>/gi)||[]){
+      const title=decode(item.match(/<title>([\s\S]*?)<\/title>/i)?.[1]),url=decode(item.match(/<link>([\s\S]*?)<\/link>/i)?.[1]),snippet=decode(item.match(/<description>([\s\S]*?)<\/description>/i)?.[1]);
+      if(title&&/^https?:\/\//i.test(url)&&!results.some(x=>x.url===url))results.push({title,url,snippet});
+      if(results.length>=7)break;
     }
-  } catch (error) {
-    console.warn("Bing Growtopia search failed:",error?.message || error);
+  }catch(error){console.warn("Bing Growtopia search failed:",error?.message||error)}
+  if(!results.length){
+    try{
+      const response=await fetch("https://html.duckduckgo.com/html/?q="+encodeURIComponent(query),{headers:{"User-Agent":"Mozilla/5.0 (compatible; DanKudoAI/1.0)"},signal:AbortSignal.timeout(10000)});
+      if(!response.ok)throw new Error("DuckDuckGo HTTP "+response.status);
+      const html=await response.text();
+      const anchors=[...html.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
+      for(const match of anchors.slice(0,7)){let url=decode(match[1]);try{const parsed=new URL(url);url=parsed.searchParams.get("uddg")||url}catch{}const title=decode(match[2]);if(/^https?:\/\//i.test(url)&&title&&!results.some(x=>x.url===url))results.push({title,url,snippet:""})}
+      const snippets=[...html.matchAll(/<a[^>]+class=["'][^"']*result__snippet[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi)];
+      snippets.forEach((match,index)=>{if(results[index])results[index].snippet=decode(match[1])});
+    }catch(error){console.warn("DuckDuckGo Growtopia search failed:",error?.message||error)}
   }
-  if (!results.length) {
-    try {
-      const response = await fetch("https://html.duckduckgo.com/html/?q=" + encodeURIComponent(query), {
-        headers:{"User-Agent":"Mozilla/5.0 (compatible; DanKudoAI/1.0)"},
-        signal:AbortSignal.timeout(10000)
-      });
-      if (!response.ok) throw new Error("DuckDuckGo HTTP " + response.status);
-      const html = await response.text();
-      const anchors = [...html.matchAll(/<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
-      for (const match of anchors.slice(0,7)) {
-        let url = decode(match[1]);
-        try { const parsed = new URL(url); url = parsed.searchParams.get("uddg") || url; } catch {}
-        const title = decode(match[2]);
-        if (/^https?:\/\//i.test(url) && title && !results.some(x=>x.url===url)) results.push({title,url,snippet:""});
-      }
-      const snippets = [...html.matchAll(/<a[^>]+class=["'][^"']*result__snippet[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi)];
-      snippets.forEach((match,index)=>{if(results[index])results[index].snippet=decode(match[1]);});
-    } catch (error) {
-      console.warn("DuckDuckGo Growtopia search failed:",error?.message || error);
-    }
-  }
-  if (!results.length) return "PENCARIAN WEB GROWTOPIA: pencarian web dijalankan dari backend, tetapi mesin pencari tidak mengembalikan hasil saat ini. Jangan mengaku telah memverifikasi fakta terkini. Jelaskan pencarian sedang tidak tersedia.";
+  if(!results.length)return {context:"PENCARIAN WEB GROWTOPIA: pencarian dijalankan, tetapi mesin pencari tidak mengembalikan hasil. Jangan mengaku telah memverifikasi fakta terkini.",sources:[],steps:[...steps,{label:"Pencarian belum menemukan hasil",detail:"Mesin pencari tidak mengembalikan halaman."}]};
   console.info("Growtopia web search:",query,"=>",results.length,"results");
-  return "HASIL LIVE WEB SEARCH GROWTOPIA (query: " + query + "):\n" +
-    results.map((item,index)=>(index+1) + ". " + item.title + "\nURL: " + item.url + "\nCuplikan: " + (item.snippet || "(tidak ada cuplikan)")).join("\n\n") +
-    "\nInstruksi: Gunakan hasil pencarian ini untuk menjawab. Prioritaskan pengumuman resmi Growtopia dan forum resmi untuk event/update. Perhatikan tanggal hasil; jangan menyimpulkan event masih aktif hanya dari halaman lama. Sertakan tautan sumber yang relevan secara langsung. Jangan mengatakan tidak punya akses web search jika hasil di atas tersedia.";
+  steps.push({label:"Menemukan "+results.length+" halaman web",detail:"Hasil pencarian dari Bing atau DuckDuckGo."});
+  const pages=await Promise.all(results.slice(0,4).map(async source=>{
+    try{
+      const response=await fetch(source.url,{headers:{"User-Agent":"Mozilla/5.0 (compatible; DanKudoAI/1.0)"},signal:AbortSignal.timeout(4500)});
+      if(!response.ok)return source;
+      const html=await response.text();
+      const pageText=decode(html.replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," "));
+      return {...source,snippet:(pageText||source.snippet).slice(0,1800)};
+    }catch{return source}
+  }));
+  const readCount=pages.filter((page,index)=>page.snippet&&page.snippet!==results[index].snippet).length;
+  if(readCount)steps.push({label:"Membaca "+readCount+" halaman sumber",detail:"Mengambil isi halaman untuk memeriksa konteks."});
+  return {
+    context:"HASIL LIVE WEB SEARCH GROWTOPIA (query: "+query+"):\n"+pages.map((item,index)=>(index+1)+". "+item.title+"\nURL: "+item.url+"\nIsi/cuplikannya: "+(item.snippet||"(tidak ada cuplikan)")).join("\n\n")+"\nInstruksi: Gunakan hasil pencarian ini untuk menjawab. Prioritaskan pengumuman resmi Growtopia dan forum resmi untuk event/update. Perhatikan tanggal hasil; jangan menyimpulkan event masih aktif hanya dari halaman lama. Jangan menambahkan daftar URL sumber ke teks jawaban; sumber akan ditampilkan terpisah oleh aplikasi. Jangan mengatakan tidak punya akses web search jika hasil di atas tersedia.",
+    sources:pages.map(item=>({title:item.title,url:item.url,snippet:item.snippet||""})),steps
+  };
 }
 function rateLimit(ip) {
   const now = Date.now();
@@ -299,7 +291,8 @@ export default async function handler(req, res) {
     const source = getDocs();
     const context = relevantDocs(message, source);
     const itemLookupContext = await searchGrowtopiaItems(message);
-    const webSearchContext = await searchGrowtopiaWeb(message);
+    const webSearchResult = await searchGrowtopiaWeb(message);
+    const webSearchContext = webSearchResult.context;
     const base = (process.env.VIKEY_BASE_URL || "https://api.vikey.ai/v1").replace(/\/$/,"");
     const model = process.env.VIKEY_MODEL || "deepseek/deepseek-v4-pro";
     const systemPrompt = "Kamu adalah DanKudo AI, asisten scripting Growtopia berbasis Lua untuk framework Lucifer, dibuat oleh DanKudo.\n\nGAYA:\n- Gunakan bahasa Indonesia santai, natural, tenang, presisi, dan langsung ke inti.\n- Sapaan singkat dibalas singkat. Jangan memaksakan jawaban teknis pada obrolan umum.\n- Untuk permintaan coding, berikan kode lengkap yang sesuai dokumentasi Lucifer. Jangan mengaku sudah menguji jika belum.\n- Jangan tampilkan chain-of-thought privat. Berikan kesimpulan, langkah verifikasi, dan alasan ringkas.\n\nAKURASI API DAN GROWtopia:\n- Dokumentasi Lucifer yang disertakan adalah acuan utama untuk API runtime. Jangan mencampur API framework lain.\n- Jangan mengarang ID item/block, fungsi, event, property, parameter, enum, atau return value. Bedakan fakta dokumentasi, hasil web, inferensi, dan hal yang belum diketahui.\n- Dokumentasi saat ini mencantumkan bot:say(text) dan sleep(ms). Untuk API lain, periksa dokumentasi sebelum digunakan.\n- isBreakable()/canBreak() tidak terdokumentasi sebagai API Lucifer. tile:canHarvest() adalah untuk panen, bukan status block dapat dihancurkan. Jangan menyamakan keduanya.\n- Jangan mengarang daftar ID block unbreakable. Jika data belum tersedia, katakan dengan jelas dan minta data yang diperlukan.\n- Jika pengguna mengoreksi jawaban, evaluasi ulang dan tarik klaim yang tidak berdasar. Jangan defensif atau mengganti tebakan dengan tebakan lain.\n\nWEB SEARCH DAN ANALISIS:\n- Untuk pertanyaan ID item/block Growtopia, nama item, mekanik game, status block, update, API yang belum terdokumentasi, atau fakta teknis yang tidak pasti, gunakan web search otomatis jika tersedia.\n- Prioritaskan sumber resmi/primer, lalu database/wiki Growtopia dan komunitas yang kredibel. Baca sumber, bandingkan bila perlu, dan cek tanggal/versi.\n- Pisahkan fakta game Growtopia dari API runtime Lucifer. Informasi dari framework lain bukan bukti bahwa fungsi tersedia di Lucifer.\n- Jika pencarian tidak menemukan bukti kuat, nyatakan belum terverifikasi. Jangan menebak.\n- Jika menggunakan web, sertakan link sumber yang benar-benar diberikan tool. Jangan membuat URL atau mengklaim telah membuka sumber yang tidak tersedia.\n- Untuk hal sederhana dan stabil, jawab langsung tanpa pencarian yang tidak perlu.\n\nBATAS KEAMANAN:\n- Bantu otomasi game yang wajar jika API terdokumentasi. Jangan membantu pencurian akun/token, malware, eksploitasi terhadap target nyata, bypass keamanan/anti-cheat/rate-limit, atau spam massal yang mengganggu. Jika ada bagian yang tidak dapat dibantu, tawarkan alternatif aman yang konkret.";
@@ -354,7 +347,7 @@ export default async function handler(req, res) {
       .map(part => part.text)
       .join("\n")
       .trim();
-    const webSources = [];
+    const webSources = [...(webSearchResult.sources || [])];
     const addSource = source => {
       const url = typeof source?.url === "string" ? source.url : "";
       if (!(url.startsWith("https://") || url.startsWith("http://"))) return;
@@ -368,9 +361,6 @@ export default async function handler(req, res) {
       for (const annotation of (Array.isArray(item?.content) ? item.content : []).flatMap(part => Array.isArray(part?.annotations) ? part.annotations : [])) {
         addSource({url:annotation?.url,title:annotation?.title});
       }
-    }
-    if (answer && webSources.length && !answer.includes("http://") && !answer.includes("https://")) {
-      answer += "\n\n**Sumber web**\n" + webSources.slice(0,8).map(source => "- [" + source.title.replaceAll("[","").replaceAll("]","") + "](" + source.url + ")").join("\n");
     }
     if (!answer) {
       return res.status(502).json({error:"Model tidak mengembalikan jawaban teks. Coba kirim ulang."});
@@ -386,7 +376,7 @@ export default async function handler(req, res) {
         console.error("Dashboard logging error:",logError?.message || logError);
       }
     }
-    return res.status(200).json({reply:answer,title});
+    return res.status(200).json({reply:answer,title,sources:webSources.slice(0,8),searchSteps:webSearchResult.steps||[]});
   } catch (err) {
     console.error("Lucifer API error:",err);
     if (err?.name === "TimeoutError" || err?.name === "AbortError") return res.status(504).json({error:"Model terlalu lama merespons. Coba lagi atau kirim pertanyaan yang lebih singkat."});
