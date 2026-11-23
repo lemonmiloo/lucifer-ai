@@ -21,10 +21,10 @@ function relevantDocs(question, source) {
 }
 let growtopiaItemCache = { fetchedAt: 0, entries: [] };
 async function searchGrowtopiaItems(question) {
-  const stopWords = new Set(["berapa","apa","id","item","items","block","blok","di","dalam","growtopia","gt","the","is","for","of","nama","itemnya","nya","dong","tolong","cari","berapa"]);
-  const normalize = value => String(value || "").toLowerCase().normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\\s+/g, " ").trim();
+  const stopWords = new Set(["berapa","apa","id","item","items","block","blok","di","dalam","growtopia","gt","the","is","for","of","nama","itemnya","nya","dong","tolong","cari"]);
+  const normalize = value => String(value || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
   const queryTokens = [...new Set(normalize(question).split(" ").filter(token => token.length > 1 && !stopWords.has(token)))];
-  if (!queryTokens.length || !/\\b(id|item|block|blok|pepper|tree|seed)\\b/i.test(question)) return "";
+  if (!queryTokens.length || !/\b(id|item|block|blok|pepper|tree|seed)\b/i.test(question)) return "";
   try {
     if (!growtopiaItemCache.entries.length || Date.now() - growtopiaItemCache.fetchedAt > 30 * 60 * 1000) {
       const sources = [
@@ -44,8 +44,8 @@ async function searchGrowtopiaItems(question) {
       }
       if (!body) throw lastError || new Error("All item database sources failed");
       const entries = [];
-      for (const line of body.split(/\\r?\\n/)) {
-        const match = line.match(/^\\s*(\\d+)\\s*:\\s*(.+?)\\s*$/);
+      for (const line of body.split(/\r?\n/)) {
+        const match = line.match(/^\s*(\d+)\s*:\s*(.+?)\s*$/);
         if (match) entries.push({ id: Number(match[1]), name: match[2].trim() });
       }
       if (!entries.length) throw new Error("No item records parsed");
@@ -53,20 +53,19 @@ async function searchGrowtopiaItems(question) {
       console.info("Growtopia item database loaded:", entries.length, "records");
     }
     const scored = growtopiaItemCache.entries.map(item => {
-      const name = normalize(item.name);
-      const nameTokens = name.split(" ");
+      const nameTokens = normalize(item.name).split(" ");
       const matched = queryTokens.filter(token => nameTokens.includes(token));
       const allTokens = queryTokens.every(token => nameTokens.includes(token));
-      const phraseMatch = queryTokens.join(" ") === name || name.includes(queryTokens.join(" "));
+      const phraseMatch = nameTokens.join(" ") === queryTokens.join(" ") || normalize(item.name).includes(queryTokens.join(" "));
       return { ...item, matched: matched.length, score: matched.length / queryTokens.length, allTokens, phraseMatch };
     }).filter(item => item.matched > 0).sort((a,b) => Number(b.allTokens)-Number(a.allTokens) || Number(b.phraseMatch)-Number(a.phraseMatch) || b.score-a.score || b.matched-a.matched);
     if (!scored.length) return "";
     const best = scored[0];
     const matches = scored.filter(item => item.score === best.score && item.allTokens === best.allTokens).slice(0, 6);
     console.info("Growtopia item lookup:", question, "=>", matches.map(x => x.name + ":" + x.id).join(", "));
-    return "HASIL LOOKUP DATABASE ITEM GROWTOPIA (sumber komunitas):\\n" +
-      matches.map(item => "- " + item.name + " — ID " + item.id).join("\\n") +
-      "\\nSumber: https://github.com/zephilion/growtopia-item-id/blob/main/click-here\\n" +
+    return "HASIL LOOKUP DATABASE ITEM GROWTOPIA (sumber komunitas):\n" +
+      matches.map(item => "- " + item.name + " — ID " + item.id).join("\n") +
+      "\nSumber: https://github.com/zephilion/growtopia-item-id/blob/main/click-here\n" +
       "INSTRUKSI WAJIB: Ini adalah hasil pencarian data yang sudah berhasil diambil backend, bukan ingatan model. Jawab langsung memakai ID yang cocok. Jika nama yang ditanyakan menyebut 'Block' tetapi database mencatat nama item tanpa kata 'Block' (misalnya Pepper Tree), jelaskan nama database persisnya. Jangan mengatakan tidak punya akses web atau database ketika hasil ini tersedia. Jangan mengubah ID.";
   } catch (error) {
     console.warn("Growtopia item lookup failed:", error?.message || error);
