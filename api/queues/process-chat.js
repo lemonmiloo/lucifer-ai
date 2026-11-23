@@ -60,20 +60,34 @@ export default queue.handleNodeCallback(async (message, metadata) => {
     const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
     const deployment=process.env.VERCEL_URL||"lucifer-ai-lemonmilo.vercel.app";
     const attachments=await Promise.all((Array.isArray(job.attachments)?job.attachments:[]).map(file=>signedAttachment(file,job.user_id,job.conversation_id)));
-    const response=await fetch("https://"+deployment+"/api/chat",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-dankudo-worker-key":secret},
-      body:JSON.stringify({
-        userId:job.user_id,
-        message:job.message,
-        attachments,
-        history:job.history||[],
-        conversationId:job.conversation_id,
-        isFirstMessage:job.is_first_message===true,
-        chatTitle:job.chat_title||""
-      }),
-      signal:AbortSignal.timeout(55000)
-    });
+    const controller=new AbortController();
+    let stopWatcher=false,wasCancelled=false;
+    const watcher=(async()=>{
+      while(!stopWatcher){
+        await new Promise(resolve=>setTimeout(resolve,1200));
+        if(stopWatcher)break;
+        const latest=await getJob(jobId);
+        if(!latest||latest.status==="cancelled"){wasCancelled=true;controller.abort();break}
+      }
+    })();
+    let response;
+    try{
+      response=await fetch("https://"+deployment+"/api/chat",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","x-dankudo-worker-key":secret},
+        body:JSON.stringify({
+          userId:job.user_id,
+          message:job.message,
+          attachments,
+          history:job.history||[],
+          conversationId:job.conversation_id,
+          isFirstMessage:job.is_first_message===true,
+          chatTitle:job.chat_title||""
+        }),
+        signal:AbortSignal.any([controller.signal,AbortSignal.timeout(55000)])
+      });
+    }finally{stopWatcher=true;await watcher}
+    if(wasCancelled)return;
     const raw=await response.text();
     let data={};
     try{data=JSON.parse(raw)}catch{}
@@ -81,6 +95,8 @@ export default queue.handleNodeCallback(async (message, metadata) => {
       const detail=data.error||"Model gagal memproses pesan.";
       throw new Error(detail);
     }
+    const latest=await getJob(jobId);
+    if(!latest||latest.status==="cancelled")return;
     await updateJob(jobId,{
       status:"completed",
       answer:data.reply,
@@ -92,6 +108,10 @@ export default queue.handleNodeCallback(async (message, metadata) => {
       completed_at:new Date().toISOString()
     });
   } catch(error) {
+    if(error?.name==="AbortError"){
+      const latest=await getJob(jobId).catch(()=>null);
+      if(!latest||latest.status==="cancelled")return;
+    }
     if((metadata?.deliveryCount||1)>=5) {
       await updateJob(jobId,{status:"failed",error:"Proses AI gagal setelah beberapa percobaan. Silakan kirim ulang."});
       return;
