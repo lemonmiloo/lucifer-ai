@@ -1229,6 +1229,38 @@ body.authenticated .composer .form textarea{min-width:0!important}
  .msg.assistant.pending-message{min-height:66px;padding:15px 16px!important}
 }
 
+
+/* Search activity + source sheet */
+.search-meta{margin:0 0 10px;color:#a9a7b5}
+.search-thought{border:0;background:transparent;color:#aaa9b4;padding:0;display:flex;align-items:center;gap:7px;font:500 13px/1.4 inherit;cursor:pointer}
+.search-thought .chevron{font-size:15px;transition:transform .2s ease}
+.search-thought[aria-expanded="true"] .chevron{transform:rotate(90deg)}
+.search-timeline{display:none;margin:12px 0 4px 8px;padding-left:16px;border-left:1px solid #45414f}
+.search-timeline.open{display:block}
+.search-step{position:relative;padding:0 0 13px 0;color:#aaa9b4;font-size:12px;line-height:1.55}
+.search-step:last-child{padding-bottom:2px}
+.search-step:before{content:"";position:absolute;left:-21px;top:5px;width:7px;height:7px;border-radius:50%;background:#9c83ef;box-shadow:0 0 0 3px #9c83ef20}
+.search-step strong{display:block;color:#d2cfda;font-weight:550}
+.search-step small{display:block;color:#898795;font-size:11px;margin-top:2px;overflow-wrap:anywhere}
+.source-pill{display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:7px 12px;border:1px solid #3b3548;border-radius:999px;background:#151521;color:#d4cde5;font-size:12px;cursor:pointer}
+.source-pill:hover{background:#242033;border-color:#67558d}
+.source-pill .source-icon{font-size:14px}
+.source-overlay{position:fixed;inset:0;z-index:60;background:#0008;display:flex;align-items:flex-end;justify-content:center;opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s ease}
+.source-overlay.open{opacity:1;visibility:visible}
+.source-sheet{width:min(100%,760px);max-height:min(76dvh,760px);overflow:hidden;display:flex;flex-direction:column;background:#252525;border:1px solid #45434a;border-bottom:0;border-radius:22px 22px 0 0;box-shadow:0 -14px 50px #0008;transform:translateY(24px);transition:transform .25s cubic-bezier(.2,.8,.2,1);padding-bottom:max(14px,env(safe-area-inset-bottom))}
+.source-overlay.open .source-sheet{transform:translateY(0)}
+.source-sheet-head{height:56px;flex:0 0 56px;display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid #ffffff0b;font-size:14px;font-weight:700;color:#f4f1f7}
+.source-sheet-close{position:absolute;right:12px;top:10px;width:34px;height:34px;border:0;border-radius:50%;background:#414146;color:#ddd;font-size:20px;cursor:pointer}
+.source-list{overflow:auto;padding:4px 16px 18px;overscroll-behavior:contain}
+.source-item{padding:14px 1px 12px;border-bottom:1px solid #ffffff0d;cursor:pointer}
+.source-item:last-child{border-bottom:0}
+.source-item-top{display:flex;align-items:center;gap:7px;color:#d0cbd7;font-size:11px;margin-bottom:8px}
+.source-site-icon{width:17px;height:17px;display:grid;place-items:center;border-radius:50%;background:#4b3d22;color:#ffd05a;font-size:11px}
+.source-item-title{font-size:14px;font-weight:650;line-height:1.4;color:#f1eef4;margin:0 0 6px}
+.source-item-snippet{font-size:12px;line-height:1.55;color:#a6a3ad;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.source-item-url{font-size:10px;color:#888593;margin-top:7px;overflow-wrap:anywhere}
+@media(max-width:600px){.source-sheet{max-height:78dvh;border-radius:20px 20px 0 0}.source-list{padding-left:17px;padding-right:17px}.source-item{padding:13px 0}}
+
 </style></head><body class="session-checking"><div class="boot-loader" id="bootLoader" role="status" aria-live="polite"><div class="boot-spinner" aria-hidden="true"></div></div><section class="auth-screen" id="authScreen" style="display:none"><div class="auth-card"><h1 class="auth-brand">DanKudo AI</h1><p class="auth-caption">Masuk untuk melanjutkan ke workspace AI</p><p class="auth-caption" style="font-size:11px;opacity:.72;margin-top:-8px">Percakapan dapat ditinjau oleh admin untuk operasional dan keamanan.</p><div class="auth-tabs"><button class="auth-tab active" id="loginTab" type="button">Masuk</button><button class="auth-tab" id="registerTab" type="button">Daftar</button></div><form id="authForm"><label class="auth-field">Username<input id="authUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Masukkan username" minlength="3" maxlength="20" required></label><label class="auth-field">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Minimal 8 karakter" required></label><button class="auth-submit" id="authSubmit" type="submit">Masuk</button></form><p class="auth-message" id="authMessage" role="status"></p></div></section><main class="app"><div class="drawer-backdrop" id="drawerBackdrop"></div><aside class="drawer" id="historyDrawer"><div class="drawer-head"><span>Riwayat Chat</span><button class="drawer-btn" id="closeDrawer" aria-label="Tutup">✕</button></div><div class="drawer-actions"><button class="drawer-btn" id="newChat">＋ Chat Baru</button></div><div class="drawer-user"><div class="drawer-user-info"><div class="drawer-user-email" id="accountEmail"></div><div class="drawer-user-role" id="accountRole">USER</div></div><button class="signout-btn" id="signOutButton" type="button">Keluar</button></div><div class="history-list" id="historyList"></div><div class="drawer-footer"><button class="profile-open-btn" id="profileOpenButton" type="button">⚙ Profil</button></div></aside><header class="top"><div class="app-brand-lockup" aria-label="DanKudo AI"><span class="app-brand-mark">D</span><span class="app-brand-copy"><strong>DanKudo</strong><small>AI WORKSPACE</small></span><span class="app-brand-live"></span></div><button class="history-btn" id="historyToggle" aria-label="Buka riwayat chat">☰</button><button class="admin-menu-btn" id="adminMenuButton" type="button" aria-label="Dashboard">Dashboard</button><button class="new-chat-top" id="newChatTop" type="button">＋ New Chat</button></header><section class="dashboard-overlay" id="dashboardOverlay" aria-hidden="true">
  <div class="dashboard-shell">
   <header class="dashboard-head"><div><p class="dashboard-eyebrow">DANKUDO AI / ADMIN</p><h2>Dashboard</h2><p class="dashboard-subtitle">Monitoring akun dan riwayat percakapan</p></div><button class="dashboard-close" id="dashboardClose" type="button" aria-label="Tutup dashboard">✕</button></header>
@@ -1361,8 +1393,59 @@ function renderMessages(messages){
   [["⌘","Bantu debug kode","Cari dan perbaiki bug di script gw"],["✳","Buat script Lua","Bantu gw bikin script Lua"],["⌁","Jelaskan API","Jelaskan cara menggunakan Lucifer API"]].forEach(([symbol,label,prompt])=>{const card=document.createElement("button");card.type="button";card.className="welcome-suggestion";const icon=document.createElement("span");icon.className="welcome-suggestion-icon";icon.textContent=symbol;const copy=document.createElement("span");copy.className="welcome-suggestion-copy";const strong=document.createElement("strong");strong.textContent=label;const small=document.createElement("small");small.textContent=prompt;copy.append(strong,small);const arrow=document.createElement("span");arrow.className="welcome-suggestion-arrow";arrow.textContent="↗";card.append(icon,copy,arrow);card.addEventListener("click",()=>{input.value=prompt;input.focus();input.dispatchEvent(new Event("input",{bubbles:true}));});suggestions.appendChild(card)});
   welcome.append(kicker,title,description,suggestions);chat.appendChild(welcome);return;
  }
- messages.forEach((m,index)=>{if(m.jobId)renderPendingMessage(m);else{const el=add(m.content,m.role,false);if(m.attachments?.length)renderAttachmentLabels(el,m.attachments);if(m.role==="assistant")renderAssistantActions(el,m.content,index)}});
+ messages.forEach((m,index)=>{if(m.jobId)renderPendingMessage(m);else{const el=add(m.content,m.role,false);if(m.attachments?.length)renderAttachmentLabels(el,m.attachments);if(m.role==="assistant"){renderSearchMeta(el,m);renderAssistantActions(el,m.content,index)}}});
  scrollChatToBottom("auto");
+}
+function renderSearchMeta(messageElement,message){
+ const sources=Array.isArray(message.sources)?message.sources:[];
+ const steps=Array.isArray(message.searchSteps)?message.searchSteps:[];
+ if(steps.length){
+  const wrap=document.createElement("div");wrap.className="search-meta";
+  const toggle=document.createElement("button");toggle.type="button";toggle.className="search-thought";toggle.setAttribute("aria-expanded","false");
+  const elapsed=Math.max(1,Math.round((Number(message.durationMs)||3000)/1000));
+  const label=document.createElement("span");label.textContent="Berpikir selama "+elapsed+" detik";
+  const chevron=document.createElement("span");chevron.className="chevron";chevron.textContent="›";
+  toggle.append(label,chevron);
+  const timeline=document.createElement("div");timeline.className="search-timeline";
+  steps.forEach(step=>{const row=document.createElement("div");row.className="search-step";const title=document.createElement("strong");title.textContent=step.label||"Aktivitas";row.appendChild(title);if(step.detail){const detail=document.createElement("small");detail.textContent=step.detail;row.appendChild(detail)}timeline.appendChild(row)});
+  toggle.addEventListener("click",()=>{const open=toggle.getAttribute("aria-expanded")!=="true";toggle.setAttribute("aria-expanded",String(open));timeline.classList.toggle("open",open)});
+  wrap.append(toggle,timeline);messageElement.appendChild(wrap);
+ }
+ if(sources.length){
+  const button=document.createElement("button");button.type="button";button.className="source-pill";
+  const icon=document.createElement("span");icon.className="source-icon";icon.textContent="🌐";
+  const text=document.createElement("span");text.textContent=sources.length+" halaman web";
+  button.append(icon,text);button.addEventListener("click",()=>openSourceSheet(sources));messageElement.appendChild(button);
+ }
+}
+function openSourceSheet(sources){
+ let overlay=document.getElementById("sourceOverlay");
+ if(!overlay){
+  overlay=document.createElement("div");overlay.className="source-overlay";overlay.id="sourceOverlay";
+  const sheet=document.createElement("section");sheet.className="source-sheet";sheet.setAttribute("role","dialog");sheet.setAttribute("aria-modal","true");sheet.setAttribute("aria-label","Hasil pencarian");
+  const head=document.createElement("div");head.className="source-sheet-head";head.textContent="Hasil Pencarian";
+  const close=document.createElement("button");close.type="button";close.className="source-sheet-close";close.textContent="×";close.setAttribute("aria-label","Tutup");close.addEventListener("click",()=>overlay.classList.remove("open"));
+  head.appendChild(close);const list=document.createElement("div");list.className="source-list";list.id="sourceList";sheet.append(head,list);overlay.appendChild(sheet);
+  overlay.addEventListener("click",event=>{if(event.target===overlay)overlay.classList.remove("open")});
+  document.body.appendChild(overlay);
+ }
+ const list=overlay.querySelector("#sourceList");list.replaceChildren();
+ sources.forEach((source,index)=>{
+  const item=document.createElement("article");item.className="source-item";item.tabIndex=0;
+  const top=document.createElement("div");top.className="source-item-top";
+  const icon=document.createElement("span");icon.className="source-site-icon";icon.textContent="✦";
+  let host="Sumber web";try{host=new URL(source.url).hostname.replace(/^www\./,"")}catch{}
+  const site=document.createElement("span");site.textContent=source.siteName||host;
+  const number=document.createElement("span");number.style.marginLeft="auto";number.textContent=String(index+1);
+  top.append(icon,site,number);
+  const title=document.createElement("h3");title.className="source-item-title";title.textContent=source.title||host;
+  const snippet=document.createElement("div");snippet.className="source-item-snippet";snippet.textContent=source.snippet||"Buka halaman untuk melihat sumber lengkap.";
+  const url=document.createElement("div");url.className="source-item-url";url.textContent=source.url;
+  item.append(top,title,snippet,url);
+  const open=()=>window.open(source.url,"_blank","noopener,noreferrer");item.addEventListener("click",open);item.addEventListener("keydown",event=>{if(event.key==="Enter")open()});
+  list.appendChild(item);
+ });
+ overlay.classList.add("open");
 }
 function renderAssistantActions(messageElement,messageText,messageIndex){
  const actions=document.createElement("div");actions.className="assistant-actions";
@@ -1623,7 +1706,7 @@ async function pollPendingJobs(){
     if(!r.ok)continue;
     const data=await r.json();
     if(data.status==="completed"&&typeof data.answer==="string"){
-     item.message.content=data.answer;delete item.message.jobId;delete item.message.status;
+     item.message.content=data.answer;item.message.sources=Array.isArray(data.sources)?data.sources:[];item.message.searchSteps=Array.isArray(data.searchSteps)?data.searchSteps:[];item.message.durationMs=Number(data.durationMs)||0;delete item.message.jobId;delete item.message.status;
      if(typeof data.title==="string"&&data.title.trim())item.chat.title=data.title.trim();
      item.chat.updatedAt=Date.now();saveChats();renderHistory();
      if(currentChatId===item.chat.id){renderMessages(item.chat.messages);history=item.chat.messages.filter(m=>m.content&&["user","assistant"].includes(m.role)).map(m=>({role:m.role,content:m.content}));}
