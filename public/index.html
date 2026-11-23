@@ -450,8 +450,6 @@ body.drawer-open #adminMenuButton:hover{
   min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;
   -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;
   padding:88px 0 176px!important;margin:0!important;
-  /* Keep the latest message anchored to the bottom with or without the keyboard. */
-  justify-content:flex-end!important;
   scroll-padding-top:96px!important;scroll-padding-bottom:176px!important;
  }
  .composer{
@@ -1435,7 +1433,6 @@ function syncMobileViewport(){
   document.documentElement.style.setProperty("--app-height",mobileBaseHeight+"px");
   document.documentElement.style.setProperty("--viewport-top","0px");
   document.documentElement.style.setProperty("--keyboard-shift","0px");
-  if(wasKeyboardOpen&&chat.querySelector(".msg"))scrollChatToBottom("auto");
  }
 }
 syncMobileViewport();
