@@ -1100,7 +1100,7 @@ body.authenticated .composer .form textarea{min-width:0!important}
 /* Keyboard-open viewport fix: reserve the exact lower area occupied by the lifted composer. */
 @media(max-width:600px){
  body.keyboard-open .chat{
-  margin-bottom:var(--keyboard-shift,0px)!important;
+  margin-bottom:calc(var(--keyboard-shift,0px) + var(--composer-height,82px))!important;
   justify-content:flex-end!important;
   padding-bottom:10px!important;
   scroll-padding-bottom:10px!important;
@@ -1412,6 +1412,10 @@ function syncMobileViewport(){
   /* Move only the composer by the keyboard's height; never resize the workspace. */
   const keyboardShift=Math.max(0,mobileBaseHeight-visibleHeight-(vv?.offsetTop||0));
   document.documentElement.style.setProperty("--keyboard-shift",keyboardShift+"px");
+  /* The composer is absolutely positioned, so reserve both its own height
+     and the keyboard lift in the chat's scroll viewport. */
+  const composerEl=document.querySelector(".composer");
+  if(composerEl)document.documentElement.style.setProperty("--composer-height",Math.ceil(composerEl.getBoundingClientRect().height)+"px");
   /* Keep the newest message visible throughout the keyboard's resize
      animation, not only on the first frame when it opens. */
   if(chat.querySelector(".msg"))scrollChatToBottom("auto");
