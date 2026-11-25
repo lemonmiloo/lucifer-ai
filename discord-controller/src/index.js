@@ -52,6 +52,23 @@ const state = {
 };
 let pendingCommand = null;
 let panelRef = null;
+const activityLog = [];
+let lastHeartbeatOnline = false;
+
+function addActivity(message) {
+  const time = new Date().toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Jakarta",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+  activityLog.unshift(`[${time}] ${String(message).slice(0, 100)}`);
+  if (activityLog.length > 6) activityLog.length = 6;
+}
+
+function isTelemetryFresh() {
+  return Boolean(state.updatedAt && Date.now() - state.updatedAt < 15000);
+}
 const panelFile = path.resolve(".panel.json");
 
 try {
@@ -78,7 +95,10 @@ function cleanWorld(value) {
 }
 
 function makeEmbed() {
-  const online = state.online && state.updatedAt && (Date.now() - state.updatedAt < 15000);
+  const online = state.online && isTelemetryFresh();
+  const activity = activityLog.length
+    ? activityLog.map(line => line.replace(/[`]/g, "'")).join("\n")
+    : "[--:--:--] Waiting for activity";
   const embed = new EmbedBuilder()
     .setColor(online ? 0x2ecc71 : 0xe0a12b)
     .setTitle("⚡ LUCIFER SYSTEM")
@@ -91,9 +111,13 @@ function makeEmbed() {
       `LAST ACTION  : ${state.lastAction}`,
       `CONNECTION   : ${online ? "CONNECTED" : "WAITING"}`,
       `LAST UPDATE  : ${state.updatedAt ? new Date(state.updatedAt).toLocaleString("en-GB", { timeZone: "Asia/Jakarta" }) + " WIB" : "-"}`,
+      "```",
+      "**LIVE ACTIVITY**",
+      "```text",
+      activity,
       "```"
     ].join("\n"))
-    .setFooter({ text: "Lucifer Discord Controller • Authorized worlds only" });
+    .setFooter({ text: "DanKudo Monitor • Live telemetry" });
   return embed;
 }
 
@@ -133,12 +157,31 @@ app.get("/health", (_req, res) => res.json({ ok: true, service: "lucifer-discord
 
 app.post("/api/status", authorizedApi, async (req, res) => {
   const body = req.body || {};
-  state.online = body.online === true;
-  state.botName = String(body.botName || "Unknown").slice(0, 40);
-  state.world = String(body.world || "-").slice(0, 24);
+  const nextOnline = body.online === true;
+  const nextBotName = String(body.botName || "Unknown").slice(0, 40);
+  const nextWorld = String(body.world || "-").slice(0, 24);
+  const nextAction = String(body.lastAction || "Heartbeat").slice(0, 80);
+
+  if (nextOnline !== lastHeartbeatOnline) {
+    addActivity(nextOnline ? `Bot online: ${nextBotName}` : "Bot reported offline");
+    lastHeartbeatOnline = nextOnline;
+  }
+  if (state.botName !== "Waiting for Lua bridge" && nextBotName !== state.botName) {
+    addActivity(`Bot changed: ${nextBotName}`);
+  }
+  if (nextWorld !== "-" && state.world !== "-" && nextWorld !== state.world) {
+    addActivity(`World changed: ${state.world} → ${nextWorld}`);
+  }
+  if (nextAction !== state.lastAction && nextAction !== "Monitoring active" && nextAction !== "Heartbeat") {
+    addActivity(nextAction);
+  }
+
+  state.online = nextOnline;
+  state.botName = nextBotName;
+  state.world = nextWorld;
   state.x = Number.isFinite(Number(body.x)) ? Math.trunc(Number(body.x)) : null;
   state.y = Number.isFinite(Number(body.y)) ? Math.trunc(Number(body.y)) : null;
-  state.lastAction = String(body.lastAction || "Heartbeat").slice(0, 80);
+  state.lastAction = nextAction;
   state.updatedAt = Date.now();
   await updatePanel();
   res.json({ ok: true, receivedAt: state.updatedAt });
